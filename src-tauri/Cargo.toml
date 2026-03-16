@@ -1,0 +1,79 @@
+[package]
+name = "jlocal"
+version = "0.7.6"
+edition = "2021"
+
+[dependencies]
+# Tauri 框架
+tauri = { version = "2.0", features = [] }
+tauri-plugin-shell = "2.0"
+tauri-plugin-dialog = "2.0"
+tauri-plugin-fs = "2.0"
+tauri-plugin-log = "2.0"
+
+# 序列化
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+ts-rs = { version = "10", features = ["serde-compat", "chrono-impl"] }
+
+# 异步运行时
+tokio = { version = "1.0", features = ["full"] }
+
+# 音频处理
+lofty = "0.22"  # 音频元数据解析
+rodio = { version = "0.19", default-features = false, features = ["symphonia-mp3", "symphonia-wav", "symphonia-isomp4", "symphonia-aac"] }  # 音频播放
+# 使用支持 DSD 的 Symphonia fork
+symphonia = { git = "https://github.com/M0Rf30/Symphonia", branch = "dsd-support", features = ["flac", "mp3", "wav", "ogg", "vorbis", "dsd", "alac", "aac"] }  # 音频解码（支持 seek、DSD、ALAC）
+
+# 数据库 - 使用 sqlx 替代 rusqlite，更好的异步支持
+sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite", "migrate", "chrono", "uuid"] }
+
+# 错误处理
+anyhow = "1.0"
+thiserror = "1.0"
+
+# 日志
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# 文件扫描
+walkdir = "2.0"
+
+# UUID
+uuid = { version = "1.0", features = ["v4", "serde"] }
+
+# 时间处理
+chrono = { version = "0.4", features = ["serde"] }
+
+# 配置管理
+config = "0.14"
+
+# 类型转换
+dirs = "5.0"
+
+# Base64 编码
+base64 = "0.22"
+
+# 正则表达式
+regex = "1.10"
+
+# 编码检测和转换
+encoding_rs = "0.8"
+
+# 图片处理
+image = "0.25"
+
+# MD5 哈希
+md5 = "0.7"
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true
