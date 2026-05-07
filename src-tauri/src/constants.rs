@@ -1,7 +1,7 @@
 // 音频格式配置
 pub const NORMAL_AUDIO_EXTENSIONS: &[&str] = &[
-    "mp3", "flac", "wav", "ogg", "m4a", "aac", "wma", "ape", 
-    "alac", "dsd", "dsf", "dff"
+    "mp3", "flac", "wav", "ogg", "m4a", "aac", "wma", "ape",
+    "alac", "dsd", "dsf", "dff", "aif", "aiff", "opus", "caf"
 ];
 
 pub const ENCRYPTED_AUDIO_EXTENSIONS: &[&str] = &[

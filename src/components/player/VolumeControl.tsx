@@ -26,6 +26,12 @@ export default function VolumeControl({ volume, onVolumeChange }: VolumeControlP
     }
   }, [isMuted, volume, previousVolume, onVolumeChange])
 
+  useEffect(() => {
+    if (!isMuted) {
+      setPreviousVolume(volume)
+    }
+  }, [volume, isMuted])
+
   const handleVolumeChange = useCallback((percentage: number) => {
     const newVolume = Math.max(0, Math.min(1, percentage))
     onVolumeChange(newVolume)

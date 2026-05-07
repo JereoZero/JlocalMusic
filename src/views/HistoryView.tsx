@@ -38,17 +38,7 @@ export default function HistoryView() {
   }, [])
 
   const handlePlayFromHistory = useCallback(async (song: typeof filteredAndSortedSongs[0]) => {
-    try {
-      const songs = await api.searchSongs(song.path)
-      if (songs && songs.length > 0) {
-        await playSong(songs[0])
-      } else {
-        await api.playSong(song.path)
-      }
-    } catch (error) {
-      console.error('Failed to play from history:', error)
-      await api.playSong(song.path)
-    }
+    await playSong(song)
   }, [playSong])
 
   const filteredHistory = useMemo(() => {

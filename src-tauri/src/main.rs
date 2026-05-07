@@ -179,8 +179,6 @@ fn main() {
             commands::stop_song,
             commands::seek_song,
             commands::set_volume,
-            commands::play_next,
-            commands::play_prev,
             commands::get_player_state,
 
             // 元数据

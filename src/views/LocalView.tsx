@@ -8,7 +8,7 @@ import { useDebouncedValue, useSongSort, useMainBgColor } from '../hooks'
 import { filterSongs } from '../utils/songUtils'
 
 export default function LocalView() {
-  const { songs, isLoading, refreshAll, likedPaths, hiddenPaths, toggleLike, toggleHiddenWithContext } = useLibraryStore()
+  const { songs, isLoading, refreshAll, likedPaths, hiddenPaths, toggleLike, toggleHidden } = useLibraryStore()
   const { currentSong, isPlaying, playSong } = usePlayerStore()
   const [searchInput, setSearchInput] = useState('')
   const bgColor = useMainBgColor()
@@ -60,7 +60,7 @@ export default function LocalView() {
           hiddenPaths={hiddenPaths}
           onPlay={playSong}
           onToggleLike={toggleLike}
-          onToggleHidden={(path) => toggleHiddenWithContext(path, 'local')}
+          onToggleHidden={(path) => toggleHidden(path)}
           emptyTitle="暂无歌曲"
           emptyDescription="请添加音乐文件夹"
           source="local"

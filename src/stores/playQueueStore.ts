@@ -129,8 +129,9 @@ export const usePlayQueueStore = create<PlayQueueStore>()(
         set((state) => {
           if (index < 0 || index >= state.queue.length) return state
           
+          const removedPath = state.queue[index].path
           const newQueue = state.queue.filter((_, i) => i !== index)
-          const newOriginalQueue = state.originalQueue.filter((_, i) => i !== index)
+          const newOriginalQueue = state.originalQueue.filter(s => s.path !== removedPath)
           let newIndex = state.currentIndex
           
           if (index < state.currentIndex) {
@@ -169,6 +170,10 @@ export const usePlayQueueStore = create<PlayQueueStore>()(
           const newQueue = [...state.queue]
           const [removed] = newQueue.splice(fromIndex, 1)
           newQueue.splice(toIndex, 0, removed)
+
+          const newOriginalQueue = [...state.originalQueue]
+          const [origRemoved] = newOriginalQueue.splice(fromIndex, 1)
+          newOriginalQueue.splice(toIndex, 0, origRemoved)
           
           let newIndex = state.currentIndex
           if (fromIndex === state.currentIndex) {
@@ -181,6 +186,7 @@ export const usePlayQueueStore = create<PlayQueueStore>()(
           
           return {
             queue: newQueue,
+            originalQueue: newOriginalQueue,
             currentIndex: newIndex,
           }
         })

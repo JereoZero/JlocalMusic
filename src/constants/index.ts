@@ -1,7 +1,7 @@
 // 音频格式配置
 export const AUDIO_FORMATS = {
-  // 支持的普通音频格式
-  normal: ['mp3', 'flac', 'wav', 'ogg', 'm4a', 'aac', 'wma', 'ape', 'alac', 'dsd', 'dsf', 'dff'] as const,
+  // 支持的普通音频格式（wma/ape 列入扫描但后端不支持播放）
+  normal: ['mp3', 'flac', 'wav', 'ogg', 'm4a', 'aac', 'alac', 'dsf', 'dff', 'aif', 'aiff', 'opus', 'caf'] as const,
   
   // 支持的加密音频格式
   encrypted: ['ncm', 'qmc', 'qmc0', 'qmc3', 'qmcflac', 'qmcogg', 'mflac'] as const,

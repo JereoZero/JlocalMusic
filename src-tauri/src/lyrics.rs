@@ -8,6 +8,7 @@ use encoding_rs::{UTF_8, GBK};
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct LyricSource {
     pub content: String,
+    #[serde(rename = "type")]
     pub source: String,
 }
 
@@ -23,9 +24,9 @@ fn decode_lrc_content(bytes: &[u8]) -> String {
     }
 
     let utf8_result = String::from_utf8(bytes.to_vec());
-    if utf8_result.is_ok() {
-        return utf8_result.unwrap();
-    }
+    if let Ok(utf8_str) = utf8_result {
+                return utf8_str;
+            }
 
     let (decoded, _, had_errors) = GBK.decode(bytes);
     if !had_errors {
@@ -59,7 +60,7 @@ fn load_lrc_from_path(lrc_path: &Path) -> Option<LyricSource> {
 
     Some(LyricSource {
         content,
-        source: "lrc_file".to_string(),
+        source: "external".to_string(),
     })
 }
 

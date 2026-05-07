@@ -11,7 +11,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 #[allow(dead_code)]
-pub struct SymphoniaFlacDecoder {
+pub struct SymphoniaDecoder {
     path: PathBuf,
     format_reader: Box<dyn FormatReader>,
     decoder: Box<dyn symphonia::core::codecs::Decoder>,
@@ -24,7 +24,7 @@ pub struct SymphoniaFlacDecoder {
     current_frame: u64,
 }
 
-impl SymphoniaFlacDecoder {
+impl SymphoniaDecoder {
     pub fn new(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let path = PathBuf::from(path);
         let file = File::open(&path)?;
@@ -112,7 +112,7 @@ impl SymphoniaFlacDecoder {
     }
 }
 
-impl Iterator for SymphoniaFlacDecoder {
+impl Iterator for SymphoniaDecoder {
     type Item = i16;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -132,7 +132,7 @@ impl Iterator for SymphoniaFlacDecoder {
     }
 }
 
-impl Source for SymphoniaFlacDecoder {
+impl Source for SymphoniaDecoder {
     fn current_frame_len(&self) -> Option<usize> {
         self.sample_buffer.as_ref().map(|b| b.len() - self.buffer_pos)
     }

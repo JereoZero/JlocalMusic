@@ -20,8 +20,6 @@ interface LibraryStore {
   refreshAll: () => Promise<void>
   toggleLike: (path: string, context?: 'hidden') => Promise<void>
   toggleHidden: (path: string, shouldRemoveLike?: boolean) => Promise<void>
-  toggleLikeWithContext: (path: string, context?: 'hidden') => Promise<void>
-  toggleHiddenWithContext: (path: string, context: 'liked' | 'local' | 'hidden') => Promise<void>
   clearError: () => void
 }
 
@@ -164,43 +162,5 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
       log('隐藏操作失败', message)
       useToastStore.getState().error(message)
     }
-  },
-
-  // 保留旧函数名作为别名，保持向后兼容
-  toggleHiddenWithContext: async (path: string, _context: 'liked' | 'local' | 'hidden') => {
-    const { hiddenPaths, likedPaths } = get()
-    const newHidden = !hiddenPaths.has(path)
-
-    try {
-      if (newHidden) {
-        await api.hideSong(path)
-        
-        if (likedPaths.has(path)) {
-          await api.toggleLike(path, false)
-          const newLikedPaths = new Set(likedPaths)
-          newLikedPaths.delete(path)
-          set({ likedPaths: newLikedPaths })
-        }
-        useToastStore.getState().hide('已隐藏歌曲')
-      } else {
-        await api.unhideSong(path)
-        useToastStore.getState().success('已恢复歌曲')
-      }
-
-      const newHiddenPaths = new Set(hiddenPaths)
-      if (newHidden) {
-        newHiddenPaths.add(path)
-      } else {
-        newHiddenPaths.delete(path)
-      }
-      set({ hiddenPaths: newHiddenPaths })
-    } catch (error) {
-      const message = error instanceof Error ? error.message : '操作失败'
-      useToastStore.getState().error(message)
-    }
-  },
-
-  toggleLikeWithContext: async (path: string, context?: 'hidden') => {
-    get().toggleLike(path, context)
   },
 }))
