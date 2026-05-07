@@ -543,8 +543,24 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                   版本历史
                 </h3>
                 <div className="space-y-4 text-sm max-h-80 overflow-y-auto">
-                  {/* v0.7.6 */}
+                  {/* v0.7.7 */}
                   <div className="border-l-2 border-orange-500 pl-4">
+                    <p className="text-white font-medium">v0.7.7</p>
+                    <p className="text-xs text-gray-500 mb-2">2026-05-07</p>
+                    <ul className="text-gray-400 space-y-1 list-disc list-inside">
+                      <li>播放进度平滑：消除双路更新导致的进度条回跳</li>
+                      <li>音频格式扩展：新增 AIFF/Opus/CAF 格式支持，统一前后端常量</li>
+                      <li>Shuffle 队列修复：删除/排序时 originalQueue 同步更新</li>
+                      <li>错误处理增强：空 catch 消除，统一使用错误处理器和 toast 通知</li>
+                      <li>内存泄漏修复：timeout 管理优化，组件卸载时正确清理</li>
+                      <li>代码质量：消除死代码 305 行，冗余方法/重复逻辑清理</li>
+                      <li>命名规范：SymphoniaFlacDecoder → SymphoniaDecoder</li>
+                      <li>Rust 优化：线程忙等 → recv_timeout，unwrap → if let</li>
+                      <li>字段名统一：LyricSource source → type</li>
+                    </ul>
+                  </div>
+                  {/* v0.7.6 */}
+                  <div className="border-l-2 border-gray-600 pl-4">
                     <p className="text-white font-medium">v0.7.6</p>
                     <p className="text-xs text-gray-500 mb-2">2025-02-15</p>
                     <ul className="text-gray-400 space-y-1 list-disc list-inside">

@@ -105,6 +105,19 @@ npm run lint         # Linting
 
 ## 📝 Changelog
 
+### v0.7.7
+> 🐛 Comprehensive bug fix release — 19 bugs fixed, -190 net lines
+
+- 🐛 Smooth progress bar: eliminated dual-track update race causing visual time jumps
+- ✨ Extended audio formats: added AIFF, Opus, CAF support, unified frontend/backend constants
+- 🐛 Shuffle queue fix: `removeFromQueue` now searches by `path` instead of index
+- 🐛 Enhanced error handling: eliminated empty catch blocks, unified to centralized error handler
+- 🐛 Memory leak fix: timeout management properly cleaned up on unmount
+- 🔧 Code quality: removed 305 lines of dead code, redundant methods cleaned
+- 🔧 Naming: `SymphoniaFlacDecoder` → `SymphoniaDecoder`
+- 🔧 Rust optimization: busy-wait thread → `recv_timeout`, `unwrap()` → `if let`
+- 🔧 Field name fix: `LyricSource.source` → `type`
+
 ### v0.7.6 (Test Only)
 > ⚠️ For testing GitHub upload process only, no feedback needed
 
