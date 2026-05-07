@@ -1,7 +1,6 @@
 use tauri::State;
 
 use crate::database::Database;
-use crate::database::Song;
 use crate::player::AudioPlayer;
 use crate::metadata::MetadataExtractor;
 use crate::path_validator::{is_path_in_music_folder, validate_audio_extension};
@@ -81,46 +80,6 @@ pub async fn set_volume(
     match player.set_volume(volume).await {
         Ok(_) => Ok(ApiResponse::ok(())),
         Err(e) => Ok(ApiResponse::err(e.to_string())),
-    }
-}
-
-#[tauri::command]
-pub async fn play_next(
-    db: State<'_, Database>,
-    player: State<'_, AudioPlayer>,
-    current_path: String,
-    mode: String,
-) -> Result<ApiResponse<Song>, String> {
-    match db.get_next_song(&current_path, &mode).await {
-        Ok(Some(song)) => {
-            if let Err(e) = player.play(&song.path).await {
-                return Ok(ApiResponse::err(e.to_string()));
-            }
-            let _ = db.increment_play_count(&song.path).await;
-            Ok(ApiResponse::ok(song))
-        }
-        Ok(None) => Ok(ApiResponse::err("没有更多歌曲")),
-        Err(e) => Ok(ApiResponse::err(e)),
-    }
-}
-
-#[tauri::command]
-pub async fn play_prev(
-    db: State<'_, Database>,
-    player: State<'_, AudioPlayer>,
-    current_path: String,
-    mode: String,
-) -> Result<ApiResponse<Song>, String> {
-    match db.get_prev_song(&current_path, &mode).await {
-        Ok(Some(song)) => {
-            if let Err(e) = player.play(&song.path).await {
-                return Ok(ApiResponse::err(e.to_string()));
-            }
-            let _ = db.increment_play_count(&song.path).await;
-            Ok(ApiResponse::ok(song))
-        }
-        Ok(None) => Ok(ApiResponse::err("没有更多歌曲")),
-        Err(e) => Ok(ApiResponse::err(e)),
     }
 }
 

@@ -13,7 +13,7 @@ export default function HiddenView() {
   const bgColor = useMainBgColor()
 
   const { currentSong, isPlaying, playSong } = usePlayerStore()
-  const { songs, isLoading, refreshAll, likedPaths, hiddenPaths, toggleLikeWithContext, toggleHidden } = useLibraryStore()
+  const { songs, isLoading, refreshAll, likedPaths, hiddenPaths, toggleLike, toggleHidden } = useLibraryStore()
 
   const hiddenSongs = useMemo(() => {
     return songs.filter(song => hiddenPaths.has(song.path))
@@ -65,7 +65,7 @@ export default function HiddenView() {
           likedPaths={likedPaths}
           hiddenPaths={hiddenPaths}
           onPlay={playSong}
-          onToggleLike={(path) => toggleLikeWithContext(path, 'hidden')}
+          onToggleLike={(path) => toggleLike(path, 'hidden')}
           onToggleHidden={toggleHidden}
           emptyIcon={<EyeOff size={48} className="mb-4 opacity-50" />}
           emptyTitle="暂无隐藏的歌曲"

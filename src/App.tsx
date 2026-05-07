@@ -16,6 +16,7 @@ import { useSongCover } from './hooks/useSongCover'
 import { useAlbumColor } from './hooks/useAlbumColor'
 import { useTheme } from './hooks/useTheme'
 import * as api from './api/modules'
+import { createErrorHandler } from './utils/errorHandler'
 import type { ViewType } from './types'
 
 function AppContent() {
@@ -68,7 +69,7 @@ function AppContent() {
     restoreLastSong()
 
     const frontendVolume = usePlayerStore.getState().volume
-    api.setVolume(frontendVolume).catch(() => {})
+    api.setVolume(frontendVolume).catch(createErrorHandler('启动音量同步'))
   }, [initEventListeners, initMediaSession, restoreLastSong])
 
   const handleKeyboardShortcuts = useCallback((e: KeyboardEvent) => {

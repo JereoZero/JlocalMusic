@@ -7,6 +7,7 @@ import { useThemeStore } from '../stores/themeStore'
 import { THEMES, ThemeId } from '../config/themes'
 import { useMainBgColor } from '../hooks'
 import type { AppLog } from '../api/modules/types'
+import { handleError } from '../utils/errorHandler'
 import { APP_CONFIG } from '../config'
 
 interface SettingsViewProps {
@@ -27,13 +28,13 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
   const bgColor = useMainBgColor()
   const primaryColor = getPrimaryColor()
   
-  // 存储 timeout ID 以便清理
-  const timeoutRefs = useRef<ReturnType<typeof setTimeout>[]>([])
-  
-  // 清理所有 timeout
+  const messageTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   useEffect(() => {
     return () => {
-      timeoutRefs.current.forEach(clearTimeout)
+      if (messageTimeoutRef.current) {
+        clearTimeout(messageTimeoutRef.current)
+      }
     }
   }, [])
 
@@ -49,7 +50,7 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
         const secondary = await api.getSecondaryFolders()
         setSecondaryFolders(secondary.map(s => s.target))
       } catch (error) {
-        console.error('Failed to load settings:', error)
+        handleError(error, '加载设置')
       }
     }
     loadSettings()
@@ -61,7 +62,7 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
       const data = await api.getLogs(level, 100)
       setLogs(data)
     } catch (error) {
-      console.error('Failed to load logs:', error)
+      handleError(error, '加载日志')
     }
   }, [logFilter])
 
@@ -72,7 +73,7 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
       showMessage('success', '日志已复制到剪贴板')
     } catch (error) {
       showMessage('error', '复制失败')
-      console.error(error)
+      handleError(error, '复制日志')
     }
   }
 
@@ -86,7 +87,7 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
       await loadLogs()
     } catch (error) {
       showMessage('error', '清空失败')
-      console.error(error)
+      handleError(error, '清空日志')
     } finally {
       setLoading(false)
     }
@@ -114,8 +115,10 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
 
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text })
-    const timeoutId = setTimeout(() => setMessage(null), 3000)
-    timeoutRefs.current.push(timeoutId)
+    if (messageTimeoutRef.current) {
+      clearTimeout(messageTimeoutRef.current)
+    }
+    messageTimeoutRef.current = setTimeout(() => setMessage(null), 3000)
   }
 
   const handleClearPlayHistory = async () => {
@@ -127,7 +130,7 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
       showMessage('success', '已清空播放历史')
     } catch (error) {
       showMessage('error', '清空失败')
-      console.error(error)
+      handleError(error, '清空历史')
     } finally {
       setLoading(false)
     }
@@ -164,7 +167,7 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
       await fetchSongs()
     } catch (error) {
       showMessage('error', '清除失败')
-      console.error(error)
+      handleError(error, '清除缩略图')
     } finally {
       setLoading(false)
     }
@@ -181,7 +184,7 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
       await fetchSongs()
     } catch (error) {
       showMessage('error', '清空失败')
-      console.error(error)
+      handleError(error, '清空数据库')
     } finally {
       setLoading(false)
     }
@@ -220,7 +223,7 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
       }
     } catch (error) {
       showMessage('error', '选择文件夹失败')
-      console.error(error)
+      handleError(error, '选择主文件夹')
     } finally {
       setLoading(false)
     }
@@ -245,7 +248,7 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
       }
     } catch (error) {
       showMessage('error', '选择文件夹失败')
-      console.error(error)
+      handleError(error, '选择二级文件夹')
     } finally {
       setLoading(false)
     }

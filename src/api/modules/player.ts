@@ -32,18 +32,6 @@ export async function setVolume(volume: number): Promise<void> {
   if (!response.success) throw new Error(response.error)
 }
 
-export async function playNext(currentPath: string, mode: string): Promise<Song> {
-  const response = await invoke<ApiResponse<Song>>('play_next', { currentPath, mode })
-  if (!response.success) throw new Error(response.error)
-  return response.data!
-}
-
-export async function playPrev(currentPath: string, mode: string): Promise<Song> {
-  const response = await invoke<ApiResponse<Song>>('play_prev', { currentPath, mode })
-  if (!response.success) throw new Error(response.error)
-  return response.data!
-}
-
 export async function getPlayerState(): Promise<BackendPlayerState> {
   const response = await invoke<ApiResponse<BackendPlayerState>>('get_player_state')
   if (!response.success) throw new Error(response.error)

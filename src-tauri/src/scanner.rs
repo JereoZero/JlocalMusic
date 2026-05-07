@@ -19,6 +19,8 @@ pub struct ScanResult {
     pub normal_songs: Vec<Song>,
     /// 加密歌曲（NCM/QMC 等会员歌曲）
     pub encrypted_songs: Vec<Song>,
+    /// 元数据提取错误
+    pub metadata_errors: Vec<String>,
 }
 
 /// 文件夹扫描器
@@ -35,8 +37,8 @@ impl FolderScanner {
 
         let mut normal_songs = Vec::new();
         let mut encrypted_songs = Vec::new();
+        let mut metadata_errors = Vec::new();
         let mut scanned = 0usize;
-        let mut success = 0usize;
         let mut errors = 0usize;
 
         let extractor = MetadataExtractor::new();
@@ -67,10 +69,9 @@ impl FolderScanner {
                 if is_supported {
                     // 支持的格式 - 正常处理
                     info!("Processing supported file: {:?} ({})", path.file_name(), ext_lower);
-                    match self.process_normal_file(path, &extractor).await {
+                    match self.process_normal_file(path, &extractor, &mut metadata_errors).await {
                         Some(song) => {
                             normal_songs.push(song);
-                            success += 1;
                         }
                         None => {
                             errors += 1;
@@ -88,20 +89,18 @@ impl FolderScanner {
         }
 
         info!(
-            "Folder scan completed. Scanned: {}, Normal: {}, Encrypted: {}, Errors: {}",
+            "Folder scan completed. Scanned: {}, Normal: {}, Encrypted: {}, Errors: {}, MetadataErrors: {}",
             scanned,
             normal_songs.len(),
             encrypted_songs.len(),
-            errors
+            errors,
+            metadata_errors.len()
         );
-
-        let _ = scanned;
-        let _ = success;
-        let _ = errors;
 
         Ok(ScanResult {
             normal_songs,
             encrypted_songs,
+            metadata_errors,
         })
     }
 
@@ -110,6 +109,7 @@ impl FolderScanner {
         &self,
         path: &Path,
         extractor: &MetadataExtractor,
+        metadata_errors: &mut Vec<String>,
     ) -> Option<Song> {
         let path_str = path.to_string_lossy().to_string();
 
@@ -117,8 +117,9 @@ impl FolderScanner {
         let metadata = match extractor.extract(&path_str).await {
             Ok(m) => Some(m),
             Err(e) => {
-                warn!("Failed to extract metadata from {:?}: {}, using defaults", path, e);
-                // 元数据提取失败时仍然创建歌曲条目
+                let err_msg = format!("Failed to extract metadata from {}: {}", path_str, e);
+                warn!("{}", err_msg);
+                metadata_errors.push(err_msg.clone());
                 None
             }
         };

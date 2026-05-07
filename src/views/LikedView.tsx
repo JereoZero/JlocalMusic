@@ -13,7 +13,7 @@ export default function LikedView() {
   const bgColor = useMainBgColor()
 
   const { currentSong, isPlaying, playSong } = usePlayerStore()
-  const { songs, isLoading, refreshAll, likedPaths, hiddenPaths, toggleLike, toggleHiddenWithContext } = useLibraryStore()
+  const { songs, isLoading, refreshAll, likedPaths, hiddenPaths, toggleLike, toggleHidden } = useLibraryStore()
 
   const likedSongs = useMemo(() => {
     return songs.filter(song => likedPaths.has(song.path) && !hiddenPaths.has(song.path))
@@ -59,7 +59,7 @@ export default function LikedView() {
           hiddenPaths={hiddenPaths}
           onPlay={playSong}
           onToggleLike={toggleLike}
-          onToggleHidden={(path) => toggleHiddenWithContext(path, 'liked')}
+          onToggleHidden={(path) => toggleHidden(path)}
           emptyIcon={<Heart size={48} className="mb-4 opacity-50" />}
           emptyTitle="暂无喜欢的歌曲"
           emptyDescription="点击歌曲旁边的爱心图标添加到我喜欢"

@@ -4,6 +4,7 @@ import type { Song } from '../types'
 import * as api from '../api/modules'
 import { usePlayQueueStore, usePlayerSettingsStore, QueueSource } from './playQueueStore'
 import { useOperationLogStore } from './operationLogStore'
+import { handleError } from '../utils/errorHandler'
 
 const log = (action: string, detail?: string, error?: string) => {
   useOperationLogStore.getState().log(action, detail, error)
@@ -47,6 +48,7 @@ interface PlayerStore {
 // 3. 避免在 React 严格模式下重复初始化
 let animationFrameId: number | null = null
 let lastUpdateTime = 0
+let lastBackendSyncTime = 0
 let eventListenersInitialized = false
 let eventUnsubscribers: Array<() => void> = []
 
@@ -107,8 +109,8 @@ async function playSongInternal(song: Song, logAction: string) {
     usePlayerStore.getState().updateMediaSession(song)
     return true
   } catch (error) {
-    log('播放失败', song.title, String(error))
-    console.error('Failed to play song:', error)
+    handleError(error, '播放歌曲')
+    log('播放失败', String(error))
     return false
   }
 }
@@ -168,7 +170,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       }
     } catch (error) {
       log('操作失败', String(error))
-      console.error('Failed to toggle play:', error)
+      handleError(error, '播放切换')
     }
   },
 
@@ -181,7 +183,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       set({ isPlaying: false })
     } catch (error) {
       log('暂停失败', String(error))
-      console.error('Failed to pause:', error)
+      handleError(error, '暂停')
     }
   },
 
@@ -230,7 +232,6 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       startProgressTimer()
     } catch (error) {
       log('跳转失败', String(error))
-      console.error('Failed to seek:', error)
     }
   },
   
@@ -396,7 +397,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         songs = await api.getSongs()
         source = 'local'
       } catch (e) {
-        console.error('Failed to get songs:', e)
+        handleError(e, '加载歌曲列表')
         return
       }
     }
@@ -419,10 +420,18 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       const { position, duration } = event.payload
       const store = usePlayerStore.getState()
       
-      // 只有在播放状态时才更新进度
       if (store.isPlaying && store.currentSong) {
-        lastUpdateTime = performance.now()
-        set({ currentTime: position, duration })
+        const now = performance.now()
+        const gap = Math.abs(position - store.currentTime)
+        const shouldSync = gap > 0.3 || position > store.currentTime || (now - lastBackendSyncTime) > 3000
+        
+        if (shouldSync) {
+          lastUpdateTime = now
+          lastBackendSyncTime = now
+          set({ currentTime: position, duration })
+        } else if (duration !== store.duration) {
+          set({ duration })
+        }
       }
     })
     eventUnsubscribers.push(() => { unsubProgress.then(fn => fn()) })

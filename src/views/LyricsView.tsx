@@ -6,6 +6,7 @@ import api from '../api'
 import { useSongCover } from '../hooks/useSongCover'
 import { useAlbumColor } from '../hooks/useAlbumColor'
 import LyricParser from 'lrc-file-parser'
+import { createErrorHandler } from '../utils/errorHandler'
 
 interface LyricsViewProps {
   onClose: () => void
@@ -42,14 +43,18 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
     setIsPaused(!isPlaying)
   }, [isPlaying])
 
+  const currentSongRef = useRef(currentSong)
+  currentSongRef.current = currentSong
+
   useEffect(() => {
-    if (!currentSong) {
+    const song = currentSongRef.current
+    if (!song) {
       setLyricLines([])
       return
     }
 
     setIsLoading(true)
-    api.getLyrics(currentSong.path)
+    api.getLyrics(song.path)
       .then((source) => {
         if (source?.content) {
           if (lyricParserRef.current) {
@@ -78,7 +83,7 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
         lyricParserRef.current.pause()
       }
     }
-  }, [currentSong?.path]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentSong?.path])
 
   const currentLineIndex = useCallback(() => {
     if (!lyricLines.length) return -1
@@ -132,7 +137,7 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
 
   const handleLineClick = useCallback((line: LyricLine) => {
     const time = line.time / 1000
-    seek(time).catch(() => {})
+    seek(time).catch(createErrorHandler('歌词跳转'))
   }, [seek])
 
   const handleCoverClick = useCallback(async () => {

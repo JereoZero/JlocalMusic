@@ -221,36 +221,6 @@ export const mockApi = {
     console.warn('Mock: set volume', volume)
   },
 
-  playNext: async (currentPath: string, mode: string): Promise<Song> => {
-    const currentIndex = mockSongs.findIndex(s => s.path === currentPath)
-    let nextIndex: number
-    
-    if (mode === 'shuffle') {
-      nextIndex = Math.floor(Math.random() * mockSongs.length)
-    } else if (mode === 'loop') {
-      nextIndex = currentIndex
-    } else {
-      nextIndex = (currentIndex + 1) % mockSongs.length
-    }
-    
-    return mockSongs[nextIndex]
-  },
-
-  playPrev: async (currentPath: string, mode: string): Promise<Song> => {
-    const currentIndex = mockSongs.findIndex(s => s.path === currentPath)
-    let prevIndex: number
-    
-    if (mode === 'shuffle') {
-      prevIndex = Math.floor(Math.random() * mockSongs.length)
-    } else if (mode === 'loop') {
-      prevIndex = currentIndex
-    } else {
-      prevIndex = (currentIndex - 1 + mockSongs.length) % mockSongs.length
-    }
-    
-    return mockSongs[prevIndex]
-  },
-
   getPlayerState: async (): Promise<import('./modules/types').BackendPlayerState> => {
     return {
       state: 'Stopped',

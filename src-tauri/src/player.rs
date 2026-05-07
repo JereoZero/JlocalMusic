@@ -5,10 +5,11 @@ use std::path::Path;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter};
-use tokio::sync::{mpsc, RwLock};
+use std::sync::mpsc;
+use tokio::sync::RwLock;
 use tracing::info;
 use ts_rs::TS;
-use crate::flac_decoder::SymphoniaFlacDecoder;
+use crate::flac_decoder::SymphoniaDecoder;
 
 #[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, TS)]
 #[ts(export)]
@@ -40,7 +41,7 @@ pub enum PlayerCmd {
 
 pub struct AudioPlayer {
     state: Arc<RwLock<PlayerState>>,
-    cmd_tx: mpsc::UnboundedSender<PlayerCmd>,
+    cmd_tx: mpsc::Sender<PlayerCmd>,
 }
 
 impl AudioPlayer {
@@ -53,7 +54,7 @@ impl AudioPlayer {
             duration: None,
         }));
         
-        let (cmd_tx, cmd_rx) = mpsc::unbounded_channel();
+        let (cmd_tx, cmd_rx) = mpsc::channel();
         
         let state_clone = state.clone();
         std::thread::spawn(move || {
@@ -65,7 +66,7 @@ impl AudioPlayer {
     }
 
     fn player_thread(
-        mut cmd_rx: mpsc::UnboundedReceiver<PlayerCmd>,
+        cmd_rx: mpsc::Receiver<PlayerCmd>,
         state: Arc<RwLock<PlayerState>>,
         app_handle: AppHandle,
     ) {
@@ -86,8 +87,7 @@ impl AudioPlayer {
         let mut last_emit = Instant::now();
         
         loop {
-            // 处理命令
-            match cmd_rx.try_recv() {
+            match cmd_rx.recv_timeout(Duration::from_millis(50)) {
                 Ok(cmd) => {
                     match cmd {
                         PlayerCmd::Play(path) => {
@@ -125,7 +125,7 @@ impl AudioPlayer {
                             };
                             
                             if is_symphonia_format {
-                                match SymphoniaFlacDecoder::new(&path) {
+                                match SymphoniaDecoder::new(&path) {
                                     Ok(source) => {
                                         duration = source.total_duration().map(|d| d.as_secs_f64());
                                         new_sink.set_volume(volume);
@@ -262,7 +262,12 @@ impl AudioPlayer {
                         }
                     }
                 }
-                Err(_) => {}
+                Err(mpsc::RecvTimeoutError::Timeout) => {
+                }
+                Err(mpsc::RecvTimeoutError::Disconnected) => {
+                    info!("Command channel closed, exiting player thread");
+                    break;
+                }
             }
             
             // 更新进度
@@ -305,8 +310,6 @@ impl AudioPlayer {
                     }));
                 }
             }
-            
-            std::thread::sleep(Duration::from_millis(50));
         }
     }
 

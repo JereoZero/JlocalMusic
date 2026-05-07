@@ -5,13 +5,15 @@ import type { Song } from '../types'
 import { formatDuration } from '../utils/format'
 import { useSongCover } from '../hooks/useSongCover'
 import { useThemeStore } from '../stores/themeStore'
+import { AUDIO_FORMATS } from '../constants'
 import type { QueueSource } from '../stores/playQueueStore'
 
-const SUPPORTED_FORMATS = ['mp3', 'flac', 'wav', 'm4a', 'aac', 'ogg', 'oga', 'dsf', 'dff', 'dsd']
+const UNSUPPORTED_EXTENSIONS = new Set(['wma', 'ape', 'dsd', 'oga'])
+const SUPPORTED_FORMATS: Set<string> = new Set(AUDIO_FORMATS.normal.filter(f => !UNSUPPORTED_EXTENSIONS.has(f)))
 
 function isSupportedFormat(path: string): boolean {
   const ext = path.toLowerCase().split('.').pop()
-  return ext ? SUPPORTED_FORMATS.includes(ext) : false
+  return ext ? SUPPORTED_FORMATS.has(ext) : false
 }
 
 interface SongListProps {
