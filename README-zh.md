@@ -91,6 +91,19 @@ npm run lint        # 代码检查
 
 ## 📝 版本历史
 
+### v0.7.7
+> 🐛 大规模 Bug 修复版本 — 修复 19 个问题，净减 190 行代码
+
+- 🐛 播放进度平滑：消除双路进度更新竞争导致的视觉回跳
+- ✨ 音频格式扩展：新增 AIFF/Opus/CAF 格式支持，统一前后端常量定义
+- 🐛 Shuffle 队列修复：`removeFromQueue` 改为按 `path` 查找，避免删除错误歌曲
+- 🐛 错误处理增强：消除空 catch 块，19 处 console.error 统一为 toast 通知
+- 🐛 内存泄漏修复：timeout 管理改为单例模式，组件卸载时正确清理
+- 🔧 代码质量：消除 305 行死代码/重复逻辑，冗余 WithContext 方法清理
+- 🔧 命名规范：`SymphoniaFlacDecoder` → `SymphoniaDecoder`
+- 🔧 Rust 优化：播放线程忙等 → `recv_timeout` 阻塞等待，`unwrap()` → `if let`
+- 🔧 字段名统一：`LyricSource.source` → `type`
+
 ### v0.7.6 (仅供测试)
 > ⚠️ 仅用于测试上传到 GitHub 的流程，暂不收集反馈
 
