@@ -38,6 +38,7 @@ function AppContent() {
     initMediaSession,
     restoreLastSong,
     initEventListeners,
+    cleanupEventListeners,
   } = usePlayerStore()
   const { fetchSongs, fetchLikedPaths, fetchHiddenPaths } = useLibraryStore()
   
@@ -69,7 +70,11 @@ function AppContent() {
 
     const frontendVolume = usePlayerStore.getState().volume
     api.setVolume(frontendVolume).catch(createErrorHandler('启动音量同步'))
-  }, [initEventListeners, initMediaSession, restoreLastSong])
+    
+    return () => {
+      cleanupEventListeners()
+    }
+  }, [initEventListeners, initMediaSession, restoreLastSong, cleanupEventListeners])
 
   useHotkeys('space', () => {
     togglePlay()

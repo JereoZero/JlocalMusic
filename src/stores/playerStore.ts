@@ -81,9 +81,16 @@ function updateProgress() {
   const newTime = store.currentTime + delta
   const maxTime = store.duration || store.currentSong.duration || 0
   
-  if (newTime >= maxTime && maxTime > 0) {
+  if (maxTime <= 0) {
+    animationFrameId = requestAnimationFrame(updateProgress)
+    return
+  }
+  
+  if (newTime >= maxTime) {
     usePlayerStore.setState({ currentTime: maxTime })
-    store.playNext()
+    store.playNext().catch((e) => {
+      handleError(e, 'rAF自动切歌')
+    })
   } else {
     usePlayerStore.setState({ currentTime: newTime })
     animationFrameId = requestAnimationFrame(updateProgress)
@@ -469,6 +476,12 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     eventUnsubscribers.forEach(fn => fn())
     eventUnsubscribers = []
     eventListenersInitialized = false
+    
+    if (animationFrameId !== null) {
+      cancelAnimationFrame(animationFrameId)
+      animationFrameId = null
+    }
+    
     log('事件监听器已清理')
   },
 }))

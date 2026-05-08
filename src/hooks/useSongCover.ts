@@ -90,6 +90,8 @@ export function useSongCovers(paths: string[]) {
       return
     }
 
+    let cancelled = false
+
     const cachedCovers = new Map<string, string | null>()
     const uncachedPaths: string[] = []
     
@@ -121,12 +123,17 @@ export function useSongCovers(paths: string[]) {
           })
       )
     ).then(results => {
+      if (cancelled) return
       results.forEach(({ path, cover }) => {
         cachedCovers.set(path, cover)
       })
       setCovers(new Map(cachedCovers))
       setIsLoading(false)
     })
+    
+    return () => {
+      cancelled = true
+    }
   }, [paths])
 
   return { covers, isLoading }

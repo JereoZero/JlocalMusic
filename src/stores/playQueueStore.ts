@@ -82,7 +82,7 @@ export const usePlayQueueStore = create<PlayQueueStore>()(
       queue: [],
       currentIndex: -1,
       originalQueue: [],
-      queueSource: 'liked',
+      queueSource: 'local',
       lastSongPath: null,
 
       setQueue: (songs, startIndex = 0, source = 'local') => {

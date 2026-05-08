@@ -53,9 +53,12 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
       return
     }
 
+    let cancelled = false
+
     setIsLoading(true)
     api.getLyrics(song.path)
       .then((source) => {
+        if (cancelled) return
         if (source?.content) {
           if (lyricParserRef.current) {
             lyricParserRef.current.pause()
@@ -64,7 +67,7 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
           lyricParserRef.current = new LyricParser({
             onPlay: () => {},
             onSetLyric: (lines: LyricLine[]) => {
-              setLyricLines(lines)
+              if (!cancelled) setLyricLines(lines)
             },
             offset: 100,
             isRemoveBlankLine: true,
@@ -75,10 +78,11 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
           setLyricLines([])
         }
       })
-      .catch(() => setLyricLines([]))
-      .finally(() => setIsLoading(false))
-
+      .catch(() => { if (!cancelled) setLyricLines([]) })
+      .finally(() => { if (!cancelled) setIsLoading(false) })
+    
     return () => {
+      cancelled = true
       if (lyricParserRef.current) {
         lyricParserRef.current.pause()
       }
