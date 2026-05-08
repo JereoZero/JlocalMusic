@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Toaster, toast } from 'sonner'
+import { useHotkeys } from 'react-hotkeys-hook'
 import Sidebar from './components/Sidebar'
 import PlayerBar from './components/PlayerBar'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -70,52 +71,24 @@ function AppContent() {
     api.setVolume(frontendVolume).catch(createErrorHandler('启动音量同步'))
   }, [initEventListeners, initMediaSession, restoreLastSong])
 
-  const handleKeyboardShortcuts = useCallback((e: KeyboardEvent) => {
-    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-      return
-    }
-
-    switch (e.code) {
-      case 'Space':
-        e.preventDefault()
-        togglePlay()
-        toast(isPlaying ? '已暂停' : '正在播放')
-        break
-      case 'ArrowLeft':
-        if (e.metaKey || e.ctrlKey) {
-          e.preventDefault()
-          playPrev()
-        } else if (currentSong) {
-          e.preventDefault()
-          const newTime = Math.max(0, currentTime - 5)
-          seek(newTime)
-        }
-        break
-      case 'ArrowRight':
-        if (e.metaKey || e.ctrlKey) {
-          e.preventDefault()
-          playNext()
-        } else if (currentSong) {
-          e.preventDefault()
-          const newTime = Math.min(duration, currentTime + 5)
-          seek(newTime)
-        }
-        break
-      case 'ArrowUp':
-        e.preventDefault()
-        setVolume(Math.min(1, volume + 0.1))
-        break
-      case 'ArrowDown':
-        e.preventDefault()
-        setVolume(Math.max(0, volume - 0.1))
-        break
-    }
-  }, [togglePlay, playNext, playPrev, seek, setVolume, isPlaying, currentSong, currentTime, duration, volume])
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyboardShortcuts)
-    return () => window.removeEventListener('keydown', handleKeyboardShortcuts)
-  }, [handleKeyboardShortcuts])
+  useHotkeys('space', () => {
+    togglePlay()
+    toast(isPlaying ? '已暂停' : '正在播放')
+  }, { preventDefault: true, enableOnFormTags: false }, [togglePlay, isPlaying])
+  
+  useHotkeys('mod+left', () => playPrev(), { preventDefault: true, enableOnFormTags: false }, [playPrev])
+  useHotkeys('mod+right', () => playNext(), { preventDefault: true, enableOnFormTags: false }, [playNext])
+  
+  useHotkeys('left', () => {
+    if (currentSong) seek(Math.max(0, currentTime - 5))
+  }, { preventDefault: true, enableOnFormTags: false }, [currentSong, currentTime, seek])
+  
+  useHotkeys('right', () => {
+    if (currentSong) seek(Math.min(duration, currentTime + 5))
+  }, { preventDefault: true, enableOnFormTags: false }, [currentSong, currentTime, duration, seek])
+  
+  useHotkeys('up', () => setVolume(Math.min(1, volume + 0.1)), { preventDefault: true, enableOnFormTags: false }, [volume, setVolume])
+  useHotkeys('down', () => setVolume(Math.max(0, volume - 0.1)), { preventDefault: true, enableOnFormTags: false }, [volume, setVolume])
 
   const handleViewChange = (view: ViewType) => {
     if (showLyrics) {

@@ -45,33 +45,6 @@ export function useDebouncedCallback<T extends (...args: unknown[]) => void>(
   return debouncedCallback
 }
 
-export function useKeyboardShortcut(
-  key: string,
-  callback: () => void,
-  options: { ctrl?: boolean; shift?: boolean; alt?: boolean; enabled?: boolean } = {}
-) {
-  const { ctrl = false, shift = false, alt = false, enabled = true } = options
-
-  useEffect(() => {
-    if (!enabled) return
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const ctrlMatch = ctrl === e.ctrlKey
-      const shiftMatch = shift === e.shiftKey
-      const altMatch = alt === e.altKey
-      const keyMatch = e.key.toLowerCase() === key.toLowerCase()
-
-      if (keyMatch && ctrlMatch && shiftMatch && altMatch) {
-        e.preventDefault()
-        callback()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [key, callback, ctrl, shift, alt, enabled])
-}
-
 export { useSongCover, useSongCovers } from './useSongCover'
 export { useSongSort, getSortIcon } from './useSongSort'
 export type { TitleSortType, AlbumSortType, LikeSortType } from './useSongSort'
