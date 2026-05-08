@@ -58,6 +58,7 @@ base64 = "0.22"
 regex = "1.10"
 
 # 编码检测和转换
+chardetng = "0.1"
 encoding_rs = "0.8"
 
 # 图片处理

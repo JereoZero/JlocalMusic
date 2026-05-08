@@ -3,7 +3,7 @@ use std::fs;
 use lofty::probe::Probe;
 use lofty::file::TaggedFileExt;
 use lofty::tag::ItemKey;
-use encoding_rs::{UTF_8, GBK};
+use chardetng::EncodingDetector;
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct LyricSource {
@@ -13,27 +13,11 @@ pub struct LyricSource {
 }
 
 fn decode_lrc_content(bytes: &[u8]) -> String {
-    if bytes.starts_with(&[0xEF, 0xBB, 0xBF]) {
-        let (decoded, _, _) = UTF_8.decode(&bytes[3..]);
-        return decoded.to_string();
-    }
-
-    if bytes.starts_with(&[0xFF, 0xFE]) || bytes.starts_with(&[0xFE, 0xFF]) {
-        let (decoded, _, _) = encoding_rs::UTF_16LE.decode(bytes);
-        return decoded.to_string();
-    }
-
-    let utf8_result = String::from_utf8(bytes.to_vec());
-    if let Ok(utf8_str) = utf8_result {
-                return utf8_str;
-            }
-
-    let (decoded, _, had_errors) = GBK.decode(bytes);
-    if !had_errors {
-        return decoded.to_string();
-    }
-
-    String::from_utf8_lossy(bytes).to_string()
+    let mut detector = EncodingDetector::new();
+    detector.feed(bytes, true);
+    let (encoding, _confident) = detector.guess_assess(None, true);
+    let (decoded, _, _) = encoding.decode(bytes);
+    decoded.to_string()
 }
 
 pub fn load_lrc_file(audio_path: &Path) -> Option<LyricSource> {
@@ -112,9 +96,9 @@ mod tests {
 
     #[test]
     fn test_decode_gbk() {
-        let bytes = [0xC4, 0xE3, 0xBA, 0xC3];
-        let decoded = decode_lrc_content(&bytes);
-        assert_eq!(decoded, "你好");
+        let (encoded, _, _) = encoding_rs::GBK.encode("[00:01.00]\u{4F60}\u{597D}\n[00:02.00]\u{4E16}\u{754C}");
+        let decoded = decode_lrc_content(&encoded);
+        assert_eq!(decoded, "[00:01.00]你好\n[00:02.00]世界");
     }
 
     #[test]
