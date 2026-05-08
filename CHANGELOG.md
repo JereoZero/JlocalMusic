@@ -2,45 +2,77 @@
 
 All notable changes to JlocalMusic will be documented in this file.
 
-## v0.7.7 (2026-05-07)
+## v0.7.7 (2026-05-08)
 
-### Bug Fixes — 19 bugs fixed, 18 verified
+### Bug Fixes — 34 bugs fixed across 4 review rounds
+
+#### Round 1: Player Core & Format System (15 bugs)
 
 **Player & Audio:**
 - 🐛 Smooth progress bar: eliminated dual-track update race between rAF timer and backend `playback_progress` event. Progress only syncs from backend when gap > 0.3s or position is ahead.
 - 🐛 Player thread busy-wait eliminated: replaced `tokio::sync::mpsc` with `std::sync::mpsc`, changed `try_recv() + sleep(50ms)` to `recv_timeout(Duration::from_millis(50))`.
 - ✨ Extended audio formats: added AIFF (.aif/.aiff), Opus (.opus), CAF (.caf) support. Unified frontend/backend format constants.
 - 🐛 Volume mute sync: added `useEffect` in VolumeControl to sync `previousVolume` state when not muted.
-
-**Play Queue:**
-- 🐛 Shuffle `removeFromQueue`: changed from index-based deletion to path-based lookup to prevent deleting wrong song when shuffle reorders the queue.
-- 🐛 `moveInQueue`: `originalQueue` now synchronized with same splice operations as `queue`.
-
-**Error Handling:**
-- 🐛 Empty catch blocks eliminated: all `.catch(() => {})` replaced with `handleError(error, context)` or `createErrorHandler('context')`.
-- 🐛 10 `console.error` calls in playerStore replaced with structured `handleError(error, context)`.
-- 🐛 Lyrics seek: `.catch(() => {})` replaced with `createErrorHandler('歌词跳转')`.
-- 🐛 App startup volume sync: `.catch(() => {})` replaced with `createErrorHandler('启动音量同步')`.
-
-**Memory & Lifecycle:**
-- 🐛 Timeout management: SettingsView's multiple `timeoutRefs` replaced with single ref pattern, preventing stale closures.
-- 🐛 LyricsView: added `currentSongRef = useRef(currentSong)` to avoid stale closure accessing outdated song reference.
+- 🐛 HistoryView: `handlePlayFromHistory` now directly calls `playSong(song)` instead of useless `searchSongs(song.path)`.
 
 **Code Quality:**
 - 🔧 Dead code removal: 305 lines eliminated across player commands (`play_next`, `play_prev`), DB methods (`get_next_song`, `get_prev_song`), API functions, and mock implementations.
 - 🔧 Library store: removed unused `toggleLikeWithContext` and `toggleHiddenWithContext` methods.
 - 🔧 Naming: `SymphoniaFlacDecoder` → `SymphoniaDecoder` (reflects multi-format support).
 - 🔧 Scan result: added `metadata_errors: Vec<String>` field to `ScanResult` for better error visibility.
-- 🔧 Rust safety: `unwrap()` → `if let` in lyrics decoder, `is_ok() + unwrap()` → `if let Ok(...)`.
+
+---
+
+#### Round 2: Memory & Error Handling (5 bugs)
+
+**Play Queue:**
+- 🐛 Shuffle `removeFromQueue`: changed from index-based deletion to path-based lookup.
+- 🐛 `moveInQueue`: `originalQueue` now synchronized with queue operations.
+
+**Error Handling:**
+- 🐛 Empty catch blocks eliminated: all `.catch(() => {})` replaced with `handleError(error, context)` or `createErrorHandler('context')`.
+- 🐛 10 `console.error` calls in playerStore replaced with `handleError(error, context)`.
+
+**Memory & Lifecycle:**
+- 🐛 Timeout management: SettingsView's single ref pattern preventing stale closures.
+- 🐛 LyricsView: `currentSongRef` pattern avoids stale closure bugs.
 
 **API Consistency:**
 - 🔧 Field name fix: `LyricSource.source` → `type` (with `#[serde(rename = "type")]`).
 - 🔧 Lyric source values: `"lrc_file"` → `"external"`.
+- 🔧 Rust safety: `unwrap()` → `if let` in lyrics decoder.
 
 ---
 
-### HistoryView Fix
-- 🐛 `handlePlayFromHistory` now directly calls `playSong(song)` instead of useless `searchSongs(song.path)`.
+#### Round 3: Play History & Data Processing (6 bugs)
+
+- 🐛 Play history tracking: new `finalizePlayHistory()` records actual listening duration. Previously always recorded `duration=0, completed=false`.
+- 🐛 `playback_progress` guard: `duration=0.0` from backend no longer corrupts frontend state.
+- 🐛 Remaining `console.error` spots: 5 more replaced with unified `handleError()`.
+- 🐛 `copyDebugLogs`: added clipboard error handling with toast feedback.
+- 🐛 SettingsView: fixed two wrong error context strings.
+- 🔧 `useAlbumColor.ts`: removed leftover `console.log` debug output.
+
+---
+
+#### Round 4: Folder/Song Management Refactor (8 bugs)
+
+- 🐛 `cleanup_nonexistent_songs`: removed `base_folder` restriction, now checks ALL songs regardless of folder origin. Fixes orphaned songs from deleted secondary folders.
+- 🐛 Symbolic link dedup: scanner uses `HashSet<PathBuf>` with canonical paths to prevent duplicate/cyclic scanning.
+- 🐛 `upsert_songs`: now returns `(success, errors)` tuple instead of silently discarding failed inserts.
+- 🐛 `delete_song` cascade: transaction-based cleanup of `play_counts`, `play_history`, `liked_songs`, `hidden_songs` before deleting from `songs`.
+- 🔧 Audio format constants: split `NORMAL_AUDIO_EXTENSIONS` / `ENCRYPTED_AUDIO_EXTENSIONS` / `UNSUPPORTED_AUDIO_EXTENSIONS` for semantic clarity.
+- 🐛 SettingsView error handling: 2 `console.error` replaced with `handleError()`, duplicate toast removed, auto-refresh after folder removal.
+
+---
+
+### AI Development Tools
+- 🤖 Installed 3 Trae IDE Skills: `tauri-review`, `react-logic`, `music-audit` for automated code auditing.
+- 📚 Reference: [jezweb/claude-skills](https://github.com/jezweb/claude-skills) (161⭐)
+
+### Testing
+- 🧪 Expanded from 7 files (64 tests) to 12 files (151 tests) — 100% pass rate.
+- 🆕 New test files: `playQueueStore`, `toastStore`, `operationLogStore`, `errorHandler`, `songUtils`.
 
 ---
 
