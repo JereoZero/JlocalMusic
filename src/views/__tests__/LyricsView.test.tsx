@@ -3,34 +3,37 @@ import { render, screen, waitFor } from '../../test/utils'
 import LyricsView from '../LyricsView'
 import type { Song } from '../../types'
 
-const mockSong: Song = {
-  id: '1',
-  title: 'Test Song',
-  artist: 'Test Artist',
-  album: 'Test Album',
-  duration: 180,
-  path: '/test/song.mp3',
-  cover: undefined,
-  play_count: 0,
-  created_at: '2024-01-01T00:00:00Z',
-}
-
-vi.mock('../../stores/playerStore', () => ({
-  usePlayerStore: vi.fn((selector) => {
-    const state = {
-      currentSong: mockSong,
-      currentTime: 0,
-      seek: vi.fn(),
-    }
-    return selector ? selector(state) : state
-  }),
+const { mockSong } = vi.hoisted(() => ({
+  mockSong: {
+    id: '1',
+    title: 'Test Song',
+    artist: 'Test Artist',
+    album: 'Test Album',
+    duration: 180,
+    path: '/test/song.mp3',
+    play_count: 0,
+    created_at: '2024-01-01T00:00:00Z',
+  } as Song,
 }))
 
-vi.mock('../../api', () => ({
-  default: {
-    getSongCoverFull: vi.fn().mockResolvedValue(null),
-    getLyrics: vi.fn().mockResolvedValue(null),
-  },
+vi.mock('../../stores/playerStore', () => {
+  const storeState = {
+    currentSong: mockSong,
+    currentTime: 0,
+    seek: vi.fn(),
+  }
+  const usePlayerStore = vi.fn((selector?: (s: typeof storeState) => unknown) => {
+    return selector ? selector(storeState) : storeState
+  })
+  return { usePlayerStore }
+})
+
+vi.mock('../../hooks/useSongCover', () => ({
+  useSongCover: () => ({ cover: null, isLoading: false }),
+}))
+
+vi.mock('../../api/modules', () => ({
+  getLyrics: vi.fn().mockResolvedValue(null),
 }))
 
 describe('LyricsView', () => {

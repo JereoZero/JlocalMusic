@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { Song } from '../types'
 import api from '../api'
-import { useToastStore } from './toastStore'
+import { toast } from 'sonner'
 import { useOperationLogStore } from './operationLogStore'
 
 const log = (action: string, detail?: string, error?: string) => {
@@ -40,7 +40,7 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
     } catch (error) {
       const message = error instanceof Error ? error.message : '获取歌曲失败'
       set({ error: message })
-      useToastStore.getState().error(message)
+      toast.error(message)
     } finally {
       set({ isLoading: false })
     }
@@ -52,7 +52,7 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
       set({ likedPaths: new Set(paths) })
     } catch (error) {
       const message = error instanceof Error ? error.message : '获取喜欢列表失败'
-      useToastStore.getState().error(message)
+      toast.error(message)
     }
   },
 
@@ -62,7 +62,7 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
       set({ hiddenPaths: new Set(paths) })
     } catch (error) {
       const message = error instanceof Error ? error.message : '获取隐藏列表失败'
-      useToastStore.getState().error(message)
+      toast.error(message)
     }
   },
 
@@ -79,11 +79,11 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
         likedPaths: new Set(likedPaths),
         hiddenPaths: new Set(hiddenPaths),
       })
-      useToastStore.getState().success('刷新成功')
+      toast.success('刷新成功')
     } catch (error) {
       const message = error instanceof Error ? error.message : '刷新失败'
       set({ error: message })
-      useToastStore.getState().error(message)
+      toast.error(message)
     } finally {
       set({ isLoading: false })
     }
@@ -102,7 +102,7 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
         const newHiddenPaths = new Set(hiddenPaths)
         newHiddenPaths.delete(path)
         set({ hiddenPaths: newHiddenPaths })
-        useToastStore.getState().success('已恢复歌曲到本地音乐')
+        toast.success('已恢复歌曲到本地音乐')
       }
 
       await api.toggleLike(path, newLiked)
@@ -111,16 +111,16 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
       const newLikedPaths = new Set(likedPaths)
       if (newLiked) {
         newLikedPaths.add(path)
-        useToastStore.getState().like('已添加到喜欢')
+        toast('已添加到喜欢', { icon: '❤️', duration: 2000 })
       } else {
         newLikedPaths.delete(path)
-        useToastStore.getState().info('已从喜欢列表移除')
+        toast.info('已从喜欢列表移除')
       }
       set({ likedPaths: newLikedPaths })
     } catch (error) {
       const message = error instanceof Error ? error.message : '操作失败'
       log('喜欢操作失败', message)
-      useToastStore.getState().error(message)
+      toast.error(message)
     }
   },
 
@@ -143,11 +143,11 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
           set({ likedPaths: newLikedPaths })
         }
         
-        useToastStore.getState().hide('已隐藏歌曲')
+        toast('已隐藏歌曲', { icon: '🚫', duration: 2000 })
       } else {
         await api.unhideSong(path)
         log('后台执行', `unhideSong(${path})`)
-        useToastStore.getState().success('已恢复歌曲')
+        toast.success('已恢复歌曲')
       }
 
       const newHiddenPaths = new Set(hiddenPaths)
@@ -160,7 +160,7 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
     } catch (error) {
       const message = error instanceof Error ? error.message : '操作失败'
       log('隐藏操作失败', message)
-      useToastStore.getState().error(message)
+      toast.error(message)
     }
   },
 }))

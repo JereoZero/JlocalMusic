@@ -51,6 +51,21 @@ let lastUpdateTime = 0
 let lastBackendSyncTime = 0
 let eventListenersInitialized = false
 let eventUnsubscribers: Array<() => void> = []
+let songStartTime = 0
+let currentPlayPath: string | null = null
+
+async function finalizePlayHistory(completed: boolean) {
+  if (!currentPlayPath || songStartTime === 0) return
+  const path = currentPlayPath
+  const elapsed = Math.floor((Date.now() - songStartTime) / 1000)
+  currentPlayPath = null
+  songStartTime = 0
+  try {
+    await api.addPlayHistory(path, elapsed, completed)
+  } catch (e) {
+    handleError(e, '记录播放历史')
+  }
+}
 
 function updateProgress() {
   const store = usePlayerStore.getState()
@@ -92,19 +107,17 @@ function stopProgressTimer() {
 async function playSongInternal(song: Song, logAction: string) {
   log(logAction, song.title)
   
+  finalizePlayHistory(false)
+  
   try {
     await api.playSong(song.path)
     log('播放成功', song.title)
     usePlayerStore.setState({ currentSong: song, isPlaying: true, currentTime: 0, duration: song.duration })
     usePlayQueueStore.getState().setLastSongPath(song.path)
     lastUpdateTime = performance.now()
+    songStartTime = Date.now()
+    currentPlayPath = song.path
     startProgressTimer()
-    
-    try {
-      await api.addPlayHistory(song.path, 0, false)
-    } catch (e) {
-      console.error('Failed to add play history:', e)
-    }
     
     usePlayerStore.getState().updateMediaSession(song)
     return true
@@ -203,12 +216,13 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       set({ isPlaying: true })
     } catch (error) {
       log('恢复失败', String(error))
-      console.error('Failed to resume:', error)
+      handleError(error, '恢复播放')
     }
   },
 
   stop: async () => {
     log('停止播放')
+    finalizePlayHistory(false)
     try {
       await api.stopSong()
       log('后台执行', 'stopSong()')
@@ -216,7 +230,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       set({ isPlaying: false, currentTime: 0 })
     } catch (error) {
       log('停止失败', String(error))
-      console.error('Failed to stop:', error)
+      handleError(error, '停止')
     }
   },
   
@@ -244,7 +258,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       set({ volume })
     } catch (error) {
       log('设置音量失败', String(error))
-      console.error('Failed to set volume:', error)
+      handleError(error, '设置音量')
     }
   },
 
@@ -329,7 +343,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         position: 0,
       })
     } catch (e) {
-      console.error('Failed to update media session:', e)
+      handleError(e, '更新MediaSession')
     }
   },
 
@@ -364,7 +378,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         await api.pauseSong()
         log('恢复歌曲', song.title)
       } catch (e) {
-        console.error('Failed to restore song:', e)
+        handleError(e, '恢复上次歌曲')
       }
       
       set({ currentSong: song, currentTime: 0, duration: song.duration, isPlaying: false })
@@ -388,7 +402,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
           source = 'liked'
         }
       } catch (e) {
-        console.error('Failed to get liked songs:', e)
+        handleError(e, '加载喜欢列表')
       }
     }
     
@@ -428,8 +442,12 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         if (shouldSync) {
           lastUpdateTime = now
           lastBackendSyncTime = now
-          set({ currentTime: position, duration })
-        } else if (duration !== store.duration) {
+          if (duration > 0) {
+            set({ currentTime: position, duration })
+          } else {
+            set({ currentTime: position })
+          }
+        } else if (duration > 0 && duration !== store.duration) {
           set({ duration })
         }
       }
@@ -439,6 +457,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     // 监听歌曲播放完成事件
     const unsubFinished = listen('track_finished', () => {
       log('歌曲播放完成')
+      finalizePlayHistory(true)
       usePlayerStore.getState().playNext()
     })
     eventUnsubscribers.push(() => { unsubFinished.then(fn => fn()) })

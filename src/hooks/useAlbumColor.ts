@@ -117,8 +117,6 @@ export function useAlbumColor(coverBase64: string | null, songPath?: string): { 
         const mainColor = rgbToHex(mainRgb.r, mainRgb.g, mainRgb.b)
         const sidebarColor = rgbToHex(sidebarRgb.r, sidebarRgb.g, sidebarRgb.b)
         
-        console.log('Album colors - lyrics:', lyricsColor, 'playerBar:', playerBarColor, 'main:', mainColor, 'sidebar:', sidebarColor, 'HSL:', hsl)
-        
         setDominantColor({ lyrics: lyricsColor, playerBar: playerBarColor, main: mainColor, sidebar: sidebarColor })
       } catch (e) {
         console.error('Color extraction error:', e)

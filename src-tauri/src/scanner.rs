@@ -5,7 +5,8 @@ use crate::qmc::is_qmc_file;
 use crate::constants::{is_audio_extension, is_encrypted_extension};
 use chrono::Utc;
 use serde::Serialize;
-use std::path::Path;
+use std::collections::HashSet;
+use std::path::{Path, PathBuf};
 use tracing::{info, warn};
 use ts_rs::TS;
 use uuid::Uuid;
@@ -40,6 +41,7 @@ impl FolderScanner {
         let mut metadata_errors = Vec::new();
         let mut scanned = 0usize;
         let mut errors = 0usize;
+        let mut visited: HashSet<PathBuf> = HashSet::new();
 
         let extractor = MetadataExtractor::new();
 
@@ -49,8 +51,17 @@ impl FolderScanner {
             .filter_map(|e| e.ok())
         {
             let path = entry.path();
-            
+
             if !path.is_file() {
+                continue;
+            }
+
+            let canonical = match path.canonicalize() {
+                Ok(p) => p,
+                Err(_) => continue,
+            };
+
+            if !visited.insert(canonical) {
                 continue;
             }
 

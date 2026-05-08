@@ -84,7 +84,7 @@ fn main() {
                     info!("Auto-scanning music folder: {}", music_folder);
 
                     // 1. 清理不存在的歌曲
-                    match db.cleanup_nonexistent_songs(&music_folder).await {
+                    match db.cleanup_nonexistent_songs().await {
                         Ok(removed) => {
                             if removed > 0 {
                                 info!("Removed {} non-existent songs", removed);
@@ -108,8 +108,8 @@ fn main() {
                             // 3. 保存正常歌曲到数据库
                             if !result.normal_songs.is_empty() {
                                 match db.upsert_songs(result.normal_songs).await {
-                                    Ok(inserted) => {
-                                        info!("Saved {} normal songs to database", inserted);
+                                    Ok((inserted, errors)) => {
+                                        info!("Saved {} normal songs to database ({}) errors", inserted, errors);
                                     }
                                     Err(e) => {
                                         error!("Failed to save normal songs: {}", e);
@@ -119,12 +119,10 @@ fn main() {
 
                             // 4. 保存加密歌曲到数据库并自动隐藏
                             if !result.encrypted_songs.is_empty() {
-                                // 先保存歌曲
                                 match db.upsert_songs(result.encrypted_songs.clone()).await {
-                                    Ok(inserted) => {
-                                        info!("Saved {} encrypted songs to database", inserted);
+                                    Ok((inserted, errors)) => {
+                                        info!("Saved {} encrypted songs to database ({}) errors", inserted, errors);
 
-                                        // 自动添加到隐藏列表
                                         let encrypted_paths: Vec<String> = result
                                             .encrypted_songs
                                             .iter()

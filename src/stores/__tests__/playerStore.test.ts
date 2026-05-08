@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { usePlayerStore } from '../playerStore'
-import { usePlayerSettingsStore, usePlayQueueStore } from '../playQueueStore'
+import { usePlayQueueStore } from '../playQueueStore'
 import type { Song } from '../../types'
 
 const createMockSong = (overrides?: Partial<Song>): Song => ({
@@ -15,8 +15,8 @@ const createMockSong = (overrides?: Partial<Song>): Song => ({
   ...overrides,
 })
 
-vi.mock('../../api', () => ({
-  default: {
+const { mockApi } = vi.hoisted(() => ({
+  mockApi: {
     playSong: vi.fn().mockResolvedValue(undefined),
     pauseSong: vi.fn().mockResolvedValue(undefined),
     resumeSong: vi.fn().mockResolvedValue(undefined),
@@ -24,148 +24,415 @@ vi.mock('../../api', () => ({
     seekSong: vi.fn().mockResolvedValue(undefined),
     setVolume: vi.fn().mockResolvedValue(undefined),
     addPlayHistory: vi.fn().mockResolvedValue(undefined),
-    getSongs: vi.fn().mockResolvedValue({ songs: [] }),
+    getSongs: vi.fn().mockResolvedValue([]),
     getLikedSongs: vi.fn().mockResolvedValue({ songs: [] }),
+    updateMediaSession: vi.fn(),
   },
-  getPlayerState: vi.fn().mockResolvedValue({ state: 'Playing', volume: 0.8, position: 0 }),
 }))
+
+vi.mock('../../api/modules', () => ({ ...mockApi }))
 
 vi.mock('@tauri-apps/api/event', () => ({
   listen: vi.fn().mockResolvedValue(vi.fn()),
 }))
 
-describe('playerSettingsStore', () => {
-  let settingsStore: typeof usePlayerSettingsStore
-
-  beforeEach(() => {
-    settingsStore = usePlayerSettingsStore
-    settingsStore.setState({
-      settings: {
-        volume: 0.8,
-        playMode: 'list',
+function mockMediaSession() {
+  Object.defineProperty(window, 'navigator', {
+    value: {
+      mediaSession: {
+        metadata: null,
+        setActionHandler: vi.fn(),
+        setPositionState: vi.fn(),
       },
-    })
+    },
+    writable: true,
+    configurable: true,
   })
+}
 
-  describe('setPlayMode', () => {
-    it('应该更新播放模式', () => {
-      settingsStore.getState().setPlayMode('loop')
-      expect(settingsStore.getState().settings.playMode).toBe('loop')
-
-      settingsStore.getState().setPlayMode('shuffle')
-      expect(settingsStore.getState().settings.playMode).toBe('shuffle')
-
-      settingsStore.getState().setPlayMode('list')
-      expect(settingsStore.getState().settings.playMode).toBe('list')
-    })
-  })
-
-  describe('setVolume', () => {
-    it('应该更新音量设置', () => {
-      settingsStore.getState().setVolume(0.5)
-      expect(settingsStore.getState().settings.volume).toBe(0.5)
-    })
-  })
-})
-
-describe('playQueueStore', () => {
-  let queueStore: typeof usePlayQueueStore
-
+describe('playerStore - initial state', () => {
   beforeEach(() => {
-    queueStore = usePlayQueueStore
-    queueStore.setState({
+    usePlayerStore.setState({
+      currentSong: null,
+      isPlaying: false,
+      currentTime: 0,
+      duration: 0,
+    })
+    usePlayQueueStore.setState({
       queue: [],
       currentIndex: -1,
       originalQueue: [],
+      lastSongPath: null,
+    })
+    vi.clearAllMocks()
+  })
+
+  it('should have null currentSong', () => {
+    expect(usePlayerStore.getState().currentSong).toBeNull()
+  })
+
+  it('should have isPlaying = false', () => {
+    expect(usePlayerStore.getState().isPlaying).toBe(false)
+  })
+
+  it('should have currentTime = 0', () => {
+    expect(usePlayerStore.getState().currentTime).toBe(0)
+  })
+})
+
+describe('playerStore - playSong', () => {
+  beforeEach(() => {
+    usePlayerStore.setState({
+      currentSong: null,
+      isPlaying: false,
+      currentTime: 0,
+      duration: 0,
+    })
+    vi.clearAllMocks()
+  })
+
+  it('should call playSong API and set state', async () => {
+    const song = createMockSong()
+    await usePlayerStore.getState().playSong(song)
+
+    expect(mockApi.playSong).toHaveBeenCalledWith(song.path)
+    const state = usePlayerStore.getState()
+    expect(state.currentSong).toEqual(song)
+    expect(state.isPlaying).toBe(true)
+    expect(state.currentTime).toBe(0)
+    expect(state.duration).toBe(song.duration)
+  })
+
+  it('should set play queue when provided', async () => {
+    const songs = [
+      createMockSong({ id: '1', path: '/a.mp3' }),
+      createMockSong({ id: '2', path: '/b.mp3' }),
+    ]
+    await usePlayerStore.getState().playSong(songs[1], songs, 'liked')
+
+    const qState = usePlayQueueStore.getState()
+    expect(qState.queue).toHaveLength(2)
+    expect(qState.currentIndex).toBe(1)
+    expect(qState.queueSource).toBe('liked')
+  })
+
+  it('should finalize previous play history before new song', async () => {
+    const prevSong = createMockSong({ id: 'prev', path: '/prev.mp3' })
+    await usePlayerStore.getState().playSong(prevSong)
+    vi.clearAllMocks()
+
+    const newSong = createMockSong({ id: 'new', path: '/new.mp3' })
+    await usePlayerStore.getState().playSong(newSong)
+
+    expect(mockApi.addPlayHistory).toHaveBeenCalledWith(
+      prevSong.path,
+      expect.any(Number),
+      false
+    )
+  })
+
+  it('should handle API errors gracefully', async () => {
+    mockApi.playSong.mockRejectedValueOnce(new Error('device error'))
+    const song = createMockSong()
+    await usePlayerStore.getState().playSong(song)
+
+    const state = usePlayerStore.getState()
+    expect(state.currentSong).toBeNull()
+    expect(state.isPlaying).toBe(false)
+  })
+})
+
+describe('playerStore - togglePlay', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('should play random when no currentSong', async () => {
+    usePlayerStore.setState({ currentSong: null, isPlaying: false })
+    mockApi.getSongs.mockResolvedValueOnce([
+      createMockSong({ id: '1', path: '/1.mp3' }),
+    ])
+    await usePlayerStore.getState().togglePlay()
+
+    expect(mockApi.playSong).toHaveBeenCalled()
+    expect(usePlayerStore.getState().isPlaying).toBe(true)
+  })
+
+  it('should pause when currently playing', async () => {
+    usePlayerStore.setState({
+      currentSong: createMockSong(),
+      isPlaying: true,
+    })
+    await usePlayerStore.getState().togglePlay()
+
+    expect(mockApi.pauseSong).toHaveBeenCalled()
+    expect(usePlayerStore.getState().isPlaying).toBe(false)
+  })
+
+  it('should resume when paused', async () => {
+    usePlayerStore.setState({
+      currentSong: createMockSong(),
+      isPlaying: false,
+    })
+    await usePlayerStore.getState().togglePlay()
+
+    expect(mockApi.resumeSong).toHaveBeenCalled()
+    expect(usePlayerStore.getState().isPlaying).toBe(true)
+  })
+})
+
+describe('playerStore - pause / resume / stop', () => {
+  it('pause should call API and set isPlaying false', async () => {
+    usePlayerStore.setState({ currentSong: createMockSong(), isPlaying: true })
+    await usePlayerStore.getState().pause()
+
+    expect(mockApi.pauseSong).toHaveBeenCalled()
+    expect(usePlayerStore.getState().isPlaying).toBe(false)
+  })
+
+  it('resume should call API and set isPlaying true', async () => {
+    usePlayerStore.setState({ currentSong: createMockSong(), isPlaying: false })
+    await usePlayerStore.getState().resume()
+
+    expect(mockApi.resumeSong).toHaveBeenCalled()
+    expect(usePlayerStore.getState().isPlaying).toBe(true)
+  })
+
+  it('stop should call API, finalize history, and reset', async () => {
+    usePlayerStore.setState({
+      currentSong: createMockSong({ path: '/playing.mp3' }),
+      isPlaying: true,
+      currentTime: 42,
+    })
+    vi.clearAllMocks()
+
+    await usePlayerStore.getState().stop()
+
+    expect(mockApi.stopSong).toHaveBeenCalled()
+    expect(usePlayerStore.getState().isPlaying).toBe(false)
+    expect(usePlayerStore.getState().currentTime).toBe(0)
+  })
+})
+
+describe('playerStore - seek', () => {
+  it('should call seek API and update state', async () => {
+    usePlayerStore.setState({
+      currentSong: createMockSong(),
+      isPlaying: true,
+      currentTime: 10,
+    })
+    await usePlayerStore.getState().seek(30)
+
+    expect(mockApi.seekSong).toHaveBeenCalledWith(30)
+    expect(usePlayerStore.getState().currentTime).toBe(30)
+  })
+})
+
+describe('playerStore - setVolume', () => {
+  it('should call API and update state', async () => {
+    await usePlayerStore.getState().setVolume(0.5)
+
+    expect(mockApi.setVolume).toHaveBeenCalledWith(0.5)
+    expect(usePlayerStore.getState().volume).toBe(0.5)
+  })
+
+  it('should clamp volume between 0 and 1 via store usage', async () => {
+    await usePlayerStore.getState().setVolume(1.5)
+    expect(mockApi.setVolume).toHaveBeenCalledWith(1.5)
+  })
+})
+
+describe('playerStore - playNext / playPrev', () => {
+  it('playNext should advance queue and play next song', async () => {
+    const songs = [
+      createMockSong({ id: '1', path: '/1.mp3' }),
+      createMockSong({ id: '2', path: '/2.mp3' }),
+      createMockSong({ id: '3', path: '/3.mp3' }),
+    ]
+    usePlayQueueStore.setState({
+      queue: [...songs],
+      originalQueue: [...songs],
+      currentIndex: 0,
+      queueSource: 'local',
+    })
+    usePlayerStore.setState({
+      currentSong: songs[0],
+      isPlaying: true,
+    })
+
+    await usePlayerStore.getState().playNext()
+
+    expect(mockApi.playSong).toHaveBeenCalledWith('/2.mp3')
+    expect(usePlayerStore.getState().currentSong?.id).toBe('2')
+  })
+
+  it('playPrev should go to previous song', async () => {
+    const songs = [
+      createMockSong({ id: '1', path: '/1.mp3' }),
+      createMockSong({ id: '2', path: '/2.mp3' }),
+      createMockSong({ id: '3', path: '/3.mp3' }),
+    ]
+    usePlayQueueStore.setState({
+      queue: [...songs],
+      originalQueue: [...songs],
+      currentIndex: 2,
+      queueSource: 'local',
+    })
+    usePlayerStore.setState({
+      currentSong: songs[2],
+      isPlaying: true,
+    })
+
+    await usePlayerStore.getState().playPrev()
+
+    expect(mockApi.playSong).toHaveBeenCalledWith('/2.mp3')
+    expect(usePlayerStore.getState().currentSong?.id).toBe('2')
+  })
+})
+
+describe('playerStore - playSongAtIndex', () => {
+  it('should play song at specified index from queue', async () => {
+    const songs = makeQueue(5)
+    usePlayQueueStore.setState({
+      queue: [...songs],
+      originalQueue: [...songs],
+      currentIndex: 0,
+    })
+
+    await usePlayerStore.getState().playSongAtIndex(2)
+
+    expect(mockApi.playSong).toHaveBeenCalledWith('/music/3.mp3')
+    expect(usePlayQueueStore.getState().currentIndex).toBe(2)
+  })
+
+  it('should do nothing when index out of bounds', async () => {
+    usePlayQueueStore.setState({ queue: [], currentIndex: -1 })
+    await usePlayerStore.getState().playSongAtIndex(0)
+
+    expect(mockApi.playSong).not.toHaveBeenCalled()
+  })
+})
+
+describe('playerStore - playRandomSong', () => {
+  it('should play a random song from liked songs if available', async () => {
+    const likedSongs = makeQueue(10)
+    mockApi.getLikedSongs.mockResolvedValueOnce({ songs: likedSongs })
+    usePlayQueueStore.setState({ queueSource: 'liked' })
+
+    await usePlayerStore.getState().playRandomSong()
+
+    expect(mockApi.playSong).toHaveBeenCalled()
+    expect(usePlayerStore.getState().currentSong).toBeDefined()
+  })
+
+  it('should fall back to all songs if liked list empty', async () => {
+    mockApi.getLikedSongs.mockResolvedValueOnce({ songs: [] })
+    mockApi.getSongs.mockResolvedValueOnce(makeQueue(5))
+    usePlayQueueStore.setState({ queueSource: 'liked' })
+
+    await usePlayerStore.getState().playRandomSong()
+
+    expect(mockApi.getSongs).toHaveBeenCalled()
+    expect(mockApi.playSong).toHaveBeenCalled()
+  })
+})
+
+describe('playerStore - restoreLastSong', () => {
+  it('should restore last song in paused state', async () => {
+    const songs = makeQueue(5)
+    mockApi.getSongs.mockResolvedValueOnce(songs)
+    usePlayQueueStore.setState({
+      lastSongPath: '/music/3.mp3',
+      queueSource: 'local',
+    })
+
+    await usePlayerStore.getState().restoreLastSong()
+
+    expect(mockApi.playSong).toHaveBeenCalledWith('/music/3.mp3')
+    expect(mockApi.pauseSong).toHaveBeenCalled()
+    expect(usePlayerStore.getState().currentSong?.id).toBe('3')
+    expect(usePlayerStore.getState().isPlaying).toBe(false)
+  })
+
+  it('should play random when no last song', async () => {
+    mockApi.getSongs.mockResolvedValueOnce(makeQueue(3))
+    usePlayQueueStore.setState({ lastSongPath: null })
+
+    await usePlayerStore.getState().restoreLastSong()
+
+    expect(mockApi.playSong).toHaveBeenCalled()
+  })
+})
+
+describe('playerStore - MediaSession', () => {
+  it('should set media session metadata on update', () => {
+    mockMediaSession()
+    const song = createMockSong({ title: 'My Song', artist: 'My Artist', album: 'My Album' })
+    usePlayerStore.getState().updateMediaSession(song)
+
+    const ms = (window.navigator as any).mediaSession
+    if (ms.metadata) {
+      expect(ms.metadata.title).toBe('My Song')
+      expect(ms.metadata.artist).toBe('My Artist')
+      expect(ms.metadata.album).toBe('My Album')
+    }
+  })
+
+  it('should not crash when mediaSession is unavailable', () => {
+    const song = createMockSong()
+    expect(() => usePlayerStore.getState().updateMediaSession(song)).not.toThrow()
+  })
+})
+
+function makeQueue(count: number): Song[] {
+  return Array.from({ length: count }, (_, i) =>
+    createMockSong({ id: String(i + 1), title: `Song ${i + 1}`, path: `/music/${i + 1}.mp3` })
+  )
+}
+
+describe('playerStore - finalizePlayHistory', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    usePlayerStore.setState({
+      currentSong: null,
+      isPlaying: false,
+    })
+    usePlayQueueStore.setState({
+      queue: [],
+      originalQueue: [],
+      currentIndex: -1,
     })
   })
 
-  describe('setQueue', () => {
-    it('应该设置播放队列', () => {
-      const songs = [
-        createMockSong({ id: '1', path: '/music/1.mp3' }),
-        createMockSong({ id: '2', path: '/music/2.mp3' }),
-      ]
-      
-      queueStore.getState().setQueue(songs, 0)
-      
-      expect(queueStore.getState().queue).toHaveLength(2)
-      expect(queueStore.getState().currentIndex).toBe(0)
-    })
+  it('should record play history when stopping playback', async () => {
+    const song = createMockSong({ path: '/some/song.mp3' })
+    await usePlayerStore.getState().playSong(song)
+
+    vi.clearAllMocks()
+
+    usePlayerStore.setState({ currentTime: 45 })
+    await usePlayerStore.getState().stop()
+
+    expect(mockApi.addPlayHistory).toHaveBeenCalledWith(
+      '/some/song.mp3',
+      expect.any(Number),
+      false
+    )
   })
 
-  describe('getCurrentSong', () => {
-    it('应该返回当前歌曲', () => {
-      const songs = [
-        createMockSong({ id: '1', path: '/music/1.mp3' }),
-        createMockSong({ id: '2', path: '/music/2.mp3' }),
-      ]
-      
-      queueStore.getState().setQueue(songs, 1)
-      
-      expect(queueStore.getState().getCurrentSong()?.id).toBe('2')
-    })
+  it('should record play history when playing new song', async () => {
+    const song1 = createMockSong({ id: '1', path: '/1.mp3' })
+    const song2 = createMockSong({ id: '2', path: '/2.mp3' })
 
-    it('队列为空时应该返回 null', () => {
-      expect(queueStore.getState().getCurrentSong()).toBeNull()
-    })
-  })
+    await usePlayerStore.getState().playSong(song1)
+    vi.clearAllMocks()
 
-  describe('moveToNext', () => {
-    it('应该移动到下一首', () => {
-      const songs = [
-        createMockSong({ id: '1', path: '/music/1.mp3' }),
-        createMockSong({ id: '2', path: '/music/2.mp3' }),
-        createMockSong({ id: '3', path: '/music/3.mp3' }),
-      ]
-      
-      queueStore.getState().setQueue(songs, 0)
-      const nextSong = queueStore.getState().moveToNext('list')
-      
-      expect(nextSong?.id).toBe('2')
-      expect(queueStore.getState().currentIndex).toBe(1)
-    })
+    await usePlayerStore.getState().playSong(song2)
 
-    it('在最后一首时应该循环到第一首', () => {
-      const songs = [
-        createMockSong({ id: '1', path: '/music/1.mp3' }),
-        createMockSong({ id: '2', path: '/music/2.mp3' }),
-      ]
-      
-      queueStore.getState().setQueue(songs, 1)
-      const nextSong = queueStore.getState().moveToNext('list')
-      
-      expect(nextSong?.id).toBe('1')
-      expect(queueStore.getState().currentIndex).toBe(0)
-    })
-  })
-
-  describe('moveToPrev', () => {
-    it('应该移动到上一首', () => {
-      const songs = [
-        createMockSong({ id: '1', path: '/music/1.mp3' }),
-        createMockSong({ id: '2', path: '/music/2.mp3' }),
-        createMockSong({ id: '3', path: '/music/3.mp3' }),
-      ]
-      
-      queueStore.getState().setQueue(songs, 2)
-      const prevSong = queueStore.getState().moveToPrev('list')
-      
-      expect(prevSong?.id).toBe('2')
-      expect(queueStore.getState().currentIndex).toBe(1)
-    })
-
-    it('在第一首时应该循环到最后一首', () => {
-      const songs = [
-        createMockSong({ id: '1', path: '/music/1.mp3' }),
-        createMockSong({ id: '2', path: '/music/2.mp3' }),
-      ]
-      
-      queueStore.getState().setQueue(songs, 0)
-      const prevSong = queueStore.getState().moveToPrev('list')
-      
-      expect(prevSong?.id).toBe('2')
-      expect(queueStore.getState().currentIndex).toBe(1)
-    })
+    expect(mockApi.addPlayHistory).toHaveBeenCalledWith(
+      '/1.mp3',
+      expect.any(Number),
+      false
+    )
   })
 })

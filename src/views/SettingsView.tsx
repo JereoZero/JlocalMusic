@@ -1,5 +1,5 @@
 import { X, Folder, Trash2, Info, RefreshCw, FileText, Copy, AlertCircle, CheckCircle, Edit2, Plus, Minus, Palette } from 'lucide-react'
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import * as api from '../api/modules'
 import { useLibraryStore } from '../stores/libraryStore'
 import { useOperationLogStore } from '../stores/operationLogStore'
@@ -9,6 +9,7 @@ import { useMainBgColor } from '../hooks'
 import type { AppLog } from '../api/modules/types'
 import { handleError } from '../utils/errorHandler'
 import { APP_CONFIG } from '../config'
+import { toast } from 'sonner'
 
 interface SettingsViewProps {
   onClose: () => void
@@ -16,7 +17,6 @@ interface SettingsViewProps {
 
 export default function SettingsView({ onClose }: SettingsViewProps) {
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [activeTab, setActiveTab] = useState<'general' | 'logs' | 'debug'>('general')
   const [logs, setLogs] = useState<AppLog[]>([])
   const [logFilter, setLogFilter] = useState<'all' | 'info' | 'error'>('all')
@@ -27,16 +27,6 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
   const { currentThemeId, setTheme, getPrimaryColor } = useThemeStore()
   const bgColor = useMainBgColor()
   const primaryColor = getPrimaryColor()
-  
-  const messageTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (messageTimeoutRef.current) {
-        clearTimeout(messageTimeoutRef.current)
-      }
-    }
-  }, [])
 
   // 加载设置
   useEffect(() => {
@@ -70,9 +60,9 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
     try {
       const text = await api.copyLogsToClipboard()
       await navigator.clipboard.writeText(text)
-      showMessage('success', '日志已复制到剪贴板')
+      toast.success( '日志已复制到剪贴板')
     } catch (error) {
-      showMessage('error', '复制失败')
+      toast.error( '复制失败')
       handleError(error, '复制日志')
     }
   }
@@ -83,10 +73,10 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
     setLoading(true)
     try {
       const count = await api.clearLogs()
-      showMessage('success', `已清空 ${count} 条日志`)
+      toast.success( `已清空 ${count} 条日志`)
       await loadLogs()
     } catch (error) {
-      showMessage('error', '清空失败')
+      toast.error( '清空失败')
       handleError(error, '清空日志')
     } finally {
       setLoading(false)
@@ -113,23 +103,15 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
     }
   }
 
-  const showMessage = (type: 'success' | 'error', text: string) => {
-    setMessage({ type, text })
-    if (messageTimeoutRef.current) {
-      clearTimeout(messageTimeoutRef.current)
-    }
-    messageTimeoutRef.current = setTimeout(() => setMessage(null), 3000)
-  }
-
   const handleClearPlayHistory = async () => {
     if (!confirm('确定要清空播放历史吗？')) return
     
     setLoading(true)
     try {
       await api.clearPlayHistory()
-      showMessage('success', '已清空播放历史')
+      toast.success('已清空播放历史')
     } catch (error) {
-      showMessage('error', '清空失败')
+      toast.error('清空失败')
       handleError(error, '清空历史')
     } finally {
       setLoading(false)
@@ -163,11 +145,11 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
       // 重新扫描当前文件夹
       const result = await api.scanFolder(musicFolder)
       const totalCount = result.normal_songs.length + result.encrypted_songs.length
-      showMessage('success', `已清除全部历史数据，重新扫描发现 ${totalCount} 首歌曲`)
+      toast.success( `已清除全部历史数据，重新扫描发现 ${totalCount} 首歌曲`)
       await fetchSongs()
     } catch (error) {
-      showMessage('error', '清除失败')
-      handleError(error, '清除缩略图')
+      toast.error( '清除失败')
+      handleError(error, '清除全部数据')
     } finally {
       setLoading(false)
     }
@@ -179,12 +161,12 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
     setLoading(true)
     try {
       const count = await api.clearHiddenSongs()
-      showMessage('success', `已清空 ${count} 首隐藏歌曲`)
+      toast.success( `已清空 ${count} 首隐藏歌曲`)
       await fetchHiddenPaths()
       await fetchSongs()
     } catch (error) {
-      showMessage('error', '清空失败')
-      handleError(error, '清空数据库')
+      toast.error( '清空失败')
+      handleError(error, '清空隐藏列表')
     } finally {
       setLoading(false)
     }
@@ -199,7 +181,11 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
   const copyDebugLogs = () => {
     const logs = useOperationLogStore.getState().getAll()
     navigator.clipboard.writeText(logs.join('\n'))
-    showMessage('success', '操作日志已复制')
+      .then(() => toast.success( '操作日志已复制'))
+      .catch((e) => {
+        toast.error( '复制失败')
+        handleError(e, '复制操作日志')
+      })
   }
 
   const clearDebugLogs = () => {
@@ -218,11 +204,11 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
         // 自动扫描新文件夹
         const result = await api.scanFolder(selected)
         const totalCount = result.normal_songs.length + result.encrypted_songs.length
-        showMessage('success', `主文件夹已更新，发现 ${totalCount} 首歌曲`)
+        toast.success( `主文件夹已更新，发现 ${totalCount} 首歌曲`)
         await fetchSongs()
       }
     } catch (error) {
-      showMessage('error', '选择文件夹失败')
+      toast.error( '选择文件夹失败')
       handleError(error, '选择主文件夹')
     } finally {
       setLoading(false)
@@ -238,16 +224,16 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
         // 在主文件夹内创建符号链接
         await api.addSecondaryFolder(selected)
         setSecondaryFolders(prev => [...prev, selected])
-        showMessage('success', `已添加副文件夹`)
+        toast.success( `已添加副文件夹`)
         
         // 重新扫描主文件夹（会自动遍历符号链接）
         const result = await api.scanFolder(musicFolder)
         const totalCount = result.normal_songs.length + result.encrypted_songs.length
-        showMessage('success', `扫描完成！发现 ${totalCount} 首歌曲`)
+        toast.success( `扫描完成！发现 ${totalCount} 首歌曲`)
         await fetchSongs()
       }
     } catch (error) {
-      showMessage('error', '选择文件夹失败')
+      toast.error( '选择文件夹失败')
       handleError(error, '选择二级文件夹')
     } finally {
       setLoading(false)
@@ -266,16 +252,19 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
       const linkInfo = secondary.find(s => s.target === folderToRemove)
       
       if (linkInfo) {
-        // 删除符号链接
         await api.removeSecondaryFolder(linkInfo.name)
         setSecondaryFolders(prev => prev.filter((_, i) => i !== index))
-        showMessage('success', '已删除副文件夹，请刷新歌曲列表')
+
+        const result = await api.scanFolder(musicFolder)
+        const totalCount = result.normal_songs.length + result.encrypted_songs.length
+        toast.success( `已删除副文件夹，扫描完成！发现 ${totalCount} 首歌曲`)
+        await fetchSongs()
       } else {
-        showMessage('error', '找不到对应的链接')
+        toast.error( '找不到对应的链接')
       }
     } catch (error) {
-      showMessage('error', '删除失败')
-      console.error(error)
+      toast.error( '删除失败')
+      handleError(error, '删除副文件夹')
     } finally {
       setLoading(false)
     }
@@ -287,11 +276,11 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
     try {
       const result = await api.scanFolder(musicFolder)
       const totalCount = result.normal_songs.length + result.encrypted_songs.length
-      showMessage('success', `扫描完成！发现 ${totalCount} 首歌曲`)
+      toast.success( `扫描完成！发现 ${totalCount} 首歌曲`)
       await fetchSongs()
     } catch (error) {
-      showMessage('error', '扫描失败')
-      console.error(error)
+      toast.error( '扫描失败')
+      handleError(error, '重新扫描')
     } finally {
       setLoading(false)
     }
@@ -349,15 +338,6 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
 
       {/* 设置内容 */}
       <div className="flex-1 overflow-y-auto px-6 py-6">
-        {message && (
-          <div
-            className={`mb-4 p-4 rounded-lg ${
-              message.type === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-            }`}
-          >
-            {message.text}
-          </div>
-        )}
         <div className="max-w-2xl space-y-6">
           {activeTab === 'general' ? (
             <>

@@ -157,14 +157,15 @@ impl Database {
         Ok(())
     }
 
-    /// 插入或更新歌曲（使用事务批量处理）
-    pub async fn upsert_songs(&self, songs: Vec<Song>) -> Result<usize, DatabaseError> {
+    /// 插入或更新歌曲 - 返回 (成功数, 失败数)
+    pub async fn upsert_songs(&self, songs: Vec<Song>) -> Result<(usize, usize), DatabaseError> {
         if songs.is_empty() {
-            return Ok(0);
+            return Ok((0, 0));
         }
 
         let mut tx = self.pool.begin().await?;
         let mut count = 0;
+        let mut errors = 0;
 
         for song in songs {
             let result = sqlx::query(
@@ -192,15 +193,16 @@ impl Database {
             match result {
                 Ok(_) => count += 1,
                 Err(e) => {
+                    errors += 1;
                     error!("Failed to insert song {}: {}", song.path, e);
                 }
             }
         }
 
         tx.commit().await?;
-        info!("Inserted/Updated {} songs", count);
+        info!("Inserted/Updated {} songs, {} errors", count, errors);
 
-        Ok(count)
+        Ok((count, errors))
     }
 
     /// 增加播放次数
@@ -310,15 +312,13 @@ impl Database {
         Ok(())
     }
 
-    /// 清理不存在的歌曲
-    pub async fn cleanup_nonexistent_songs(&self, base_folder: &str) -> Result<usize, DatabaseError> {
-        // 获取所有歌曲
+    /// 清理不存在的歌曲 - 检查全部歌曲
+    pub async fn cleanup_nonexistent_songs(&self) -> Result<usize, DatabaseError> {
         let songs = self.get_songs().await?;
         let mut removed_count = 0;
 
         for song in songs {
-            // 只检查在指定文件夹中的歌曲
-            if song.path.starts_with(base_folder) && !std::path::Path::new(&song.path).exists() {
+            if !std::path::Path::new(&song.path).exists() {
                 info!("Removing non-existent song from database: {}", song.path);
                 match self.delete_song(&song.path).await {
                     Ok(_) => removed_count += 1,
@@ -331,17 +331,40 @@ impl Database {
         Ok(removed_count)
     }
 
-    /// 删除歌曲
+    /// 删除歌曲及关联数据
     pub async fn delete_song(&self, path: &str) -> Result<(), DatabaseError> {
+        let mut tx = self.pool.begin().await?;
+
+        sqlx::query("DELETE FROM play_counts WHERE path = ?")
+            .bind(path)
+            .execute(&mut *tx)
+            .await?;
+
+        sqlx::query("DELETE FROM play_history WHERE path = ?")
+            .bind(path)
+            .execute(&mut *tx)
+            .await?;
+
+        sqlx::query("DELETE FROM liked_songs WHERE path = ?")
+            .bind(path)
+            .execute(&mut *tx)
+            .await?;
+
+        sqlx::query("DELETE FROM hidden_songs WHERE path = ?")
+            .bind(path)
+            .execute(&mut *tx)
+            .await?;
+
         let result = sqlx::query("DELETE FROM songs WHERE path = ?")
             .bind(path)
-            .execute(&self.pool)
+            .execute(&mut *tx)
             .await?;
 
         if result.rows_affected() == 0 {
             return Err(DatabaseError::SongNotFound(path.to_string()));
         }
 
+        tx.commit().await?;
         Ok(())
     }
 

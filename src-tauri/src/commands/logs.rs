@@ -146,9 +146,8 @@ pub async fn get_song_play_count(
 #[tauri::command]
 pub async fn cleanup_nonexistent_songs(
     db: State<'_, Database>,
-    base_folder: String,
 ) -> Result<ApiResponse<usize>, String> {
-    match db.cleanup_nonexistent_songs(&base_folder).await {
+    match db.cleanup_nonexistent_songs().await {
         Ok(count) => Ok(ApiResponse::ok(count)),
         Err(e) => Ok(ApiResponse::err(e)),
     }

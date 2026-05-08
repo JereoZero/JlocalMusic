@@ -193,8 +193,7 @@ pub async fn scan_folder(
     db: State<'_, Database>,
     path: String,
 ) -> Result<ApiResponse<crate::scanner::ScanResult>, String> {
-    // 1. 先清理不存在的歌曲
-    match db.cleanup_nonexistent_songs(&path).await {
+    match db.cleanup_nonexistent_songs().await {
         Ok(removed) => {
             tracing::info!("Removed {} non-existent songs", removed);
         }
@@ -203,23 +202,22 @@ pub async fn scan_folder(
         }
     }
 
-    // 2. 扫描文件夹
     let scanner = FolderScanner::new();
     match scanner.scan(&path).await {
         Ok(result) => {
-            // 3. 保存正常歌曲到数据库
             if !result.normal_songs.is_empty() {
-                if let Err(e) = db.upsert_songs(result.normal_songs.clone()).await {
-                    tracing::error!("Failed to save normal songs: {}", e);
+                let (success, errors) = db.upsert_songs(result.normal_songs.clone()).await
+                    .unwrap_or((0, 0));
+                if errors > 0 {
+                    tracing::warn!("{} normal songs failed to insert", errors);
                 }
+                tracing::info!("Saved {} normal songs, {} errors", success, errors);
             }
 
-            // 4. 保存加密歌曲到数据库并自动隐藏
             if !result.encrypted_songs.is_empty() {
-                if let Err(e) = db.upsert_songs(result.encrypted_songs.clone()).await {
-                    tracing::error!("Failed to save encrypted songs: {}", e);
-                } else {
-                    // 自动添加到隐藏列表
+                let (success, errors) = db.upsert_songs(result.encrypted_songs.clone()).await
+                    .unwrap_or((0, 0));
+                if success > 0 {
                     let encrypted_paths: Vec<String> = result
                         .encrypted_songs
                         .iter()
@@ -228,6 +226,9 @@ pub async fn scan_folder(
                     if let Err(e) = db.hide_songs_batch(encrypted_paths, true).await {
                         tracing::error!("Failed to auto-hide encrypted songs: {}", e);
                     }
+                }
+                if errors > 0 {
+                    tracing::warn!("{} encrypted songs failed to insert", errors);
                 }
             }
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Toaster, toast } from 'sonner'
 import Sidebar from './components/Sidebar'
 import PlayerBar from './components/PlayerBar'
-import ToastContainer from './components/ToastContainer'
 import ErrorBoundary from './components/ErrorBoundary'
 import LocalView from './views/LocalView'
 import LikedView from './views/LikedView'
@@ -11,7 +11,6 @@ import SettingsView from './views/SettingsView'
 import LyricsView from './views/LyricsView'
 import { usePlayerStore } from './stores/playerStore'
 import { useLibraryStore } from './stores/libraryStore'
-import { useToastStore } from './stores/toastStore'
 import { useSongCover } from './hooks/useSongCover'
 import { useAlbumColor } from './hooks/useAlbumColor'
 import { useTheme } from './hooks/useTheme'
@@ -40,7 +39,6 @@ function AppContent() {
     initEventListeners,
   } = usePlayerStore()
   const { fetchSongs, fetchLikedPaths, fetchHiddenPaths } = useLibraryStore()
-  const { info } = useToastStore()
   
   // 获取专辑颜色
   const { cover } = useSongCover(currentSong?.path)
@@ -58,10 +56,10 @@ function AppContent() {
         fetchLikedPaths(),
         fetchHiddenPaths()
       ])
-      info('加载完成')
+      toast('加载完成')
     }
     loadData()
-  }, [fetchSongs, fetchLikedPaths, fetchHiddenPaths, info])
+  }, [fetchSongs, fetchLikedPaths, fetchHiddenPaths])
 
   useEffect(() => {
     initEventListeners()
@@ -81,7 +79,7 @@ function AppContent() {
       case 'Space':
         e.preventDefault()
         togglePlay()
-        info(isPlaying ? '已暂停' : '正在播放')
+        toast(isPlaying ? '已暂停' : '正在播放')
         break
       case 'ArrowLeft':
         if (e.metaKey || e.ctrlKey) {
@@ -112,7 +110,7 @@ function AppContent() {
         setVolume(Math.max(0, volume - 0.1))
         break
     }
-  }, [togglePlay, playNext, playPrev, seek, setVolume, isPlaying, currentSong, currentTime, duration, volume, info])
+  }, [togglePlay, playNext, playPrev, seek, setVolume, isPlaying, currentSong, currentTime, duration, volume])
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyboardShortcuts)
@@ -185,7 +183,17 @@ function AppContent() {
 
       <PlayerBar onToggleLyrics={handleToggleLyrics} />
 
-      <ToastContainer />
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          style: {
+            background: '#1a1a1a',
+            color: '#fff',
+            border: '1px solid #333',
+            fontSize: '14px',
+          },
+        }}
+      />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 // 音频格式配置
 pub const NORMAL_AUDIO_EXTENSIONS: &[&str] = &[
-    "mp3", "flac", "wav", "ogg", "m4a", "aac", "wma", "ape",
+    "mp3", "flac", "wav", "ogg", "m4a", "aac",
     "alac", "dsd", "dsf", "dff", "aif", "aiff", "opus", "caf"
 ];
 
@@ -8,10 +8,15 @@ pub const ENCRYPTED_AUDIO_EXTENSIONS: &[&str] = &[
     "ncm", "qmc", "qmc0", "qmc3", "qmcflac", "qmcogg", "mflac"
 ];
 
+pub const UNSUPPORTED_AUDIO_EXTENSIONS: &[&str] = &[
+    "wma", "ape", "wv", "wvc", "tta"
+];
+
 pub fn is_audio_extension(ext: &str) -> bool {
     let ext_lower = ext.to_lowercase();
     NORMAL_AUDIO_EXTENSIONS.contains(&ext_lower.as_str()) 
         || ENCRYPTED_AUDIO_EXTENSIONS.contains(&ext_lower.as_str())
+        || UNSUPPORTED_AUDIO_EXTENSIONS.contains(&ext_lower.as_str())
 }
 
 pub fn is_encrypted_extension(ext: &str) -> bool {

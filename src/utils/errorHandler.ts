@@ -1,4 +1,4 @@
-import { useToastStore } from '../stores/toastStore'
+import { toast } from 'sonner'
 
 export class AppError extends Error {
   constructor(message: string, public code?: string) {
@@ -12,7 +12,7 @@ export function handleError(error: unknown, context: string): void {
   
   console.error(`[${context}]`, error)
   
-  useToastStore.getState().error(message)
+  toast.error(message)
 }
 
 export function createErrorHandler(context: string) {
