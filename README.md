@@ -30,9 +30,10 @@ A local music player built with Tauri 2 + React 19, focused on a clean and effic
 - 🚀 **Lightweight & Fast** - Built with Tauri 2, small bundle size, quick startup
 - 🎵 **Wide Format Support** - MP3, FLAC, WAV, DSF, DFF, OGG, AAC, M4A and more
 - 🎤 **Lyrics Support** - LRC lyrics files and embedded lyrics with auto-scroll
-- 🎨 **Elegant UI** - Dark theme, dynamic background colors, smooth transition animations
+- 🎨 **Theme System** - 4 themes (Orange, Khaki, Gray Blue, Olive Green), dynamic background colors
 - 🔒 **Privacy First** - All data stored locally
 - 📁 **Smart Management** - Multi-folder support, auto-cleanup deleted songs
+- ▶️ **Independent Play Queues** - Each view (Local/Liked/Hidden/History) has its own play queue
 
 > 💡 Currently developed and tested on macOS Apple Silicon. Windows/Linux support coming soon.
 
@@ -64,6 +65,10 @@ A local music player built with Tauri 2 + React 19, focused on a clean and effic
 - **Tailwind CSS** - Utility-first CSS
 - **Zustand** - Lightweight state management
 - **Lucide React** - Icon library
+- **sonner** - Toast notifications
+- **colorthief** - Album cover color extraction
+- **react-hotkeys-hook** - Keyboard shortcuts
+- **es-toolkit** - Debounce/throttle utilities
 
 ## 📦 Project Structure
 
@@ -121,6 +126,20 @@ npm run lint         # Linting
 ```
 
 ## 📝 Changelog
+
+### v0.7.8
+> 🎨 Theme system overhaul + 6 major refactoring replacements, ~216 lines removed
+
+- 🎨 **Theme Aware UI** - All play buttons, badges, borders, filter tabs follow theme color
+- ♻️ **Toast → sonner** - Deleted 3 files (-115 lines), replaced with 3.8M/week industry standard
+- 🎨 **Color extraction → colorthief** - Median Cut quantization replaces single-pixel sampling
+- 🎹 **Shortcuts → react-hotkeys-hook** - Scope support, deleted dead hook code
+- 🛠️ **Debounce → es-toolkit** - 2x faster than lodash, treeshaken ~3kB
+- 🔤 **Encoding → chardetng** - Firefox's detector handles all CJK encodings automatically
+- 🔗 **Rust constants unified** - SYMPHONIA_EXTENSIONS shared across 3 files
+- ▶️ **LikedView Play All** - One-click play entire liked playlist
+- 🎯 **Independent queues** - Each view maintains its own play queue
+- 🧪 **142 tests, 11 files** - All passing
 
 ### v0.7.7
 > 🐛 Comprehensive bug fix release — 19 bugs fixed, -190 net lines
@@ -200,6 +219,10 @@ This project uses the following open source libraries:
 - [Tailwind CSS](https://tailwindcss.com) - CSS Framework (MIT)
 - [Zustand](https://zustand-demo.pmnd.rs) - State Management (MIT)
 - [Lucide React](https://lucide.dev) - Icons (ISC)
+- [sonner](https://sonner.emilkowal.ski) - Toast Notifications (MIT)
+- [colorthief](https://github.com/lokesh/color-thief) - Color Extraction (MIT)
+- [react-hotkeys-hook](https://github.com/JohannesKlauss/react-hotkeys-hook) - Keyboard Shortcuts (MIT)
+- [es-toolkit](https://es-toolkit.slash.page) - Utilities (MIT)
 - [Vite](https://vitejs.dev) - Build Tool (MIT)
 - [Vitest](https://vitest.dev) - Testing Framework (MIT)
 
@@ -211,6 +234,7 @@ This project uses the following open source libraries:
 - [lofty](https://docs.rs/lofty/) - Audio Metadata (MIT)
 - [sqlx](https://github.com/launchbadge/sqlx) - Database (MIT/APACHE-2.0)
 - [tokio](https://tokio.rs) - Async Runtime (MIT)
+- [chardetng](https://docs.rs/chardetng) - Encoding Detection (MIT/APACHE-2.0)
 
 ## 🤝 Contributing
 

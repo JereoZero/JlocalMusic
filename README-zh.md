@@ -30,9 +30,10 @@
 - 🚀 **轻量快速** - 基于 Tauri 2，包体积小，启动速度快
 - 🎵 **格式丰富** - 支持 MP3、FLAC、WAV、DSF、DFF、OGG、AAC、M4A 等主流格式
 - 🎤 **歌词支持** - 支持 LRC 歌词文件和内嵌歌词，自动同步滚动
-- 🎨 **优雅界面** - 深色主题，动态背景色，流畅过渡动画
+- 🎨 **主题系统** - 4 种主题（橙色/卡其/雾霾蓝/橄榄绿），动态背景色
 - 🔒 **本地优先** - 所有数据存储在本地，保护隐私
 - 📁 **智能管理** - 多文件夹支持，自动清理已删除歌曲
+- ▶️ **独立播放队列** - 每个视图（本地/我喜欢/已隐藏/历史）维护自己的播放队列
 
 ## 🛠️ 技术栈
 
@@ -63,6 +64,10 @@
 - [Lucide React](https://lucide.dev) - 图标库 (ISC)
 - [Vite](https://vitejs.dev) - 构建工具 (MIT)
 - [Vitest](https://vitest.dev) - 测试框架 (MIT)
+- [sonner](https://sonner.emilkowal.ski/) - 通知组件 (MIT)
+- [colorthief](https://lokeshdhakar.com/projects/color-thief/) - 专辑封面颜色提取 (MIT)
+- [react-hotkeys-hook](https://github.com/JohannesKlauss/react-hotkeys-hook) - 键盘快捷键 (MIT)
+- [es-toolkit](https://es-toolkit.slash.page/) - 防抖/节流工具 (MIT)
 
 ### 后端
 - [Tauri](https://tauri.app) - 桌面应用框架 (MIT/APACHE-2.0)
@@ -72,6 +77,7 @@
 - [lofty](https://docs.rs/lofty/) - 音频元数据 (MIT)
 - [sqlx](https://github.com/launchbadge/sqlx) - 数据库 (MIT/APACHE-2.0)
 - [tokio](https://tokio.rs) - 异步运行时 (MIT)
+- [chardetng](https://docs.rs/chardetng) - 编码自动检测 (MIT/APACHE-2.0)
 
 ## 🚀 开发
 
@@ -107,6 +113,20 @@ npm run lint        # 代码检查
 ```
 
 ## 📝 版本历史
+
+### v0.7.8
+> 🎨 主题系统重构 + 6 项大规模重构替换，净减少约 216 行代码
+
+- 🎨 **主题色全面同步** - 所有播放按钮、徽章、边框、筛选标签跟随主题色变化
+- ♻️ **Toast → sonner** - 删除 3 个文件 (-115行)，替换为业界标准
+- 🎨 **颜色 → colorthief** - Median Cut 色彩量化算法替代单像素采样
+- 🎹 **快捷键 → react-hotkeys-hook** - 支持 Scope 隔离，删除死代码
+- 🛠️ **防抖 → es-toolkit** - 比 lodash 快 2 倍，treeshaken ~3kB
+- 🔤 **编码 → chardetng** - Firefox 同款编码检测，自动识别中日韩编码
+- 🔗 **Rust 常量统一** - SYMPHONIA_EXTENSIONS 3 个文件共享
+- ▶️ **我喜欢·播放全部** - 一键播放我喜欢歌单
+- 🎯 **独立播放队列** - 各视图独立队列互不干扰
+- 🧪 **142 项测试，11 个文件** - 全部通过
 
 ### v0.7.7
 > 🐛 大规模 Bug 修复版本 — 修复 19 个问题，净减 190 行代码
