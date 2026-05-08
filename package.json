@@ -34,6 +34,7 @@
     "@tauri-apps/plugin-shell": "^2.0.0",
     "clsx": "^2.1.0",
     "colorthief": "^3.3.1",
+    "es-toolkit": "^1.46.1",
     "lrc-file-parser": "^2.4.1",
     "lru-cache": "^11.2.6",
     "lucide-react": "^0.460.0",

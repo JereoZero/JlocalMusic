@@ -1,16 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { debounce } from 'es-toolkit'
 
 export function useDebouncedValue<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value)
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedValue(value)
-    }, delay)
-
-    return () => {
-      clearTimeout(timer)
-    }
+    const d = debounce(setDebouncedValue, delay)
+    d(value)
+    return () => d.cancel()
   }, [value, delay])
 
   return debouncedValue
@@ -20,29 +17,17 @@ export function useDebouncedCallback<T extends (...args: unknown[]) => void>(
   callback: T,
   delay: number
 ): T {
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const debouncedCallback = useCallback(
-    (...args: Parameters<T>) => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-      }
-      timeoutRef.current = setTimeout(() => {
-        callback(...args)
-      }, delay)
-    },
-    [callback, delay]
-  ) as T
+  const debouncedRef = useRef<ReturnType<typeof debounce<T>> | null>(null)
 
   useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-      }
-    }
-  }, [])
+    const d = debounce(callback, delay)
+    debouncedRef.current = d
+    return () => d.cancel()
+  }, [callback, delay])
 
-  return debouncedCallback
+  return useCallback((...args: Parameters<T>) => {
+    debouncedRef.current?.(...args)
+  }, []) as T
 }
 
 export { useSongCover, useSongCovers } from './useSongCover'
