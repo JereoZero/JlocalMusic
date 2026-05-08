@@ -10,6 +10,7 @@ use tokio::sync::RwLock;
 use tracing::info;
 use ts_rs::TS;
 use crate::flac_decoder::SymphoniaDecoder;
+use crate::constants::is_symphonia_format;
 
 #[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, TS)]
 #[ts(export)]
@@ -101,20 +102,7 @@ impl AudioPlayer {
                             }
                             
                             let path_lower = path.to_lowercase();
-                            // 使用 Symphonia 解码器支持所有格式（支持 seek）
-                            let is_symphonia_format = path_lower.ends_with(".flac") 
-                                || path_lower.ends_with(".dsf") 
-                                || path_lower.ends_with(".dff")
-                                || path_lower.ends_with(".m4a")
-                                || path_lower.ends_with(".m4b")
-                                || path_lower.ends_with(".aac")
-                                || path_lower.ends_with(".ogg")
-                                || path_lower.ends_with(".opus")
-                                || path_lower.ends_with(".wav")
-                                || path_lower.ends_with(".aif")
-                                || path_lower.ends_with(".aiff")
-                                || path_lower.ends_with(".aifc")
-                                || path_lower.ends_with(".caf");
+                            let is_symphonia_format = is_symphonia_format(&path_lower);
                             
                             let new_sink = match Sink::try_new(&stream_handle) {
                                 Ok(s) => s,

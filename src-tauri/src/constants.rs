@@ -12,6 +12,11 @@ pub const UNSUPPORTED_AUDIO_EXTENSIONS: &[&str] = &[
     "wma", "ape", "wv", "wvc", "tta"
 ];
 
+pub const SYMPHONIA_EXTENSIONS: &[&str] = &[
+    "flac", "dsf", "dff", "m4a", "m4b", "aac", "ogg", "opus",
+    "wav", "aif", "aiff", "aifc", "caf"
+];
+
 pub fn is_audio_extension(ext: &str) -> bool {
     let ext_lower = ext.to_lowercase();
     NORMAL_AUDIO_EXTENSIONS.contains(&ext_lower.as_str()) 
@@ -21,6 +26,11 @@ pub fn is_audio_extension(ext: &str) -> bool {
 
 pub fn is_encrypted_extension(ext: &str) -> bool {
     ENCRYPTED_AUDIO_EXTENSIONS.contains(&ext.to_lowercase().as_str())
+}
+
+pub fn is_symphonia_format(path: &str) -> bool {
+    let path_lower = path.to_lowercase();
+    SYMPHONIA_EXTENSIONS.iter().any(|ext| path_lower.ends_with(ext))
 }
 
 // 播放器配置

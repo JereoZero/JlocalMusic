@@ -2,7 +2,7 @@ use crate::database::Song;
 use crate::metadata::MetadataExtractor;
 use crate::ncm::is_ncm_file;
 use crate::qmc::is_qmc_file;
-use crate::constants::{is_audio_extension, is_encrypted_extension};
+use crate::constants::{is_audio_extension, is_encrypted_extension, ENCRYPTED_AUDIO_EXTENSIONS, UNSUPPORTED_AUDIO_EXTENSIONS};
 use chrono::Utc;
 use serde::Serialize;
 use std::collections::HashSet;
@@ -208,10 +208,9 @@ impl FolderScanner {
 
     /// 检查是否是不支持的格式
     fn is_unsupported_format(ext: &str) -> bool {
-        matches!(
-            ext,
-            "ape" | "wv" | "wvc" | "wma" | "tta" | "kgm" | "mflac" | "mgg" | "vpr" | "kwm" | "ncm" | "qmc" | "qmc0" | "qmc3"
-        )
+        UNSUPPORTED_AUDIO_EXTENSIONS.contains(&ext)
+            || ENCRYPTED_AUDIO_EXTENSIONS.contains(&ext)
+            || matches!(ext, "kgm" | "mgg" | "vpr" | "kwm")
     }
 
     /// 处理不支持的格式文件（自动隐藏）
