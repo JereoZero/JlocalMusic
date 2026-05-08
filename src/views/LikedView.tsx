@@ -7,6 +7,8 @@ import SongListHeader from '../components/SongListHeader'
 import ViewHeader from '../components/ViewHeader'
 import { useSongSort, useMainBgColor } from '../hooks'
 import { filterSongs } from '../utils/songUtils'
+import { hexToRgba } from '../config/themes'
+import { useThemeStore } from '../stores/themeStore'
 import type { Song } from '../types'
 
 export default function LikedView() {
@@ -42,6 +44,9 @@ export default function LikedView() {
     }
   }, [playSong, likedSongs])
 
+  const { getPrimaryColor } = useThemeStore()
+  const primaryColor = getPrimaryColor()
+
   return (
     <div className="h-full flex flex-col transition-colors duration-700 select-none" style={{ backgroundColor: bgColor, transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)' }}>
       <ViewHeader
@@ -55,7 +60,13 @@ export default function LikedView() {
           likedSongs.length > 0 ? (
             <button
               onClick={handlePlayAll}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 text-sm transition-colors active:scale-95"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors active:scale-95"
+              style={{
+                backgroundColor: hexToRgba(primaryColor, 0.2),
+                color: primaryColor,
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = hexToRgba(primaryColor, 0.3) }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = hexToRgba(primaryColor, 0.2) }}
             >
               <Play size={14} className="fill-current" />
               播放全部

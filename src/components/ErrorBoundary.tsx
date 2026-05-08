@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from 'react'
+import { getPrimaryColor } from '../stores/themeStore'
 
 interface Props {
   children: ReactNode
@@ -34,6 +35,8 @@ class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback
       }
 
+      const primaryColor = getPrimaryColor()
+
       return (
         <div className="min-h-screen bg-[#121212] flex items-center justify-center p-4">
           <div className="bg-[#1a1a1a] rounded-lg p-6 max-w-md w-full text-center">
@@ -64,7 +67,8 @@ class ErrorBoundary extends Component<Props, State> {
             <div className="flex gap-2 justify-center">
               <button
                 onClick={this.handleReset}
-                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                className="px-4 py-2 text-white rounded-lg transition-colors"
+                style={{ backgroundColor: primaryColor }}
               >
                 重试
               </button>

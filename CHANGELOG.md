@@ -2,6 +2,28 @@
 
 All notable changes to JlocalMusic will be documented in this file.
 
+## v0.7.8 (2026-05-08)
+
+### Theme System
+- 🔧 All play buttons, badges, borders, filter tabs now follow theme color dynamically
+- 🔧 Sidebar nav items, refresh button, search focus ring use theme primary color
+- 🔧 ErrorBoundary retry button uses theme color
+- ✨ New `hexToRgba` utility for dynamic opacity support
+
+### Refactoring (Code Quality)
+- ♻️ Toast system → `sonner`: deleted 3 files (toastStore + ToastContainer + test) -115 lines
+- 🎨 Album color → `colorthief`: Median Cut algorithm replaces single-pixel sampling
+- 🎹 Keyboard shortcuts → `react-hotkeys-hook`: +Scope/combo key support, deleted dead hook
+- 🛠️ Debounce → `es-toolkit`: 2x faster than lodash, treeshaken ~3kB
+- 🔤 Encoding detection → `chardetng` (Mozilla/Firefox): auto-detect GBK/EUC-JP/Shift_JIS
+- 🔗 Rust constants unified: SYMPHONIA_EXTENSIONS shared across player/scanner/constants
+- Total net code reduction: ~216 lines removed
+
+### Features
+- ▶️ LikedView: "Play All" button, independent play queue per view (local/liked/hidden/history)
+
+---
+
 ## v0.7.7 (2026-05-08)
 
 ### Bug Fixes — 34 bugs fixed across 4 review rounds

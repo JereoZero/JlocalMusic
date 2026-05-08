@@ -9,6 +9,7 @@ import { useMainBgColor } from '../hooks'
 import type { AppLog } from '../api/modules/types'
 import { handleError } from '../utils/errorHandler'
 import { APP_CONFIG } from '../config'
+import { hexToRgba } from '../config/themes'
 import { toast } from 'sonner'
 
 interface SettingsViewProps {
@@ -344,7 +345,7 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
               {/* 音乐文件夹设置 */}
               <section className="bg-white/5 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <Folder size={20} className="text-orange-500" />
+                  <Folder size={20} style={{ color: primaryColor }} />
                   音乐文件夹
                 </h3>
                 <div className="space-y-3">
@@ -353,7 +354,13 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                       <p className="text-sm text-white truncate">{musicFolder || '未设置'}</p>
                       <p className="text-xs text-gray-400">主音乐文件夹</p>
                     </div>
-                    <span className="text-xs px-2 py-1 bg-orange-500/20 text-orange-500 rounded mr-2">
+                    <span
+                    className="text-xs px-2 py-1 rounded mr-2"
+                    style={{
+                      backgroundColor: hexToRgba(primaryColor, 0.2),
+                      color: primaryColor,
+                    }}
+                  >
                       当前使用
                     </span>
                   </div>
@@ -361,7 +368,10 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                 <div className="flex gap-2 mt-4">
                   <button
                     onClick={handleSelectPrimaryFolder}
-                    className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors text-sm text-white"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm text-white"
+                    style={{ backgroundColor: primaryColor }}
+                    onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
                   >
                     <Edit2 size={14} />
                     更改主文件夹
@@ -523,8 +533,24 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                   版本历史
                 </h3>
                 <div className="space-y-4 text-sm max-h-80 overflow-y-auto">
+                  {/* v0.7.8 */}
+                  <div className="border-l-2 pl-4" style={{ borderLeftColor: primaryColor }}>
+                    <p className="text-white font-medium">v0.7.8</p>
+                    <p className="text-xs text-gray-500 mb-2">2026-05-08</p>
+                    <ul className="space-y-1 text-gray-400">
+                      <li>🔧 播放按钮颜色跟随主题色，消除硬编码橙色</li>
+                      <li>♻️ Toast → sonner：删除自建通知系统 -115行</li>
+                      <li>🎨 专辑颜色 → colorthief：Median Cut 精确提取</li>
+                      <li>🎹 快捷键 → react-hotkeys-hook：+Scope/组合键</li>
+                      <li>🛠️ 防抖 → es-toolkit：+50% 性能</li>
+                      <li>🔤 编码检测 → chardetng：支持所有亚洲编码</li>
+                      <li>🔗 Rust 常量引用统一，消除 3 处重复</li>
+                      <li>▶️ 我喜欢 + 播放全部，各视图独立播放队列</li>
+                    </ul>
+                  </div>
+
                   {/* v0.7.7 */}
-                  <div className="border-l-2 border-orange-500 pl-4">
+                  <div className="border-l-2 pl-4" style={{ borderLeftColor: hexToRgba(primaryColor, 0.3) }}>
                     <p className="text-white font-medium">v0.7.7</p>
                     <p className="text-xs text-gray-500 mb-2">2026-05-07</p>
                     <ul className="text-gray-400 space-y-1 list-disc list-inside">
@@ -740,31 +766,22 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                 <div className="flex gap-2 mb-4">
                   <button
                     onClick={() => setLogFilter('all')}
-                    className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                      logFilter === 'all'
-                        ? 'bg-orange-500 text-white'
-                        : 'bg-white/10 text-gray-400 hover:text-white'
-                    }`}
+                    className="px-3 py-1.5 rounded-lg text-sm transition-colors bg-white/10 text-gray-400 hover:text-white"
+                    style={logFilter === 'all' ? { backgroundColor: primaryColor, color: 'white' } : undefined}
                   >
                     全部
                   </button>
                   <button
                     onClick={() => setLogFilter('info')}
-                    className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                      logFilter === 'info'
-                        ? 'bg-orange-500 text-white'
-                        : 'bg-white/10 text-gray-400 hover:text-white'
-                    }`}
+                    className="px-3 py-1.5 rounded-lg text-sm transition-colors bg-white/10 text-gray-400 hover:text-white"
+                    style={logFilter === 'info' ? { backgroundColor: primaryColor, color: 'white' } : undefined}
                   >
                     信息
                   </button>
                   <button
                     onClick={() => setLogFilter('error')}
-                    className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                      logFilter === 'error'
-                        ? 'bg-orange-500 text-white'
-                        : 'bg-white/10 text-gray-400 hover:text-white'
-                    }`}
+                    className="px-3 py-1.5 rounded-lg text-sm transition-colors bg-white/10 text-gray-400 hover:text-white"
+                    style={logFilter === 'error' ? { backgroundColor: primaryColor, color: 'white' } : undefined}
                   >
                     错误
                   </button>

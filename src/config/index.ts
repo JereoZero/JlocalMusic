@@ -1,5 +1,5 @@
 export const APP_CONFIG = {
-  version: '0.7.7',
+  version: '0.7.8',
   name: 'JlocalMusic',
   
   player: {
