@@ -6,7 +6,20 @@
 
 A local music player built with Tauri 2 + React 19, focused on a clean and efficient local music management experience.
 
-![screenshot](screenshots/main.png)
+<div align="center">
+  <table>
+    <tr>
+      <td><img src="screenshots/main.png" alt="Main Interface" width="380"/></td>
+      <td><img src="screenshots/player.png" alt="Player Controls" width="380"/></td>
+      <td><img src="screenshots/lyrics.png" alt="Lyrics View" width="380"/></td>
+    </tr>
+    <tr>
+      <td align="center"><b>🎵 Main Interface</b></td>
+      <td align="center"><b>🎛️ Player Controls</b></td>
+      <td align="center"><b>🎤 Lyrics View</b></td>
+    </tr>
+  </table>
+</div>
 
 ## ✨ Features
 

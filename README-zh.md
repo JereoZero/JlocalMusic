@@ -6,7 +6,20 @@
 
 一个基于 Tauri 2 + React 19 的本地音乐播放器，专注于简洁、高效的本地音乐管理体验。
 
-![screenshot](screenshots/main.png)
+<div align="center">
+  <table>
+    <tr>
+      <td><img src="screenshots/main.png" alt="主界面" width="380"/></td>
+      <td><img src="screenshots/player.png" alt="播放控制" width="380"/></td>
+      <td><img src="screenshots/lyrics.png" alt="歌词界面" width="380"/></td>
+    </tr>
+    <tr>
+      <td align="center"><b>🎵 主界面</b></td>
+      <td align="center"><b>🎛️ 播放控制</b></td>
+      <td align="center"><b>🎤 歌词界面</b></td>
+    </tr>
+  </table>
+</div>
 
 ## ✨ 特性
 
