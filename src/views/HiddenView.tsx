@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { EyeOff } from 'lucide-react'
 import { usePlayerStore } from '../stores/playerStore'
 import { useLibraryStore } from '../stores/libraryStore'
@@ -7,6 +7,7 @@ import SongListHeader from '../components/SongListHeader'
 import ViewHeader from '../components/ViewHeader'
 import { useSongSort, useMainBgColor } from '../hooks'
 import { filterSongs } from '../utils/songUtils'
+import type { Song } from '../types'
 
 export default function HiddenView() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -18,6 +19,10 @@ export default function HiddenView() {
   const hiddenSongs = useMemo(() => {
     return songs.filter(song => hiddenPaths.has(song.path))
   }, [songs, hiddenPaths])
+
+  const handlePlaySong = useCallback((song: Song) => {
+    playSong(song, hiddenSongs, 'hidden')
+  }, [playSong, hiddenSongs])
 
   const filteredSongs = useMemo(() => {
     return filterSongs(hiddenSongs, searchQuery)
@@ -64,7 +69,7 @@ export default function HiddenView() {
           isPlaying={isPlaying}
           likedPaths={likedPaths}
           hiddenPaths={hiddenPaths}
-          onPlay={playSong}
+          onPlay={handlePlaySong}
           onToggleLike={(path) => toggleLike(path, 'hidden')}
           onToggleHidden={toggleHidden}
           emptyIcon={<EyeOff size={48} className="mb-4 opacity-50" />}

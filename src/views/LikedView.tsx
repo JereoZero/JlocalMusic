@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { Heart } from 'lucide-react'
+import { useState, useMemo, useCallback } from 'react'
+import { Heart, Play } from 'lucide-react'
 import { usePlayerStore } from '../stores/playerStore'
 import { useLibraryStore } from '../stores/libraryStore'
 import SongList from '../components/SongList'
@@ -7,6 +7,7 @@ import SongListHeader from '../components/SongListHeader'
 import ViewHeader from '../components/ViewHeader'
 import { useSongSort, useMainBgColor } from '../hooks'
 import { filterSongs } from '../utils/songUtils'
+import type { Song } from '../types'
 
 export default function LikedView() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -31,15 +32,36 @@ export default function LikedView() {
     handleAlbumSort,
   } = useSongSort(filteredSongs)
 
+  const handlePlaySong = useCallback((song: Song) => {
+    playSong(song, likedSongs, 'liked')
+  }, [playSong, likedSongs])
+
+  const handlePlayAll = useCallback(() => {
+    if (likedSongs.length > 0) {
+      playSong(likedSongs[0], likedSongs, 'liked')
+    }
+  }, [playSong, likedSongs])
+
   return (
     <div className="h-full flex flex-col transition-colors duration-700 select-none" style={{ backgroundColor: bgColor, transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)' }}>
       <ViewHeader
         title="我喜欢"
-        count={filteredAndSortedSongs.length}
+        count={likedSongs.length}
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         onRefresh={refreshAll}
         isLoading={isLoading}
+        actions={
+          likedSongs.length > 0 ? (
+            <button
+              onClick={handlePlayAll}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 text-sm transition-colors active:scale-95"
+            >
+              <Play size={14} className="fill-current" />
+              播放全部
+            </button>
+          ) : null
+        }
       />
 
       <SongListHeader
@@ -57,7 +79,7 @@ export default function LikedView() {
           isPlaying={isPlaying}
           likedPaths={likedPaths}
           hiddenPaths={hiddenPaths}
-          onPlay={playSong}
+          onPlay={handlePlaySong}
           onToggleLike={toggleLike}
           onToggleHidden={(path) => toggleHidden(path)}
           emptyIcon={<Heart size={48} className="mb-4 opacity-50" />}

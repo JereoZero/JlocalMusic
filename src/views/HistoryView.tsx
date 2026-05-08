@@ -37,14 +37,14 @@ export default function HistoryView() {
     loadPlayHistory()
   }, [])
 
-  const handlePlayFromHistory = useCallback(async (song: typeof filteredAndSortedSongs[0]) => {
-    await playSong(song)
-  }, [playSong])
-
   const filteredHistory = useMemo(() => {
     const visibleHistory = playHistory.filter((item) => !hiddenPaths.has(item.path))
     return filterByQuery(visibleHistory, searchQuery).map(playHistoryToSong)
   }, [playHistory, searchQuery, hiddenPaths])
+
+  const handlePlayFromHistory = useCallback(async (song: typeof filteredAndSortedSongs[0]) => {
+    playSong(song, filteredHistory, 'history')
+  }, [playSong, filteredHistory])
 
   const {
     sortedItems: filteredAndSortedSongs,
