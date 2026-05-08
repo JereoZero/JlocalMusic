@@ -4,6 +4,10 @@
 [![Tauri](https://img.shields.io/badge/Tauri-2.0-blue.svg)](https://tauri.app)
 [![React](https://img.shields.io/badge/React-19-61dafb.svg)](https://react.dev)
 
+<div align="right">
+  <a href="README.md">🇬🇧 English</a>
+</div>
+
 一个基于 Tauri 2 + React 19 的本地音乐播放器，专注于简洁、高效的本地音乐管理体验。
 
 <div align="center">

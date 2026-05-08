@@ -4,6 +4,10 @@
 [![Tauri](https://img.shields.io/badge/Tauri-2.0-blue.svg)](https://tauri.app)
 [![React](https://img.shields.io/badge/React-19-61dafb.svg)](https://react.dev)
 
+<div align="right">
+  <a href="README-zh.md">🇨🇳 中文</a>
+</div>
+
 A local music player built with Tauri 2 + React 19, focused on a clean and efficient local music management experience.
 
 <div align="center">
