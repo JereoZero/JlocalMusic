@@ -114,6 +114,20 @@ npm run lint        # 代码检查
 
 ## 📝 版本历史
 
+### v0.7.11
+> 🔧 CI 构建修复 + BUGS.md 归档 — 21 个 CODEX 精简为汇总表
+
+- 🔧 **CI 修复** — `npm install --legacy-peer-deps` 解决 GitHub Actions 中 peer dependency 冲突
+- 📝 **BUGS.md 归档** — 21 个已修复 CODEX 从详细描述压缩为紧凑汇总表，完整记录移至 BUGS_HISTORY.md
+
+### v0.7.10
+> 🎯 CODEX 审查终局 — 全部 P1 缺陷清零，3 轮审查完成
+
+- 🎯 **同步格式探测** — `probe_audio_file()` 入队前验证 Symphonia/Rodio 可解码
+- 📁 **启动持久化** — 首次启动自动扫描写入 `music_folder` 到 DB
+- 🛡️ **歌词路径保护** — 配置缺失/越权返回明确错误
+- 🖼️ **封面缓存保护** — `upsert_songs` 保留已有封面
+
 ### v0.7.9
 > ⚡ 性能与代码质量优化 — Rust 和 React 共 9 项改进
 

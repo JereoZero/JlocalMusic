@@ -4,19 +4,12 @@ All notable changes to JlocalMusic will be documented in this file.
 
 ## v0.7.11 (2026-05-09)
 
-### CI Fix
-- 🔧 **GitHub Actions build fixed** — `npm install --legacy-peer-deps` resolves peer dependency conflict that blocked `tsc`/`vite build` in CI
+### 🔧 CI 构建修复
+- GitHub Actions 构建因 `npm install` peer dependency 冲突失败 → 改用 `--legacy-peer-deps`
+- 修复后 `tsc`、`vite build` 全部通过，Rust `cargo build` 编译成功
 
-### Documentation
-- 📝 **BUGS.md archived** — 21 fixed CODEX items archived to compact summary (406→193 lines); full records in BUGS_HISTORY.md
-- 📝 Version bumped 0.7.10→0.7.11 across package.json/Cargo.toml/tauri.conf.json/config
-
-### Testing
-- 🧪 142 tests (11 files) — 100%
-- ✅ TypeScript — 0 errors
-- ✅ ESLint — 0 warnings
-- ✅ Rust cargo build — 0 errors
-- ✅ Vite production build — 383.94 KB gzipped 114.23 KB
+### 📝 文档归档
+- BUGS.md 归档：21 个已修复 CODEX 从详细描述精简为紧凑汇总表，完整记录移至 BUGS_HISTORY.md
 
 ---
 

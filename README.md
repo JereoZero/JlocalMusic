@@ -127,6 +127,20 @@ npm run lint         # Linting
 
 ## 📝 Changelog
 
+### v0.7.11
+> 🔧 CI build fix + BUGS.md archive — 21 CODEX items compacted to summary
+
+- 🔧 **CI fix** — npm install `--legacy-peer-deps` resolves peer dependency conflict in GitHub Actions
+- 📝 **BUGS.md archived** — 21 fixed CODEX items compacted to summary table; full records in BUGS_HISTORY.md
+
+### v0.7.10
+> 🎯 CODEX Final Round — All P1 defects resolved, 3 review batches complete
+
+- 🎯 **Sync format probe** — `probe_audio_file()` validates Symphonia/Rodio decodability before queueing
+- 📁 **Startup persistence** — auto-scan writes `music_folder` to DB on first launch
+- 🛡️ **Lyrics path protection** — proper errors for missing config and path violations
+- 🖼️ **Cover cache COALESCE** — `upsert_songs` preserves existing cover on re-scan
+
 ### v0.7.9
 > ⚡ Performance & code quality — 9 optimizations across Rust and React
 

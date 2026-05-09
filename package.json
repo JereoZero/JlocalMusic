@@ -20,11 +20,12 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\"",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm run lint && npm run format:check",
-    "version": "node scripts/version.js",
+    "gen:types": "bash scripts/generate-types.sh",
+    "sync-docs": "bash scripts/sync-docs.sh",
+    "version": "npm run sync-docs",
     "version:patch": "node scripts/version.js patch",
     "version:minor": "node scripts/version.js minor",
-    "version:major": "node scripts/version.js major",
-    "gen:types": "bash scripts/generate-types.sh"
+    "version:major": "node scripts/version.js major"
   },
   "dependencies": {
     "@tanstack/react-virtual": "^3.13.18",
