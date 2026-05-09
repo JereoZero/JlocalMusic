@@ -114,6 +114,25 @@ npm run lint        # 代码检查
 
 ## 📝 版本历史
 
+### v0.7.12
+> 🔥 代码审查修复版本 — 修复 15 个问题（3 严重 + 6 重要 + 6 代码质量）
+
+- 🐛 **SongListHeader 表头可见** — 移除 `hidden` 类，列标签正常显示
+- 🐛 **播放历史修复** — `finalizePlayHistory` 正确 await，切歌不再丢失历史
+- 🛡️ **CSP 安全策略** — 从 null 改为限制性安全策略
+- 🎨 **专辑色提取** — colorthief Median Cut 算法替代单像素采样
+- ⚡ **批量封面请求** — `useSongCovers` 使用单次 RPC 替代 N 次顺序请求
+- 📦 **类型去重** — `ViewType`/`PlayMode` 统一在 `types.ts` 定义
+- ⚙️ **配置去重** — `PLAYER_CONFIG` 合并到 `APP_CONFIG`，`progressInterval` 值不一致修复
+- 🪟 **窗口可调整大小** — 最小 900×600，不再固定 1200×750
+- 🔧 **Rust 路径验证去重** — `settings.rs` 中重复函数删除
+- 🧹 **清理未使用依赖** — 前端 `clsx`/`tailwind-merge`，Rust `config`/`regex`
+- 🔧 **类型转换 hack 修复** — `SortableItem` 接口添加 `path` 字段
+- 🔁 **HistoryView 引用稳定** — `loadPlayHistory` 用 `useCallback` 包装
+- ⏱️ **音量防抖** — 100ms 防抖减少后端频繁调用
+- 🚀 **getLikedSongs SQL JOIN** — 后端 JOIN 查询替代客户端过滤
+- 🗑️ **批量取消喜欢** — `clear_liked_songs` RPC 取消循环逐个操作
+
 ### v0.7.11
 > 🔧 CI 构建修复 + BUGS.md 归档 — 21 个 CODEX 精简为汇总表
 

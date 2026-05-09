@@ -3,12 +3,21 @@ import { listen } from '@tauri-apps/api/event'
 import type { Song } from '../types'
 import * as api from '../api/modules'
 import { usePlayQueueStore, usePlayerSettingsStore, QueueSource } from './playQueueStore'
+import { debounce } from 'es-toolkit'
 import { useOperationLogStore } from './operationLogStore'
 import { handleError } from '../utils/errorHandler'
 
 const log = (action: string, detail?: string, error?: string) => {
   useOperationLogStore.getState().log(action, detail, error)
 }
+
+const debouncedSetVolume = debounce(async (volume: number) => {
+  try {
+    await api.setVolume(volume)
+  } catch (error) {
+    log('设置音量失败', String(error))
+  }
+}, 100)
 
 interface PlaybackProgressEvent {
   path: string
@@ -114,7 +123,7 @@ function stopProgressTimer() {
 async function playSongInternal(song: Song, logAction: string) {
   log(logAction, song.title)
 
-  finalizePlayHistory(false)
+  await finalizePlayHistory(false)
 
   try {
     await api.playSong(song.path)
@@ -233,7 +242,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
   stop: async () => {
     log('停止播放')
-    finalizePlayHistory(false)
+    await finalizePlayHistory(false)
     try {
       await api.stopSong()
       log('后台执行', 'stopSong()')
@@ -262,15 +271,9 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
   setVolume: async (volume) => {
     log('调节音量', `${Math.round(volume * 100)}%`)
-    try {
-      await api.setVolume(volume)
-      log('后台执行', `setVolume(${Math.round(volume * 100)}%)`)
-      usePlayerSettingsStore.getState().setVolume(volume)
-      set({ volume })
-    } catch (error) {
-      log('设置音量失败', String(error))
-      handleError(error, '设置音量')
-    }
+    usePlayerSettingsStore.getState().setVolume(volume)
+    set({ volume })
+    debouncedSetVolume(volume)
   },
 
   playNext: async () => {

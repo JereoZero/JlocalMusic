@@ -177,6 +177,14 @@ pub async fn get_liked_paths(db: State<'_, Database>) -> Result<ApiResponse<Vec<
 }
 
 #[tauri::command]
+pub async fn get_liked_songs(db: State<'_, Database>) -> Result<ApiResponse<Vec<Song>>, String> {
+    match db.get_liked_songs().await {
+        Ok(songs) => Ok(ApiResponse::ok(songs)),
+        Err(e) => Ok(ApiResponse::err(e)),
+    }
+}
+
+#[tauri::command]
 pub async fn toggle_like(
     db: State<'_, Database>,
     path: String,
@@ -184,6 +192,14 @@ pub async fn toggle_like(
 ) -> Result<ApiResponse<()>, String> {
     match db.toggle_like(&path, liked).await {
         Ok(_) => Ok(ApiResponse::ok(())),
+        Err(e) => Ok(ApiResponse::err(e)),
+    }
+}
+
+#[tauri::command]
+pub async fn clear_liked_songs(db: State<'_, Database>) -> Result<ApiResponse<u64>, String> {
+    match db.clear_liked_songs().await {
+        Ok(count) => Ok(ApiResponse::ok(count)),
         Err(e) => Ok(ApiResponse::err(e)),
     }
 }

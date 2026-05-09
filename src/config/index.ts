@@ -1,10 +1,12 @@
 export const APP_CONFIG = {
-  version: '0.7.11',
+  version: '0.7.12',
   name: 'JlocalMusic',
 
   player: {
     defaultVolume: 0.8,
     progressUpdateInterval: 500,
+    coverCacheSize: 500,
+    coverCacheTTL: 1000 * 60 * 60,
   },
 
   toast: {

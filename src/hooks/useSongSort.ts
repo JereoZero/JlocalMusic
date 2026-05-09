@@ -10,6 +10,7 @@ interface SortableItem {
   title?: string
   artist?: string
   album?: string
+  path: string
 }
 
 const SORT_KEY = 'jlocal_sort_'
@@ -122,8 +123,8 @@ export function useSongSort<T extends SortableItem>(
 
     if (likeSort !== 'default' && likedPaths) {
       result.sort((a, b) => {
-        const aLiked = likedPaths.has((a as unknown as { path: string }).path) ? 1 : 0
-        const bLiked = likedPaths.has((b as unknown as { path: string }).path) ? 1 : 0
+        const aLiked = likedPaths.has(a.path) ? 1 : 0
+        const bLiked = likedPaths.has(b.path) ? 1 : 0
         return likeSort === 'liked-first' ? bLiked - aLiked : aLiked - bLiked
       })
     }

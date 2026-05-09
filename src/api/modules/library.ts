@@ -1,9 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import type { ApiResponse } from './types'
 import type { Song } from '../../types'
-import { getSongs } from './song'
 
-// 喜欢
 export async function getLikedPaths(): Promise<string[]> {
   const response = await invoke<ApiResponse<string[]>>('get_liked_paths')
   if (!response.success) throw new Error(response.error)
@@ -11,14 +9,20 @@ export async function getLikedPaths(): Promise<string[]> {
 }
 
 export async function getLikedSongs(): Promise<{ songs: Song[] }> {
-  const [allSongs, likedPaths] = await Promise.all([getSongs(), getLikedPaths()])
-  const likedSongs = allSongs.filter((song) => likedPaths.includes(song.path))
-  return { songs: likedSongs }
+  const response = await invoke<ApiResponse<Song[]>>('get_liked_songs')
+  if (!response.success) throw new Error(response.error)
+  return { songs: response.data || [] }
 }
 
 export async function toggleLike(path: string, liked: boolean): Promise<void> {
   const response = await invoke<ApiResponse<void>>('toggle_like', { path, liked })
   if (!response.success) throw new Error(response.error)
+}
+
+export async function clearLikedSongs(): Promise<number> {
+  const response = await invoke<ApiResponse<number>>('clear_liked_songs')
+  if (!response.success) throw new Error(response.error)
+  return response.data || 0
 }
 
 export async function isSongLiked(path: string): Promise<boolean> {

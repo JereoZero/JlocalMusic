@@ -2,6 +2,38 @@
 
 All notable changes to JlocalMusic will be documented in this file.
 
+## v0.7.12 (2026-05-09)
+
+### 🔥 Bug Fixes — 15 issues fixed from comprehensive code review
+
+#### P0 — Critical (3)
+- 🐛 **SongListHeader always hidden** — Removed `hidden` class from table header grid, header column labels now visible ([SongListHeader.tsx](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src/components/SongListHeader.tsx))
+- 🐛 **`finalizePlayHistory` missing await** — Two call sites (playSongInternal, stop) now properly await before continuing, fixing playback history data loss on song switch ([playerStore.ts](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src/stores/playerStore.ts))
+- 🛡️ **CSP security disabled** — Replaced `"csp": null` with proper restrict-to-self policy covering default-src, img-src, style-src, script-src ([tauri.conf.json](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/tauri.conf.json))
+
+#### P1 — Important (6)
+- 🎨 **Single-pixel color sampling → colorthief Median Cut** — Replaced Canvas getImageData(1×1) with `colorthief`'s MMCQ quantization for representative album colors ([useAlbumColor.ts](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src/hooks/useAlbumColor.ts))
+- ⚡ **`useSongCovers` individual requests → batch API** — Changed N sequential `getSongCoverFull` calls to single `getSongCoversBatch` RPC ([useSongCover.ts](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src/hooks/useSongCover.ts))
+- 📦 **Duplicate types eliminated** — `ViewType`/`PlayMode` now defined only in `types.ts`, imported by `constants/index.ts` ([constants/index.ts](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src/constants/index.ts))
+- ⚙️ **Config deduplication** — Merged `PLAYER_CONFIG` into `APP_CONFIG.player`, fixed inconsistent `progressInterval` value (250ms → 500ms) ([config/index.ts](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src/config/index.ts))
+- 🪟 **Window now resizable** — Removed fixed maxWidth/maxHeight restriction, set minWidth=900 minHeight=600 with `resizable: true` ([tauri.conf.json](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/tauri.conf.json))
+- 🔗 **Rust `is_path_in_music_folder` deduplicated** — Removed duplicate in `settings.rs`, unified to `path_validator.rs` version ([commands/settings.rs](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/src/commands/settings.rs))
+
+#### P2 — Code quality (6)
+- 🧹 **Unused deps cleaned** — Removed `clsx`, `tailwind-merge` (frontend) and `config`, `regex` (Rust) from package manifests
+- 🔧 **`useSongSort` type cast hack fixed** — Added `path: string` to `SortableItem` interface, eliminated `as unknown as` ([useSongSort.ts](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src/hooks/useSongSort.ts))
+- 🔁 **HistoryView useEffect stable reference** — Wrapped `loadPlayHistory` in `useCallback` to prevent unnecessary re-fetches ([HistoryView.tsx](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src/views/HistoryView.tsx))
+- ⏱️ **Volume debounce** — Added 100ms debounce to `setVolume` backend calls using `es-toolkit/debounce` ([playerStore.ts](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src/stores/playerStore.ts))
+- 🚀 **`getLikedSongs` backend SQL JOIN** — Replaced client-side filter (fetch all → filter in JS) with SQL INNER JOIN for O(1) lookup ([database.rs](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/src/database.rs), [library.ts](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src/api/modules/library.ts))
+- 🗑️ **Batch unlike in clearAllData** — Added `clear_liked_songs` RPC eliminating per-song DELETE loop in SettingsView ([database.rs](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/src/database.rs), [SettingsView.tsx](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src/views/SettingsView.tsx))
+
+### Lint & Verification
+- ✅ TypeScript `tsc --noEmit` — 0 errors
+- ✅ ESLint `--max-warnings 0` — 0 warnings
+- ✅ Rust `cargo check` — clean compile
+
+---
+
 ## v0.7.11 (2026-05-09)
 
 ### 🔧 CI 构建修复

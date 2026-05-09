@@ -1,35 +1,5 @@
 import { useState, useEffect } from 'react'
-
-function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: number } {
-  r /= 255
-  g /= 255
-  b /= 255
-
-  const max = Math.max(r, g, b)
-  const min = Math.min(r, g, b)
-  let h = 0
-  let s = 0
-  const l = (max + min) / 2
-
-  if (max !== min) {
-    const d = max - min
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
-
-    switch (max) {
-      case r:
-        h = ((g - b) / d + (g < b ? 6 : 0)) / 6
-        break
-      case g:
-        h = ((b - r) / d + 2) / 6
-        break
-      case b:
-        h = ((r - g) / d + 4) / 6
-        break
-    }
-  }
-
-  return { h: h * 360, s: s * 100, l: l * 100 }
-}
+import { getColor } from 'colorthief'
 
 function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
   h /= 360
@@ -64,6 +34,37 @@ function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: n
   }
 }
 
+function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: number } {
+  r /= 255
+  g /= 255
+  b /= 255
+
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  let h = 0
+  let s = 0
+  const l = (max + min) / 2
+
+  if (max !== min) {
+    const d = max - min
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+
+    switch (max) {
+      case r:
+        h = ((g - b) / d + (g < b ? 6 : 0)) / 6
+        break
+      case g:
+        h = ((b - r) / d + 2) / 6
+        break
+      case b:
+        h = ((r - g) / d + 4) / 6
+        break
+    }
+  }
+
+  return { h: h * 360, s: s * 100, l: l * 100 }
+}
+
 function rgbToHex(r: number, g: number, b: number): string {
   const toHex = (n: number) => Math.min(255, Math.max(0, n)).toString(16).padStart(2, '0')
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`
@@ -93,48 +94,26 @@ export function useAlbumColor(
 
     const img = new Image()
 
-    img.onload = () => {
+    img.onload = async () => {
       try {
-        const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')
-
-        if (!ctx) {
+        const color = await getColor(img)
+        if (!color) {
           setDominantColor({ lyrics: null, playerBar: null, main: null, sidebar: null })
           return
         }
-
-        const size = 50
-        canvas.width = size
-        canvas.height = size
-
-        ctx.drawImage(img, 0, 0, size, size)
-
-        // 取右上角1/4区域的一个点
-        const x = Math.floor((size * 3) / 4)
-        const y = Math.floor(size / 4)
-        const imageData = ctx.getImageData(x, y, 1, 1)
-        const r = imageData.data[0]
-        const g = imageData.data[1]
-        const b = imageData.data[2]
-
-        // 转换为 HSL，提取色相
+        const { r, g, b } = color.rgb()
         const hsl = rgbToHsl(r, g, b)
 
-        // 歌词背景亮度 12%，主界面亮度 10%，侧边栏亮度 9%，底边栏亮度 7%
         const lyricsRgb = hslToRgb(hsl.h, hsl.s, 12)
         const mainRgb = hslToRgb(hsl.h, hsl.s, 10)
         const sidebarRgb = hslToRgb(hsl.h, hsl.s, 9)
         const playerBarRgb = hslToRgb(hsl.h, hsl.s, 7)
-        const lyricsColor = rgbToHex(lyricsRgb.r, lyricsRgb.g, lyricsRgb.b)
-        const playerBarColor = rgbToHex(playerBarRgb.r, playerBarRgb.g, playerBarRgb.b)
-        const mainColor = rgbToHex(mainRgb.r, mainRgb.g, mainRgb.b)
-        const sidebarColor = rgbToHex(sidebarRgb.r, sidebarRgb.g, sidebarRgb.b)
 
         setDominantColor({
-          lyrics: lyricsColor,
-          playerBar: playerBarColor,
-          main: mainColor,
-          sidebar: sidebarColor,
+          lyrics: rgbToHex(lyricsRgb.r, lyricsRgb.g, lyricsRgb.b),
+          playerBar: rgbToHex(playerBarRgb.r, playerBarRgb.g, playerBarRgb.b),
+          main: rgbToHex(mainRgb.r, mainRgb.g, mainRgb.b),
+          sidebar: rgbToHex(sidebarRgb.r, sidebarRgb.g, sidebarRgb.b),
         })
       } catch (e) {
         console.error('Color extraction error:', e)
@@ -142,11 +121,11 @@ export function useAlbumColor(
       }
     }
 
-    img.onerror = (e) => {
-      console.error('Image load error:', e)
+    img.onerror = () => {
       setDominantColor({ lyrics: null, playerBar: null, main: null, sidebar: null })
     }
 
+    img.crossOrigin = 'anonymous'
     img.src = `data:image/jpeg;base64,${coverBase64}`
 
     return () => {

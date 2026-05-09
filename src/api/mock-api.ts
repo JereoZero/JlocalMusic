@@ -142,6 +142,12 @@ export const mockApi = {
     else mockLikedPaths.delete(path)
   },
 
+  clearLikedSongs: async (): Promise<number> => {
+    const count = mockLikedPaths.size
+    mockLikedPaths.clear()
+    return count
+  },
+
   // 隐藏相关
   getHiddenPaths: async (): Promise<string[]> => Array.from(mockHiddenPaths),
 

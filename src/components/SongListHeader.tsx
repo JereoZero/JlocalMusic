@@ -28,7 +28,7 @@ function SongListHeader({
   showHideColumn = true,
 }: SongListHeaderProps) {
   return (
-    <div className="hidden grid grid-cols-[40px_40px_1fr_128px_40px_40px_48px] gap-x-4 items-center px-6 py-3 text-sm text-gray-400 border-b border-[#2a2a2a] bg-[#0a0a0a]">
+    <div className="grid grid-cols-[40px_40px_1fr_128px_40px_40px_48px] gap-x-4 items-center px-6 py-3 text-sm text-gray-400 border-b border-[#2a2a2a] bg-[#0a0a0a]">
       <div>#</div>
       <div></div>
       <button

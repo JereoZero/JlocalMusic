@@ -1,6 +1,7 @@
 use tauri::State;
 
 use crate::database::Database;
+use crate::path_validator;
 use super::common::ApiResponse;
 
 #[tauri::command]
@@ -36,18 +37,6 @@ pub async fn get_all_settings(
     }
 }
 
-fn is_path_in_music_folder(path: &str, music_folder: &str) -> bool {
-    let path = match std::path::Path::new(path).canonicalize() {
-        Ok(p) => p,
-        Err(_) => return false,
-    };
-    let music_path = match std::path::Path::new(music_folder).canonicalize() {
-        Ok(p) => p,
-        Err(_) => return false,
-    };
-    path.starts_with(&music_path)
-}
-
 #[tauri::command]
 pub async fn get_audio_file(
     db: State<'_, Database>,
@@ -61,7 +50,7 @@ pub async fn get_audio_file(
         Err(e) => return Ok(ApiResponse::err(e)),
     };
     
-    if !is_path_in_music_folder(&path, &music_folder) {
+    if !path_validator::is_path_in_music_folder(&path, &music_folder) {
         return Ok(ApiResponse::err("Access denied: path outside music folder"));
     }
     
@@ -85,7 +74,7 @@ pub async fn check_file_exists(
         Err(e) => return Ok(ApiResponse::err(e)),
     };
     
-    if !is_path_in_music_folder(&path, &music_folder) {
+    if !path_validator::is_path_in_music_folder(&path, &music_folder) {
         return Ok(ApiResponse::err("Access denied: path outside music folder"));
     }
     

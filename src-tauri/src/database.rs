@@ -135,6 +135,24 @@ impl Database {
         Ok(paths)
     }
 
+    /// 获取喜欢的歌曲（通过 JOIN 查询）
+    pub async fn get_liked_songs(&self) -> Result<Vec<Song>, DatabaseError> {
+        let songs = sqlx::query_as::<_, Song>(
+            r#"
+            SELECT 
+                s.*,
+                1 as is_liked
+            FROM songs s
+            INNER JOIN liked_songs l ON s.path = l.path
+            ORDER BY s.title
+            "#,
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(songs)
+    }
+
     /// 切换喜欢状态
     pub async fn toggle_like(&self, path: &str, liked: bool) -> Result<(), DatabaseError> {
         if liked {
@@ -155,6 +173,14 @@ impl Database {
         }
 
         Ok(())
+    }
+
+    /// 清空所有喜欢
+    pub async fn clear_liked_songs(&self) -> Result<u64, DatabaseError> {
+        let result = sqlx::query("DELETE FROM liked_songs")
+            .execute(&self.pool)
+            .await?;
+        Ok(result.rows_affected())
     }
 
     /// 插入或更新歌曲 - 返回 (成功数, 失败数)

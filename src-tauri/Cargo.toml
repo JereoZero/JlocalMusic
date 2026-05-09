@@ -1,6 +1,6 @@
 [package]
 name = "jlocal"
-version = "0.7.11"
+version = "0.7.12"
 edition = "2021"
 
 [dependencies]
@@ -45,17 +45,11 @@ uuid = { version = "1.0", features = ["v4", "serde"] }
 # 时间处理
 chrono = { version = "0.4", features = ["serde"] }
 
-# 配置管理
-config = "0.14"
-
 # 类型转换
 dirs = "5.0"
 
 # Base64 编码
 base64 = "0.22"
-
-# 正则表达式
-regex = "1.10"
 
 # 编码检测和转换
 chardetng = "0.1"

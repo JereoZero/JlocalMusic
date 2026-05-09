@@ -29,7 +29,7 @@ export default function HistoryView() {
     }))
   )
 
-  const loadPlayHistory = async () => {
+  const loadPlayHistory = useCallback(async () => {
     setIsLoading(true)
     try {
       const data = await api.getPlayHistory(100)
@@ -39,11 +39,11 @@ export default function HistoryView() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     loadPlayHistory()
-  }, [])
+  }, [loadPlayHistory])
 
   const filteredHistory = useMemo(() => {
     const visibleHistory = playHistory.filter((item) => !hiddenPaths.has(item.path))

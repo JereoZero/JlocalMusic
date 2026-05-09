@@ -127,6 +127,25 @@ npm run lint         # Linting
 
 ## 📝 Changelog
 
+### v0.7.12
+> 🔥 Code review release — 15 bugs fixed (3 P0 critical, 6 P1 important, 6 P2 quality)
+
+- 🐛 **SongListHeader visible** — Removed `hidden` class, header columns now show
+- 🐛 **Play history fix** — `finalizePlayHistory` now awaited properly
+- 🛡️ **CSP security** — Replaced null CSP with restrict-to-self policy
+- 🎨 **Album color** — colorthief Median Cut replaces single-pixel sampling
+- ⚡ **Batch covers** — `useSongCovers` uses single RPC instead of N sequential calls
+- 📦 **Type dedup** — `ViewType`/`PlayMode` unified under `types.ts`
+- ⚙️ **Config dedup** — `PLAYER_CONFIG` merged, `progressInterval` fixed
+- 🪟 **Resizable window** — min 900×600, previously fixed 1200×750
+- 🔧 **Rust path validator** — Duplicate `is_path_in_music_folder` removed
+- 🧹 **Unused deps** — `clsx`, `tailwind-merge`, `config`, `regex` cleaned
+- 🔧 **Type cast hack** — `SortableItem` now includes `path: string`
+- 🔁 **HistoryView stable ref** — `loadPlayHistory` wrapped in `useCallback`
+- ⏱️ **Volume debounce** — 100ms debounce for `setVolume` calls
+- 🚀 **getLikedSongs SQL JOIN** — Backend query replaces client-side filter
+- 🗑️ **Batch unlike** — `clear_liked_songs` RPC eliminates per-song loop
+
 ### v0.7.11
 > 🔧 CI build fix + BUGS.md archive — 21 CODEX items compacted to summary
 

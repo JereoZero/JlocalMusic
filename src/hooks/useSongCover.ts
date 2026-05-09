@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { LRUCache } from 'lru-cache'
 import api from '../api'
+import { APP_CONFIG } from '../config'
 
 const coverCache = new LRUCache<string, string>({
-  max: 500,
-  ttl: 1000 * 60 * 60,
+  max: APP_CONFIG.player.coverCacheSize,
+  ttl: APP_CONFIG.player.coverCacheTTL,
 })
 
 const pendingRequests = new Map<string, Promise<string | null>>()
@@ -116,26 +117,24 @@ export function useSongCovers(paths: string[]) {
 
     setIsLoading(true)
 
-    Promise.all(
-      uncachedPaths.map((path) =>
-        api
-          .getSongCoverFull(path)
-          .catch(() => null)
-          .then((cover) => {
-            if (cover) {
-              coverCache.set(path, cover)
-            }
-            return { path, cover }
-          })
-      )
-    ).then((results) => {
-      if (cancelled) return
-      results.forEach(({ path, cover }) => {
-        cachedCovers.set(path, cover)
+    api
+      .getSongCoversBatch(uncachedPaths)
+      .then((batchResult) => {
+        if (cancelled) return
+        batchResult.forEach((cover, path) => {
+          if (cover) {
+            coverCache.set(path, cover)
+          }
+          cachedCovers.set(path, cover)
+        })
+        setCovers(new Map(cachedCovers))
+        setIsLoading(false)
       })
-      setCovers(new Map(cachedCovers))
-      setIsLoading(false)
-    })
+      .catch(() => {
+        if (cancelled) return
+        setCovers(new Map(cachedCovers))
+        setIsLoading(false)
+      })
 
     return () => {
       cancelled = true

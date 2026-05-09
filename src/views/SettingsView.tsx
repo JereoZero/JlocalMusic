@@ -147,10 +147,7 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
       await api.clearPlayHistory()
 
       // 清空喜欢列表
-      const likedPaths = await api.getLikedPaths()
-      for (const path of likedPaths) {
-        await api.toggleLike(path, false)
-      }
+      await api.clearLikedSongs()
 
       // 清空隐藏列表
       await api.clearHiddenSongs()
@@ -562,6 +559,62 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                   版本历史
                 </h3>
                 <div className="space-y-4 text-sm max-h-80 overflow-y-auto">
+                  {/* v0.7.12 */}
+                  <div className="border-l-2 pl-4" style={{ borderLeftColor: primaryColor }}>
+                    <p className="text-white font-medium">v0.7.12</p>
+                    <p className="text-xs text-gray-500 mb-2">2026-05-09</p>
+                    <ul className="space-y-1 text-gray-400">
+                      <li>🐛 SongListHeader 表头可见：移除 hidden 类</li>
+                      <li>🐛 播放历史修复：finalizePlayHistory 正确 await</li>
+                      <li>🛡️ CSP 安全策略：从 null 改为限制性策略</li>
+                      <li>🎨 专辑色提取：colorthief Median Cut 替代单像素</li>
+                      <li>⚡ 批量封面请求：useSongCovers 使用单次 RPC</li>
+                      <li>📦 类型去重：ViewType/PlayMode 统一在 types.ts</li>
+                      <li>⚙️ 配置去重：PLAYER_CONFIG 合并，progressInterval 修复</li>
+                      <li>🪟 窗口可调整大小：最小 900×600</li>
+                      <li>🔧 Rust 路径验证去重：settings.rs 重复函数删除</li>
+                      <li>🧹 清理未使用依赖：clsx/tailwind-merge/config/regex</li>
+                      <li>🔧 类型转换 hack 修复：SortableItem 添加 path 字段</li>
+                      <li>🔁 HistoryView 引用稳定：loadPlayHistory useCallback</li>
+                      <li>⏱️ 音量防抖：100ms 防抖减少后端调用</li>
+                      <li>🚀 getLikedSongs SQL JOIN：后端查询替代客户端过滤</li>
+                      <li>🗑️ 批量取消喜欢：clear_liked_songs RPC</li>
+                    </ul>
+                  </div>
+                  {/* v0.7.11 */}
+                  <div className="border-l-2 pl-4" style={{ borderLeftColor: hexToRgba(primaryColor, 0.5) }}>
+                    <p className="text-white font-medium">v0.7.11</p>
+                    <p className="text-xs text-gray-500 mb-2">2026-05-09</p>
+                    <ul className="space-y-1 text-gray-400">
+                      <li>🔧 CI 构建修复：npm install --legacy-peer-deps</li>
+                      <li>📝 BUGS.md 归档：21 个 CODEX 精简为汇总表</li>
+                    </ul>
+                  </div>
+                  {/* v0.7.10 */}
+                  <div className="border-l-2 pl-4" style={{ borderLeftColor: hexToRgba(primaryColor, 0.3) }}>
+                    <p className="text-white font-medium">v0.7.10</p>
+                    <p className="text-xs text-gray-500 mb-2">2026-05-09</p>
+                    <ul className="space-y-1 text-gray-400">
+                      <li>🎯 同步格式探测：入队前验证可解码性</li>
+                      <li>📁 启动持久化：首次启动 music_folder 写入 DB</li>
+                      <li>🛡️ 歌词路径保护：配置缺失/越权返回错误</li>
+                      <li>🖼️ 封面缓存保护：重新扫描保留已有封面</li>
+                    </ul>
+                  </div>
+                  {/* v0.7.9 */}
+                  <div className="border-l-2 pl-4" style={{ borderLeftColor: hexToRgba(primaryColor, 0.2) }}>
+                    <p className="text-white font-medium">v0.7.9</p>
+                    <p className="text-xs text-gray-500 mb-2">2026-05-09</p>
+                    <ul className="space-y-1 text-gray-400">
+                      <li>🔧 日志级别修正：player.rs 错误场景 info→warn/error</li>
+                      <li>🔇 扫描日志降噪：每首歌降为 debug 级别</li>
+                      <li>📦 Vec 预分配：扫描器 with_capacity 减少重分配</li>
+                      <li>⚛️ useCallback 视图切换：避免 Sidebar 重渲染</li>
+                      <li>🏪 useShallow selector：5 组件优化避免连锁重渲染</li>
+                      <li>💾 排序状态持久化：sessionStorage 跨视图保持</li>
+                      <li>🎵 DSD 播放支持：从不可播放列表移除</li>
+                    </ul>
+                  </div>
                   {/* v0.7.8 */}
                   <div className="border-l-2 pl-4" style={{ borderLeftColor: primaryColor }}>
                     <p className="text-white font-medium">v0.7.8</p>
