@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useShallow } from 'zustand/shallow'
 import { Music } from 'lucide-react'
 import { usePlayerStore } from '../stores/playerStore'
 import { useLibraryStore } from '../stores/libraryStore'
@@ -19,7 +20,14 @@ export default function HistoryView() {
   const bgColor = useMainBgColor()
 
   const { currentSong, isPlaying, playSong } = usePlayerStore()
-  const { likedPaths, hiddenPaths, toggleLike, toggleHidden } = useLibraryStore()
+  const { likedPaths, hiddenPaths, toggleLike, toggleHidden } = useLibraryStore(
+  useShallow(s => ({
+    likedPaths: s.likedPaths,
+    hiddenPaths: s.hiddenPaths,
+    toggleLike: s.toggleLike,
+    toggleHidden: s.toggleHidden,
+  }))
+)
 
   const loadPlayHistory = async () => {
     setIsLoading(true)
@@ -52,7 +60,7 @@ export default function HistoryView() {
     albumSort,
     handleTitleSort,
     handleAlbumSort,
-  } = useSongSort(filteredHistory)
+  } = useSongSort(filteredHistory, undefined, 'history')
 
   return (
     <div className="h-full flex flex-col transition-colors duration-700 select-none" style={{ backgroundColor: bgColor, transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)' }}>

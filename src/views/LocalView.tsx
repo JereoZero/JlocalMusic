@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
+import { useShallow } from 'zustand/shallow'
 import { usePlayerStore } from '../stores/playerStore'
 import { useLibraryStore } from '../stores/libraryStore'
 import SongList from '../components/SongList'
@@ -9,7 +10,17 @@ import { filterSongs } from '../utils/songUtils'
 import type { Song } from '../types'
 
 export default function LocalView() {
-  const { songs, isLoading, refreshAll, likedPaths, hiddenPaths, toggleLike, toggleHidden } = useLibraryStore()
+  const { songs, isLoading, refreshAll, likedPaths, hiddenPaths, toggleLike, toggleHidden } = useLibraryStore(
+  useShallow(s => ({
+    songs: s.songs,
+    isLoading: s.isLoading,
+    likedPaths: s.likedPaths,
+    hiddenPaths: s.hiddenPaths,
+    refreshAll: s.refreshAll,
+    toggleLike: s.toggleLike,
+    toggleHidden: s.toggleHidden,
+  }))
+)
   const { currentSong, isPlaying, playSong } = usePlayerStore()
   const [searchInput, setSearchInput] = useState('')
   const bgColor = useMainBgColor()
@@ -35,7 +46,7 @@ export default function LocalView() {
     handleTitleSort,
     handleAlbumSort,
     handleLikeSort,
-  } = useSongSort(filteredSongs, likedPaths)
+  } = useSongSort(filteredSongs, likedPaths, 'local')
 
   return (
     <div className="h-full flex flex-col transition-colors duration-700 select-none" style={{ backgroundColor: bgColor, transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)' }}>
@@ -65,7 +76,7 @@ export default function LocalView() {
           hiddenPaths={hiddenPaths}
           onPlay={handlePlaySong}
           onToggleLike={toggleLike}
-          onToggleHidden={(path) => toggleHidden(path)}
+          onToggleHidden={toggleHidden}
           emptyTitle="暂无歌曲"
           emptyDescription="请添加音乐文件夹"
           source="local"

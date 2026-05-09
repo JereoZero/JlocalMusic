@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Toaster, toast } from 'sonner'
 import { useHotkeys } from 'react-hotkeys-hook'
 import Sidebar from './components/Sidebar'
@@ -22,6 +22,7 @@ import type { ViewType } from './types'
 function AppContent() {
   const [currentView, setCurrentView] = useState<ViewType>('liked')
   const [previousView, setPreviousView] = useState<ViewType>('liked')
+  const previousViewRef = useRef<ViewType>('liked')
   const [showLyrics, setShowLyrics] = useState(false)
 
   const { 
@@ -95,31 +96,31 @@ function AppContent() {
   useHotkeys('up', () => setVolume(Math.min(1, volume + 0.1)), { preventDefault: true, enableOnFormTags: false }, [volume, setVolume])
   useHotkeys('down', () => setVolume(Math.max(0, volume - 0.1)), { preventDefault: true, enableOnFormTags: false }, [volume, setVolume])
 
-  const handleViewChange = (view: ViewType) => {
-    if (showLyrics) {
-      setShowLyrics(false)
-    }
+  const handleViewChange = useCallback((view: ViewType) => {
+    setShowLyrics(false)
     if (view !== 'settings') {
       setPreviousView(view)
+      previousViewRef.current = view
     }
     setCurrentView(view)
-  }
+  }, [])
 
-  const handleToggleSettings = () => {
-    if (showLyrics) {
-      setShowLyrics(false)
-    }
-    if (currentView === 'settings') {
-      setCurrentView(previousView)
-    } else {
-      setPreviousView(currentView)
-      setCurrentView('settings')
-    }
-  }
+  const handleToggleSettings = useCallback(() => {
+    setShowLyrics(false)
+    setCurrentView(prev => {
+      if (prev === 'settings') {
+        return previousViewRef.current
+      } else {
+        previousViewRef.current = prev
+        setPreviousView(prev)
+        return 'settings'
+      }
+    })
+  }, [])
 
-  const handleToggleLyrics = () => {
-    setShowLyrics(!showLyrics)
-  }
+  const handleToggleLyrics = useCallback(() => {
+    setShowLyrics(prev => !prev)
+  }, [])
 
   const renderView = () => {
     if (showLyrics) {

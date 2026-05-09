@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import React from 'react'
 
@@ -12,6 +12,23 @@ interface SortableItem {
   album?: string
 }
 
+const SORT_KEY = 'jlocal_sort_'
+
+function readStoredSort<T extends string>(key: string, fallback: T): T {
+  try {
+    const stored = sessionStorage.getItem(SORT_KEY + key)
+    return (stored as T) || fallback
+  } catch {
+    return fallback
+  }
+}
+
+function writeStoredSort(key: string, value: string) {
+  try {
+    sessionStorage.setItem(SORT_KEY + key, value)
+  } catch { /* noop */ }
+}
+
 export function getSortIcon(sortType: string): React.ReactNode {
   if (sortType === 'default') return React.createElement(ArrowUpDown, { size: 14, className: 'opacity-30' })
   if (sortType.includes('asc')) return React.createElement(ArrowUp, { size: 14 })
@@ -20,35 +37,64 @@ export function getSortIcon(sortType: string): React.ReactNode {
 
 export function useSongSort<T extends SortableItem>(
   items: T[],
-  likedPaths?: Set<string>
+  likedPaths?: Set<string>,
+  viewKey?: string,
 ) {
-  const [titleSort, setTitleSort] = useState<TitleSortType>('default')
-  const [albumSort, setAlbumSort] = useState<AlbumSortType>('default')
-  const [likeSort, setLikeSort] = useState<LikeSortType>('default')
+  const [titleSort, setTitleSortState] = useState<TitleSortType>(() =>
+    viewKey ? readStoredSort(`${viewKey}_title`, 'default') : 'default'
+  )
+  const [albumSort, setAlbumSortState] = useState<AlbumSortType>(() =>
+    viewKey ? readStoredSort(`${viewKey}_album`, 'default') : 'default'
+  )
+  const [likeSort, setLikeSortState] = useState<LikeSortType>(() =>
+    viewKey ? readStoredSort(`${viewKey}_like`, 'default') : 'default'
+  )
 
-  const handleTitleSort = () => {
+  const persistSort = useCallback((key: string, value: string) => {
+    if (viewKey) writeStoredSort(`${viewKey}_${key}`, value)
+  }, [viewKey])
+
+  const setTitleSort = useCallback((value: TitleSortType) => {
+    setTitleSortState(value)
+    persistSort('title', value)
+  }, [persistSort])
+
+  const setAlbumSort = useCallback((value: AlbumSortType) => {
+    setAlbumSortState(value)
+    persistSort('album', value)
+  }, [persistSort])
+
+  const setLikeSort = useCallback((value: LikeSortType) => {
+    setLikeSortState(value)
+    persistSort('like', value)
+  }, [persistSort])
+
+  const handleTitleSort = useCallback(() => {
     const order: TitleSortType[] = ['default', 'title-asc', 'title-desc', 'artist-asc', 'artist-desc']
     const currentIndex = order.indexOf(titleSort)
-    setTitleSort(order[(currentIndex + 1) % order.length])
+    const nextSort = order[(currentIndex + 1) % order.length]
+    setTitleSort(nextSort)
     setAlbumSort('default')
     setLikeSort('default')
-  }
+  }, [titleSort, setTitleSort, setAlbumSort, setLikeSort])
 
-  const handleAlbumSort = () => {
+  const handleAlbumSort = useCallback(() => {
     const order: AlbumSortType[] = ['default', 'album-asc', 'album-desc']
     const currentIndex = order.indexOf(albumSort)
-    setAlbumSort(order[(currentIndex + 1) % order.length])
+    const nextSort = order[(currentIndex + 1) % order.length]
+    setAlbumSort(nextSort)
     setTitleSort('default')
     setLikeSort('default')
-  }
+  }, [albumSort, setAlbumSort, setTitleSort, setLikeSort])
 
-  const handleLikeSort = () => {
+  const handleLikeSort = useCallback(() => {
     const order: LikeSortType[] = ['default', 'liked-first', 'unliked-first']
     const currentIndex = order.indexOf(likeSort)
-    setLikeSort(order[(currentIndex + 1) % order.length])
+    const nextSort = order[(currentIndex + 1) % order.length]
+    setLikeSort(nextSort)
     setTitleSort('default')
     setAlbumSort('default')
-  }
+  }, [likeSort, setLikeSort, setTitleSort, setAlbumSort])
 
   const sortedItems = useMemo(() => {
     const result = [...items]

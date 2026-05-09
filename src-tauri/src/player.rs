@@ -7,7 +7,7 @@ use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter};
 use std::sync::mpsc;
 use tokio::sync::RwLock;
-use tracing::info;
+use tracing::{info, warn, error};
 use ts_rs::TS;
 use crate::flac_decoder::SymphoniaDecoder;
 use crate::constants::is_symphonia_format;
@@ -74,7 +74,7 @@ impl AudioPlayer {
         let (_stream, stream_handle) = match OutputStream::try_default() {
             Ok(s) => s,
             Err(e) => {
-                info!("Failed to create output stream: {}", e);
+                warn!("Failed to create output stream: {}", e);
                 return;
             }
         };
@@ -97,7 +97,7 @@ impl AudioPlayer {
                             }
                             
                             if !Path::new(&path).exists() {
-                                info!("File not found: {}", path);
+                                warn!("File not found: {}", path);
                                 continue;
                             }
                             
@@ -107,7 +107,7 @@ impl AudioPlayer {
                             let new_sink = match Sink::try_new(&stream_handle) {
                                 Ok(s) => s,
                                 Err(e) => {
-                                    info!("Failed to create sink: {}", e);
+                                    error!("Failed to create sink: {}", e);
                                     continue;
                                 }
                             };
@@ -133,7 +133,7 @@ impl AudioPlayer {
                                         info!("Playing with Symphonia: {}", path);
                                     }
                                     Err(e) => {
-                                        info!("Failed to decode: {}", e);
+                                        warn!("Failed to decode with Symphonia: {}", e);
                                         continue;
                                     }
                                 }
@@ -141,7 +141,7 @@ impl AudioPlayer {
                                 let file = match File::open(&path) {
                                     Ok(f) => f,
                                     Err(e) => {
-                                        info!("Failed to open file: {}", e);
+                                        warn!("Failed to open file: {}", e);
                                         continue;
                                     }
                                 };
@@ -149,7 +149,7 @@ impl AudioPlayer {
                                 let source = match Decoder::new(BufReader::new(file)) {
                                     Ok(s) => s,
                                     Err(e) => {
-                                        info!("Failed to decode: {}", e);
+                                        warn!("Failed to decode with rodio: {}", e);
                                         continue;
                                     }
                                 };
@@ -232,7 +232,7 @@ impl AudioPlayer {
                                         info!("Seeked to {:.1}s", time);
                                     }
                                     Err(e) => {
-                                        info!("Seek failed: {:?}", e);
+                                        warn!("Seek failed: {:?}", e);
                                     }
                                 }
                             }

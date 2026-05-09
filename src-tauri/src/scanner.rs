@@ -7,7 +7,7 @@ use chrono::Utc;
 use serde::Serialize;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
-use tracing::{info, warn};
+use tracing::{info, debug, warn};
 use ts_rs::TS;
 use uuid::Uuid;
 use walkdir::WalkDir;
@@ -36,9 +36,9 @@ impl FolderScanner {
     pub async fn scan(&self, folder_path: &str) -> anyhow::Result<ScanResult> {
         info!("Starting folder scan: {}", folder_path);
 
-        let mut normal_songs = Vec::new();
-        let mut encrypted_songs = Vec::new();
-        let mut metadata_errors = Vec::new();
+        let mut normal_songs = Vec::with_capacity(500);
+        let mut encrypted_songs = Vec::with_capacity(50);
+        let mut metadata_errors = Vec::with_capacity(20);
         let mut scanned = 0usize;
         let mut errors = 0usize;
         let mut visited: HashSet<PathBuf> = HashSet::new();
@@ -79,7 +79,7 @@ impl FolderScanner {
                 
                 if is_supported {
                     // 支持的格式 - 正常处理
-                    info!("Processing supported file: {:?} ({})", path.file_name(), ext_lower);
+                    debug!("Processing supported file: {:?} ({})", path.file_name(), ext_lower);
                     match self.process_normal_file(path, &extractor, &mut metadata_errors).await {
                         Some(song) => {
                             normal_songs.push(song);

@@ -8,7 +8,7 @@ import { useThemeStore } from '../stores/themeStore'
 import { AUDIO_FORMATS } from '../constants'
 import type { QueueSource } from '../stores/playQueueStore'
 
-const UNSUPPORTED_EXTENSIONS = new Set(['wma', 'ape', 'dsd', 'oga'])
+const UNSUPPORTED_EXTENSIONS = new Set(['wma', 'ape', 'oga'])
 const SUPPORTED_FORMATS: Set<string> = new Set(AUDIO_FORMATS.normal.filter(f => !UNSUPPORTED_EXTENSIONS.has(f)))
 
 function isSupportedFormat(path: string): boolean {

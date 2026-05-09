@@ -3,7 +3,7 @@ use serde::Serialize;
 use sqlx::{sqlite::SqlitePoolOptions, Pool, Sqlite};
 use tauri::AppHandle;
 use ts_rs::TS;
-use tracing::{error, info};
+use tracing::{error, info, debug};
 
 /// 歌曲数据结构
 #[derive(Debug, Clone, Serialize, sqlx::FromRow, TS)]
@@ -245,7 +245,7 @@ impl Database {
         .execute(&self.pool)
         .await?;
 
-        info!(
+        debug!(
             "Recorded play history: {} duration={}s completed={}",
             path, duration, completed
         );

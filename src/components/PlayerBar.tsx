@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import { useShallow } from 'zustand/shallow'
 import { usePlayerStore } from '../stores/playerStore'
 import { useLibraryStore } from '../stores/libraryStore'
 import { usePlayerSettingsStore, usePlayQueueStore } from '../stores/playQueueStore'
@@ -23,7 +24,14 @@ export default function PlayerBar({ onToggleLyrics }: { onToggleLyrics?: () => v
     setVolume 
   } = usePlayerStore()
   
-  const { likedPaths, hiddenPaths, toggleLike, toggleHidden } = useLibraryStore()
+  const { likedPaths, hiddenPaths, toggleLike, toggleHidden } = useLibraryStore(
+  useShallow(s => ({
+    likedPaths: s.likedPaths,
+    hiddenPaths: s.hiddenPaths,
+    toggleLike: s.toggleLike,
+    toggleHidden: s.toggleHidden,
+  }))
+)
   const { settings, setPlayMode } = usePlayerSettingsStore()
   const { shuffleQueue, unshuffleQueue } = usePlayQueueStore()
   const { getPrimaryColor } = useThemeStore()

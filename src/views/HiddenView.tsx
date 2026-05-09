@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
+import { useShallow } from 'zustand/shallow'
 import { EyeOff } from 'lucide-react'
 import { usePlayerStore } from '../stores/playerStore'
 import { useLibraryStore } from '../stores/libraryStore'
@@ -14,7 +15,17 @@ export default function HiddenView() {
   const bgColor = useMainBgColor()
 
   const { currentSong, isPlaying, playSong } = usePlayerStore()
-  const { songs, isLoading, refreshAll, likedPaths, hiddenPaths, toggleLike, toggleHidden } = useLibraryStore()
+  const { songs, isLoading, refreshAll, likedPaths, hiddenPaths, toggleLike, toggleHidden } = useLibraryStore(
+  useShallow(s => ({
+    songs: s.songs,
+    isLoading: s.isLoading,
+    likedPaths: s.likedPaths,
+    hiddenPaths: s.hiddenPaths,
+    refreshAll: s.refreshAll,
+    toggleLike: s.toggleLike,
+    toggleHidden: s.toggleHidden,
+  }))
+)
 
   const hiddenSongs = useMemo(() => {
     return songs.filter(song => hiddenPaths.has(song.path))
@@ -34,7 +45,7 @@ export default function HiddenView() {
     albumSort,
     handleTitleSort,
     handleAlbumSort,
-  } = useSongSort(filteredSongs)
+  } = useSongSort(filteredSongs, undefined, 'hidden')
 
   return (
     <div className="h-full flex flex-col transition-colors duration-700 select-none" style={{ backgroundColor: bgColor, transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)' }}>

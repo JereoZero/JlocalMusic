@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
+import { useShallow } from 'zustand/shallow'
 import { Heart, Play } from 'lucide-react'
 import { usePlayerStore } from '../stores/playerStore'
 import { useLibraryStore } from '../stores/libraryStore'
@@ -16,7 +17,17 @@ export default function LikedView() {
   const bgColor = useMainBgColor()
 
   const { currentSong, isPlaying, playSong } = usePlayerStore()
-  const { songs, isLoading, refreshAll, likedPaths, hiddenPaths, toggleLike, toggleHidden } = useLibraryStore()
+  const { songs, isLoading, refreshAll, likedPaths, hiddenPaths, toggleLike, toggleHidden } = useLibraryStore(
+  useShallow(s => ({
+    songs: s.songs,
+    isLoading: s.isLoading,
+    likedPaths: s.likedPaths,
+    hiddenPaths: s.hiddenPaths,
+    refreshAll: s.refreshAll,
+    toggleLike: s.toggleLike,
+    toggleHidden: s.toggleHidden,
+  }))
+)
 
   const likedSongs = useMemo(() => {
     return songs.filter(song => likedPaths.has(song.path) && !hiddenPaths.has(song.path))
@@ -32,7 +43,7 @@ export default function LikedView() {
     albumSort,
     handleTitleSort,
     handleAlbumSort,
-  } = useSongSort(filteredSongs)
+  } = useSongSort(filteredSongs, undefined, 'liked')
 
   const handlePlaySong = useCallback((song: Song) => {
     playSong(song, likedSongs, 'liked')
@@ -92,7 +103,7 @@ export default function LikedView() {
           hiddenPaths={hiddenPaths}
           onPlay={handlePlaySong}
           onToggleLike={toggleLike}
-          onToggleHidden={(path) => toggleHidden(path)}
+          onToggleHidden={toggleHidden}
           emptyIcon={<Heart size={48} className="mb-4 opacity-50" />}
           emptyTitle="暂无喜欢的歌曲"
           emptyDescription="点击歌曲旁边的爱心图标添加到我喜欢"
