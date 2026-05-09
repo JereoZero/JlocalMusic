@@ -38,12 +38,12 @@ pub async fn get_lyrics(
     let db = app.state::<crate::database::Database>();
     let music_folder = match db.get_setting("music_folder").await {
         Ok(Some(folder)) => folder,
-        Ok(None) => return Ok(ApiResponse::ok(None)),
+        Ok(None) => return Ok(ApiResponse::err("Music folder not configured")),
         Err(e) => return Ok(ApiResponse::err(e.to_string())),
     };
     
     if !crate::path_validator::is_path_in_music_folder(&path, &music_folder) {
-        return Ok(ApiResponse::ok(None));
+        return Ok(ApiResponse::err("Access denied: path outside music folder"));
     }
     
     let audio_path = Path::new(&path);

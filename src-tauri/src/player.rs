@@ -12,6 +12,37 @@ use ts_rs::TS;
 use crate::flac_decoder::SymphoniaDecoder;
 use crate::constants::is_symphonia_format;
 
+pub fn probe_audio_file(path: &str) -> Result<(), String> {
+    let file = File::open(path).map_err(|e| format!("Cannot open file: {}", e))?;
+    let path_lower = path.to_lowercase();
+
+    if is_symphonia_format(&path_lower) {
+        use symphonia::core::io::MediaSourceStream;
+        use symphonia::core::probe::Hint;
+        use symphonia::core::formats::FormatOptions;
+        use symphonia::core::meta::MetadataOptions;
+
+        let mss = MediaSourceStream::new(Box::new(file), Default::default());
+        let mut hint = Hint::new();
+        if let Some(ext) = Path::new(path).extension().and_then(|e| e.to_str()) {
+            hint.with_extension(ext);
+        }
+
+        let format_opts = FormatOptions::default();
+        let metadata_opts = MetadataOptions::default();
+
+        let _probed = symphonia::default::get_probe()
+            .format(&hint, mss, &format_opts, &metadata_opts)
+            .map_err(|e| format!("Unsupported or corrupt audio format: {}", e))?;
+    } else {
+        let reader = BufReader::new(file);
+        let _source = Decoder::new(reader)
+            .map_err(|e| format!("Cannot decode audio file: {}", e))?;
+    }
+
+    Ok(())
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, TS)]
 #[ts(export)]
 pub enum PlaybackState {

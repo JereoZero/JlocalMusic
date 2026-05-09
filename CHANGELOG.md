@@ -2,6 +2,31 @@
 
 All notable changes to JlocalMusic will be documented in this file.
 
+## v0.7.10 (2026-05-09)
+
+### P1 Bug Fixes (CODEX Final Round)
+- 🎯 **Synchronous audio format probe** (CODEX-1) — `probe_audio_file()` verifies file is decodable via Symphonia/Rodio *before* queuing to player thread; corrupt/unsupported files now return immediate error to frontend
+- 📁 **Startup music_folder persistence** (CODEX-2) — auto-scan on first launch now creates default directory and writes `music_folder` to DB, preventing "Music folder not configured" errors
+- 🛡️ **Lyrics path protection** (CODEX-7) — `get_lyrics` returns proper errors for missing config and path violations instead of silent `Ok(None)`
+
+### P3 Bug Fixes
+- 🖼️ **Cover cache COALESCE** (CODEX-17) — `upsert_songs` now preserves existing cover art when re-scan yields no new cover
+
+### Documentation
+- 📝 BUGS.md fully updated — 21/23 CODEX items resolved (19 + 2 deferred for E2E/Windows)
+- 📝 All docs synced to v0.7.10 (README, CHANGELOG, DEVELOPMENT_LOG)
+
+### Previous CODEX Summary (v0.7.9 cumulative)
+> Full CODEX fix history: CODEX-3~19, 21~23 resolved across 3 review batches.
+> 2 deferred: CODEX-20 (E2E tests, low priority), Windows-only #3/#4.
+
+### Testing & Verification
+- 🧪 142 tests (11 files) — 100% pass rate
+- ✅ TypeScript `tsc --noEmit` — 0 errors
+- ✅ ESLint `--max-warnings 0` — 0 warnings
+
+---
+
 ## v0.7.9 (2026-05-09)
 
 ### Rust Backend Optimizations

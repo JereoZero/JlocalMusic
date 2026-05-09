@@ -64,11 +64,13 @@ fn main() {
                 let music_folder: String = match db.get_setting("music_folder").await {
                     Ok(Some(folder)) if !folder.is_empty() => folder,
                     _ => {
-                        // 使用应用数据目录中的 jmusic-file 文件夹
                         match app_handle.path().app_data_dir() {
                             Ok(data_dir) => {
                                 let music_dir = data_dir.join("jmusic-file");
-                                music_dir.to_string_lossy().to_string()
+                                let folder = music_dir.to_string_lossy().to_string();
+                                let _ = std::fs::create_dir_all(&music_dir);
+                                let _ = db.set_setting("music_folder", &folder).await;
+                                folder
                             }
                             Err(_) => String::new(),
                         }

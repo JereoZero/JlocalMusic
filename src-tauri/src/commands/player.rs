@@ -1,7 +1,7 @@
 use tauri::State;
 
 use crate::database::Database;
-use crate::player::AudioPlayer;
+use crate::player::{AudioPlayer, probe_audio_file};
 use crate::metadata::MetadataExtractor;
 use crate::path_validator::{is_path_in_music_folder, validate_audio_extension};
 use super::common::ApiResponse;
@@ -30,6 +30,10 @@ pub async fn play_song(
 
     if !std::path::Path::new(&path).exists() {
         return Ok(ApiResponse::err("File not found"));
+    }
+
+    if let Err(e) = probe_audio_file(&path) {
+        return Ok(ApiResponse::err(e));
     }
 
     match player.play(&path).await {
