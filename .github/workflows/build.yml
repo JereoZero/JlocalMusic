@@ -46,7 +46,7 @@ jobs:
           brew install create-dmg
 
       - name: Install frontend dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
