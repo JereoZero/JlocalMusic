@@ -114,6 +114,19 @@ npm run lint        # 代码检查
 
 ## 📝 版本历史
 
+### v0.7.9
+> ⚡ 性能与代码质量优化 — Rust 和 React 共 9 项改进
+
+- 🔧 **日志级别修正** — player.rs 7 处错误场景 `info!` → `warn!`/`error!`
+- 🔇 **扫描日志降噪** — 每首歌扫描日志降为 `debug!`
+- 📦 **Vec 容量预分配** — 扫描器 Vector `with_capacity` 减少重分配
+- ⚛️ **useCallback memo 化** — App.tsx 视图切换函数避免 Sidebar 重渲染
+- 🧹 **内联箭头清理** — LocalView/LikedView 移除不必要的包裹
+- 🏪 **useShallow selector** — 5 组件优化避免连锁重渲染
+- 💾 **排序状态持久化** — sessionStorage 保存排序偏好，切换视图不丢失
+- 🎵 **DSD 播放支持** — 从不可播放列表移除（Symphonia 已原生支持）
+- 🧪 **142 测试/11 文件** — 全通过，cargo check + tsc 零错误
+
 ### v0.7.8
 > 🎨 主题系统重构 + 6 项大规模重构替换，净减少约 216 行代码
 

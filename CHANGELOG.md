@@ -2,6 +2,29 @@
 
 All notable changes to JlocalMusic will be documented in this file.
 
+## v0.7.9 (2026-05-09)
+
+### Rust Backend Optimizations
+- 🔧 **Log level correction** — 7 error paths in `player.rs` changed from `info!` to `warn!`/`error!` for proper severity classification
+- 🔇 **Scan log noise** — per-song `info!` downgraded to `debug!` in scanner, prevents terminal flooding on large libraries
+- 🔇 **Play history log** — `add_play_history()` `info!` downgraded to `debug!`
+- 📦 **Vec pre-allocation** — scanner vectors use `with_capacity(500/50/20)` to reduce memory reallocations
+
+### React Frontend Optimizations
+- ⚛️ **useCallback for view handlers** — `handleViewChange`/`handleToggleSettings`/`handleToggleLyrics` in App.tsx now memoized, preventing unnecessary Sidebar re-renders
+- 🧹 **Inline arrow cleanup** — removed redundant `(path) => toggleHidden(path)` wrapping in LocalView/LikedView
+- 🏪 **useShallow selectors** — 5 components (LocalView, LikedView, HiddenView, HistoryView, PlayerBar) optimized with `useShallow` to avoid cascade re-renders from store signal changes
+- 💾 **Sort persistence** — sort state saved to `sessionStorage` via new `viewKey` parameter, survives view switches
+- 🎵 **DSD playback** — removed `dsd` from UNSUPPORTED_EXTENSIONS in SongList (SymphoniaDecoder already handles it)
+
+### Testing & Verification
+- 🧪 142 tests (11 files) — 100% pass rate
+- ✅ TypeScript `tsc --noEmit` — 0 errors
+- ✅ Rust `cargo check` — clean
+- 📊 12 files changed, +161 / -65 lines
+
+---
+
 ## v0.7.8 (2026-05-08)
 
 ### Theme System

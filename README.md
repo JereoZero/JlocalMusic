@@ -127,6 +127,19 @@ npm run lint         # Linting
 
 ## 📝 Changelog
 
+### v0.7.9
+> ⚡ Performance & code quality — 9 optimizations across Rust and React
+
+- 🔧 **Log levels fixed** — 7 error scenarios in player.rs now use `warn!`/`error!` properly
+- 🔇 **Scan log noise reduction** — per-song logs downgraded to `debug!`
+- 📦 **Vec pre-allocation** — scanner vectors use `with_capacity` to reduce reallocs
+- ⚛️ **useCallback memoization** — view switch handlers in App.tsx avoid Sidebar re-renders
+- 🧹 **Inline arrow cleanup** — removed unnecessary wrapping in LocalView/LikedView
+- 🏪 **useShallow selectors** — 5 components optimized to avoid cascade re-renders
+- 💾 **Sort state persistence** — sessionStorage saves sort preferences across view switches
+- 🎵 **DSD playback** — removed from unsupported list (Symphonia already handles it)
+- 🧪 **142 tests, 11 files** — all passing, cargo check + tsc 0 errors
+
 ### v0.7.8
 > 🎨 Theme system overhaul + 6 major refactoring replacements, ~216 lines removed
 
