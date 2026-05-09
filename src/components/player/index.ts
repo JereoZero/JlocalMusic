@@ -1,3 +1,4 @@
 export { default as ProgressBar } from './ProgressBar'
 export { default as VolumeControl } from './VolumeControl'
-export { default as PlaybackControls, getPlayModeIcon, getPlayModeTitle } from './PlaybackControls'
+export { default as PlaybackControls } from './PlaybackControls'
+export { getPlayModeIcon, getPlayModeTitle } from './playModeUtils'

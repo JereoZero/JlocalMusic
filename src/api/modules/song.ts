@@ -44,13 +44,19 @@ export async function getSongCoverFull(path: string): Promise<string | null> {
 }
 
 export async function getSongCoversBatch(paths: string[]): Promise<Map<string, string | null>> {
-  const response = await invoke<ApiResponse<Record<string, string | null>>>('get_song_covers_batch', { paths })
+  const response = await invoke<ApiResponse<Record<string, string | null>>>(
+    'get_song_covers_batch',
+    { paths }
+  )
   if (!response.success) throw new Error(response.error)
   return new Map(Object.entries(response.data || {}))
 }
 
 export async function getThumbnailInfo() {
-  const response = await invoke<ApiResponse<{ small_count: number; large_count: number; size_bytes: number }>>('get_thumbnail_info')
+  const response =
+    await invoke<ApiResponse<{ small_count: number; large_count: number; size_bytes: number }>>(
+      'get_thumbnail_info'
+    )
   if (!response.success) throw new Error(response.error)
   return response.data!
 }

@@ -23,7 +23,7 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
   const isPlaying = usePlayerStore((state) => state.isPlaying)
   const seek = usePlayerStore((state) => state.seek)
   const togglePlay = usePlayerStore((state) => state.togglePlay)
-  
+
   const [lyricLines, setLyricLines] = useState<LyricLine[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
@@ -33,7 +33,8 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
   const currentLineRef = useRef<HTMLDivElement>(null)
   const lyricParserRef = useRef<LyricParser | null>(null)
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  
+  const suppressScrollRef = useRef(false)
+
   const { cover: coverBase64 } = useSongCover(currentSong?.path)
   const albumColors = useAlbumColor(coverBase64, currentSong?.path)
   const { getPrimaryColor } = useThemeStore()
@@ -56,7 +57,8 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
     let cancelled = false
 
     setIsLoading(true)
-    api.getLyrics(song.path)
+    api
+      .getLyrics(song.path)
       .then((source) => {
         if (cancelled) return
         if (source?.content) {
@@ -78,9 +80,13 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
           setLyricLines([])
         }
       })
-      .catch(() => { if (!cancelled) setLyricLines([]) })
-      .finally(() => { if (!cancelled) setIsLoading(false) })
-    
+      .catch(() => {
+        if (!cancelled) setLyricLines([])
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+
     return () => {
       cancelled = true
       if (lyricParserRef.current) {
@@ -118,7 +124,7 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
   useEffect(() => {
     // 用户滚动时不自动滚动
     if (isUserScrolling) return
-    
+
     if (currentLineRef.current && lyricsContainerRef.current) {
       const container = lyricsContainerRef.current
       const line = currentLineRef.current
@@ -132,17 +138,24 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
       const scrollOffset = lineCenter - containerCenter
       const newScrollTop = container.scrollTop + scrollOffset
 
+      suppressScrollRef.current = true
       container.scrollTo({
         top: newScrollTop,
-        behavior: 'smooth'
+        behavior: 'smooth',
       })
+      setTimeout(() => {
+        suppressScrollRef.current = false
+      }, 100)
     }
   }, [lineIndex, isUserScrolling])
 
-  const handleLineClick = useCallback((line: LyricLine) => {
-    const time = line.time / 1000
-    seek(time).catch(createErrorHandler('歌词跳转'))
-  }, [seek])
+  const handleLineClick = useCallback(
+    (line: LyricLine) => {
+      const time = line.time / 1000
+      seek(time).catch(createErrorHandler('歌词跳转'))
+    },
+    [seek]
+  )
 
   const handleCoverClick = useCallback(async () => {
     await togglePlay()
@@ -150,13 +163,15 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
 
   // 用户滚动处理
   const handleScroll = useCallback(() => {
+    if (suppressScrollRef.current) return
+
     setIsUserScrolling(true)
-    
+
     // 清除之前的定时器
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current)
     }
-    
+
     // 2秒后恢复自动滚动
     scrollTimeoutRef.current = setTimeout(() => {
       setIsUserScrolling(false)
@@ -206,15 +221,18 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
   return (
     <div className="h-full flex relative overflow-hidden">
       {/* 动态背景层 */}
-      <div 
+      <div
         className="absolute inset-0 transition-all duration-700"
-        style={{ backgroundColor: bgColor, transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)' }}
+        style={{
+          backgroundColor: bgColor,
+          transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)',
+        }}
       />
-      
+
       {/* 内容层 */}
       <div className="relative h-full w-full flex">
         {/* 最左侧功能栏点击区域 - 退出歌词 */}
-        <div 
+        <div
           className="absolute left-0 top-0 bottom-0 w-16 z-20 cursor-pointer"
           onClick={onClose}
           title="点击返回"
@@ -234,10 +252,11 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
             {/* 专辑封面 - 点击暂停/播放 */}
             <div
               className="rounded-lg overflow-hidden bg-[#2a2a2a] flex items-center justify-center cursor-pointer select-none"
-              style={{ 
-                width: isPaused ? '200px' : '280px', 
+              style={{
+                width: isPaused ? '200px' : '280px',
                 height: isPaused ? '200px' : '280px',
-                transition: 'width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                transition:
+                  'width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
               }}
               onClick={handleCoverClick}
               title={isPaused ? '点击播放' : '点击暂停'}
@@ -252,7 +271,7 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
               ) : (
                 <div className="w-full h-full bg-[#3a3a3a] flex items-center justify-center">
                   <svg className="w-20 h-20 text-[#5a5a5a]" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                    <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
                   </svg>
                 </div>
               )}
@@ -260,18 +279,15 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
 
             {/* 歌曲信息 - 固定大小 */}
             <div className="text-center" style={{ width: '280px' }}>
-              <h2 className="text-xl font-bold text-white mb-2 truncate">
-                {title}
-              </h2>
-              <p className="text-sm text-gray-400 mb-1 truncate">
-                专辑：{album}
-              </p>
-              <p className="text-sm text-gray-400 truncate">
-                歌手：{artist}
-              </p>
+              <h2 className="text-xl font-bold text-white mb-2 truncate">{title}</h2>
+              <p className="text-sm text-gray-400 mb-1 truncate">专辑：{album}</p>
+              <p className="text-sm text-gray-400 truncate">歌手：{artist}</p>
               {/* 暂停时显示横线 */}
               {isPaused && (
-                <div className="mt-4 w-12 h-0.5 mx-auto rounded" style={{ backgroundColor: primaryColor }} />
+                <div
+                  className="mt-4 w-12 h-0.5 mx-auto rounded"
+                  style={{ backgroundColor: primaryColor }}
+                />
               )}
             </div>
           </div>
@@ -279,7 +295,7 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
 
         {/* 右侧歌词区域 */}
         <div className="flex-1 h-full flex flex-col py-8 z-10">
-          <div 
+          <div
             ref={lyricsContainerRef}
             className="flex-1 overflow-y-auto scrollbar-hide px-8"
             onScroll={handleScroll}
@@ -293,9 +309,7 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
             ) : lyricLines.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full">
                 <p className="text-gray-500 text-sm">暂无歌词</p>
-                <p className="text-xs mt-2 text-gray-600">
-                  可将 .lrc 歌词文件放在歌曲同目录下
-                </p>
+                <p className="text-xs mt-2 text-gray-600">可将 .lrc 歌词文件放在歌曲同目录下</p>
               </div>
             ) : (
               <div className="py-32 text-center">
@@ -303,7 +317,7 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
                   const isCurrent = index === lineIndex
                   const isPast = index < lineIndex
                   const distance = Math.abs(index - lineIndex)
-                  
+
                   // 鼠标在歌词区域时不模糊
                   let opacity = 1
                   let shouldBlur = false
@@ -311,7 +325,7 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
                     opacity = Math.max(0, 1 - (distance - 2) * 0.15)
                     shouldBlur = true
                   }
-                  
+
                   return (
                     <div
                       key={`${line.time}-${index}`}
@@ -320,14 +334,17 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
                       className={`
                         py-4 px-4 rounded-lg cursor-pointer mb-2
                         transition-all duration-500 ease-in-out
-                        ${isCurrent 
-                          ? 'text-white text-3xl font-medium scale-110' 
-                          : isPast
-                            ? 'text-gray-600 text-2xl hover:text-gray-400'
-                            : 'text-gray-500 text-2xl hover:text-gray-300 hover:bg-white/5'
+                        ${
+                          isCurrent
+                            ? 'text-white text-3xl font-medium scale-110'
+                            : isPast
+                              ? 'text-gray-600 text-2xl hover:text-gray-400'
+                              : 'text-gray-500 text-2xl hover:text-gray-300 hover:bg-white/5'
                         }
                       `}
-                      style={shouldBlur && opacity < 1 ? { opacity, filter: 'blur(0.5px)' } : undefined}
+                      style={
+                        shouldBlur && opacity < 1 ? { opacity, filter: 'blur(0.5px)' } : undefined
+                      }
                     >
                       <span>{line.text}</span>
                     </div>

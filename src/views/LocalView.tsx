@@ -10,17 +10,18 @@ import { filterSongs } from '../utils/songUtils'
 import type { Song } from '../types'
 
 export default function LocalView() {
-  const { songs, isLoading, refreshAll, likedPaths, hiddenPaths, toggleLike, toggleHidden } = useLibraryStore(
-  useShallow(s => ({
-    songs: s.songs,
-    isLoading: s.isLoading,
-    likedPaths: s.likedPaths,
-    hiddenPaths: s.hiddenPaths,
-    refreshAll: s.refreshAll,
-    toggleLike: s.toggleLike,
-    toggleHidden: s.toggleHidden,
-  }))
-)
+  const { songs, isLoading, refreshAll, likedPaths, hiddenPaths, toggleLike, toggleHidden } =
+    useLibraryStore(
+      useShallow((s) => ({
+        songs: s.songs,
+        isLoading: s.isLoading,
+        likedPaths: s.likedPaths,
+        hiddenPaths: s.hiddenPaths,
+        refreshAll: s.refreshAll,
+        toggleLike: s.toggleLike,
+        toggleHidden: s.toggleHidden,
+      }))
+    )
   const { currentSong, isPlaying, playSong } = usePlayerStore()
   const [searchInput, setSearchInput] = useState('')
   const bgColor = useMainBgColor()
@@ -30,10 +31,6 @@ export default function LocalView() {
   const visibleSongs = useMemo(() => {
     return songs.filter((song) => !hiddenPaths.has(song.path))
   }, [songs, hiddenPaths])
-
-  const handlePlaySong = useCallback((song: Song) => {
-    playSong(song, visibleSongs, 'local')
-  }, [playSong, visibleSongs])
 
   const filteredSongs = useMemo(() => {
     return filterSongs(visibleSongs, searchQuery)
@@ -48,8 +45,21 @@ export default function LocalView() {
     handleLikeSort,
   } = useSongSort(filteredSongs, likedPaths, 'local')
 
+  const handlePlaySong = useCallback(
+    (song: Song) => {
+      playSong(song, filteredAndSortedSongs, 'local')
+    },
+    [playSong, filteredAndSortedSongs]
+  )
+
   return (
-    <div className="h-full flex flex-col transition-colors duration-700 select-none" style={{ backgroundColor: bgColor, transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)' }}>
+    <div
+      className="h-full flex flex-col transition-colors duration-700 select-none"
+      style={{
+        backgroundColor: bgColor,
+        transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)',
+      }}
+    >
       <ViewHeader
         title="本地"
         count={filteredAndSortedSongs.length}

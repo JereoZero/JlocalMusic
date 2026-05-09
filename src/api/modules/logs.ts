@@ -38,8 +38,16 @@ export async function copyLogsToClipboard(): Promise<string> {
 }
 
 // 播放历史
-export async function addPlayHistory(path: string, duration: number, completed: boolean): Promise<void> {
-  const response = await invoke<ApiResponse<void>>('add_play_history', { path, duration, completed })
+export async function addPlayHistory(
+  path: string,
+  duration: number,
+  completed: boolean
+): Promise<void> {
+  const response = await invoke<ApiResponse<void>>('add_play_history', {
+    path,
+    duration,
+    completed,
+  })
   if (!response.success) throw new Error(response.error)
 }
 

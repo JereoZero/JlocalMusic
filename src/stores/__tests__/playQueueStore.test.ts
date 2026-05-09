@@ -273,7 +273,7 @@ describe('playQueueStore - shuffle/unshuffle', () => {
     usePlayQueueStore.getState().shuffleQueue()
     usePlayQueueStore.getState().unshuffleQueue()
     const state = usePlayQueueStore.getState()
-    expect(state.queue.map(s => s.id)).toEqual(['1', '2', '3', '4', '5'])
+    expect(state.queue.map((s) => s.id)).toEqual(['1', '2', '3', '4', '5'])
     expect(state.currentIndex).toBe(2)
   })
 

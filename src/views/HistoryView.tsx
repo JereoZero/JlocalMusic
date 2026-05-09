@@ -21,13 +21,13 @@ export default function HistoryView() {
 
   const { currentSong, isPlaying, playSong } = usePlayerStore()
   const { likedPaths, hiddenPaths, toggleLike, toggleHidden } = useLibraryStore(
-  useShallow(s => ({
-    likedPaths: s.likedPaths,
-    hiddenPaths: s.hiddenPaths,
-    toggleLike: s.toggleLike,
-    toggleHidden: s.toggleHidden,
-  }))
-)
+    useShallow((s) => ({
+      likedPaths: s.likedPaths,
+      hiddenPaths: s.hiddenPaths,
+      toggleLike: s.toggleLike,
+      toggleHidden: s.toggleHidden,
+    }))
+  )
 
   const loadPlayHistory = async () => {
     setIsLoading(true)
@@ -50,10 +50,6 @@ export default function HistoryView() {
     return filterByQuery(visibleHistory, searchQuery).map(playHistoryToSong)
   }, [playHistory, searchQuery, hiddenPaths])
 
-  const handlePlayFromHistory = useCallback(async (song: typeof filteredAndSortedSongs[0]) => {
-    playSong(song, filteredHistory, 'history')
-  }, [playSong, filteredHistory])
-
   const {
     sortedItems: filteredAndSortedSongs,
     titleSort,
@@ -62,8 +58,21 @@ export default function HistoryView() {
     handleAlbumSort,
   } = useSongSort(filteredHistory, undefined, 'history')
 
+  const handlePlayFromHistory = useCallback(
+    async (song: (typeof filteredAndSortedSongs)[0]) => {
+      playSong(song, filteredAndSortedSongs, 'history')
+    },
+    [playSong, filteredAndSortedSongs]
+  )
+
   return (
-    <div className="h-full flex flex-col transition-colors duration-700 select-none" style={{ backgroundColor: bgColor, transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)' }}>
+    <div
+      className="h-full flex flex-col transition-colors duration-700 select-none"
+      style={{
+        backgroundColor: bgColor,
+        transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)',
+      }}
+    >
       <ViewHeader
         title="播放历史"
         count={filteredAndSortedSongs.length}

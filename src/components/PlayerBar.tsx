@@ -11,27 +11,27 @@ import { Heart, Eye, EyeOff } from 'lucide-react'
 import type { PlayMode } from '../types'
 
 export default function PlayerBar({ onToggleLyrics }: { onToggleLyrics?: () => void }) {
-  const { 
-    currentSong, 
-    isPlaying, 
-    currentTime, 
-    duration, 
+  const {
+    currentSong,
+    isPlaying,
+    currentTime,
+    duration,
     volume,
-    togglePlay, 
-    playNext, 
-    playPrev, 
-    seek, 
-    setVolume 
+    togglePlay,
+    playNext,
+    playPrev,
+    seek,
+    setVolume,
   } = usePlayerStore()
-  
+
   const { likedPaths, hiddenPaths, toggleLike, toggleHidden } = useLibraryStore(
-  useShallow(s => ({
-    likedPaths: s.likedPaths,
-    hiddenPaths: s.hiddenPaths,
-    toggleLike: s.toggleLike,
-    toggleHidden: s.toggleHidden,
-  }))
-)
+    useShallow((s) => ({
+      likedPaths: s.likedPaths,
+      hiddenPaths: s.hiddenPaths,
+      toggleLike: s.toggleLike,
+      toggleHidden: s.toggleHidden,
+    }))
+  )
   const { settings, setPlayMode } = usePlayerSettingsStore()
   const { shuffleQueue, unshuffleQueue } = usePlayQueueStore()
   const { getPrimaryColor } = useThemeStore()
@@ -43,7 +43,7 @@ export default function PlayerBar({ onToggleLyrics }: { onToggleLyrics?: () => v
   const songDuration = duration || currentSong?.duration || 0
   const { cover } = useSongCover(currentSong?.path)
   const albumColors = useAlbumColor(cover, currentSong?.path)
-  
+
   // PlayerBar 使用更暗的背景（亮度 10%）
   const playerBarBg = albumColors.playerBar || '#181818'
 
@@ -51,20 +51,23 @@ export default function PlayerBar({ onToggleLyrics }: { onToggleLyrics?: () => v
     const modes: PlayMode[] = ['list', 'loop', 'shuffle']
     const currentIndex = modes.indexOf(playMode)
     const nextMode = modes[(currentIndex + 1) % modes.length]
-    
+
     if (nextMode === 'shuffle' && playMode !== 'shuffle') {
       shuffleQueue()
     } else if (playMode === 'shuffle' && nextMode !== 'shuffle') {
       unshuffleQueue()
     }
-    
+
     setPlayMode(nextMode)
   }, [playMode, setPlayMode, shuffleQueue, unshuffleQueue])
 
   return (
-    <div 
+    <div
       className="h-20 px-4 flex items-center justify-between border-t border-[#2a2a2a] transition-colors duration-700"
-      style={{ backgroundColor: playerBarBg, transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)' }}
+      style={{
+        backgroundColor: playerBarBg,
+        transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)',
+      }}
     >
       {/* 左侧：歌曲信息 */}
       <div className="w-1/3 flex items-center gap-3">
@@ -82,7 +85,7 @@ export default function PlayerBar({ onToggleLyrics }: { onToggleLyrics?: () => v
           ) : (
             <div className="w-full h-full bg-[#3a3a3a] flex items-center justify-center">
               <svg className="w-6 h-6 text-[#5a5a5a]" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
               </svg>
             </div>
           )}
@@ -91,9 +94,7 @@ export default function PlayerBar({ onToggleLyrics }: { onToggleLyrics?: () => v
           <p className="text-sm font-medium text-white truncate">
             {currentSong?.title || '未在播放'}
           </p>
-          <p className="text-xs truncate text-gray-400">
-            {currentSong?.artist || ''}
-          </p>
+          <p className="text-xs truncate text-gray-400">{currentSong?.artist || ''}</p>
         </div>
       </div>
 
@@ -119,11 +120,7 @@ export default function PlayerBar({ onToggleLyrics }: { onToggleLyrics?: () => v
             <Heart size={18} fill={isLiked ? primaryColor : 'none'} />
           </button>
         </div>
-        <ProgressBar
-          currentTime={currentTime}
-          duration={songDuration}
-          onSeek={seek}
-        />
+        <ProgressBar currentTime={currentTime} duration={songDuration} onSeek={seek} />
       </div>
 
       {/* 右侧：隐藏按钮 + 音量 */}
@@ -136,10 +133,7 @@ export default function PlayerBar({ onToggleLyrics }: { onToggleLyrics?: () => v
         >
           {isHidden ? <EyeOff size={18} /> : <Eye size={18} />}
         </button>
-        <VolumeControl
-          volume={volume}
-          onVolumeChange={setVolume}
-        />
+        <VolumeControl volume={volume} onVolumeChange={setVolume} />
       </div>
     </div>
   )

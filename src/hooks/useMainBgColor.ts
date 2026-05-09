@@ -6,6 +6,6 @@ export function useMainBgColor(): string {
   const currentSong = usePlayerStore((state) => state.currentSong)
   const { cover } = useSongCover(currentSong?.path)
   const albumColors = useAlbumColor(cover, currentSong?.path)
-  
+
   return albumColors.main || '#121212'
 }

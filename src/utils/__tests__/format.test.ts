@@ -1,11 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { 
-  formatDuration, 
-  formatFileSize, 
-  formatDate, 
-  formatDateTime,
-  truncate 
-} from '../format'
+import { formatDuration, formatFileSize, formatDate, formatDateTime, truncate } from '../format'
 
 describe('formatDuration', () => {
   describe('基本功能', () => {

@@ -27,9 +27,12 @@ function ViewHeader({
   const { getPrimaryColor } = useThemeStore()
   const primaryColor = getPrimaryColor()
 
-  const handleSearchFocus = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
-    e.currentTarget.style.boxShadow = `0 0 0 2px ${hexToRgba(primaryColor, 0.5)}`
-  }, [primaryColor])
+  const handleSearchFocus = useCallback(
+    (e: React.FocusEvent<HTMLInputElement>) => {
+      e.currentTarget.style.boxShadow = `0 0 0 2px ${hexToRgba(primaryColor, 0.5)}`
+    },
+    [primaryColor]
+  )
 
   const handleSearchBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
     e.currentTarget.style.boxShadow = 'none'
@@ -39,9 +42,7 @@ function ViewHeader({
     <div className="px-6 py-4 mt-8 flex items-center justify-between border-b border-[#2a2a2a]">
       <div className="flex items-end gap-4">
         <h2 className="text-2xl font-bold text-white">{title}</h2>
-        {count !== undefined && (
-          <span className="text-sm text-gray-400">{count} 首</span>
-        )}
+        {count !== undefined && <span className="text-sm text-gray-400">{count} 首</span>}
       </div>
       <div className="flex items-center gap-4">
         {actions}
@@ -51,9 +52,15 @@ function ViewHeader({
             disabled={isLoading}
             className="p-2 rounded-full hover:bg-[#2a2a2a] text-gray-400 hover:text-white transition-colors disabled:opacity-50 active:scale-95"
             style={{ color: undefined }}
-            onMouseDown={(e) => { e.currentTarget.style.color = primaryColor }}
-            onMouseUp={(e) => { e.currentTarget.style.color = '#ffffff' }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = '#9ca3af' }}
+            onMouseDown={(e) => {
+              e.currentTarget.style.color = primaryColor
+            }}
+            onMouseUp={(e) => {
+              e.currentTarget.style.color = '#ffffff'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#9ca3af'
+            }}
           >
             <RefreshCw size={18} className={isLoading ? 'animate-spin' : ''} />
           </button>

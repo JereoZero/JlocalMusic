@@ -17,20 +17,21 @@ export default function LikedView() {
   const bgColor = useMainBgColor()
 
   const { currentSong, isPlaying, playSong } = usePlayerStore()
-  const { songs, isLoading, refreshAll, likedPaths, hiddenPaths, toggleLike, toggleHidden } = useLibraryStore(
-  useShallow(s => ({
-    songs: s.songs,
-    isLoading: s.isLoading,
-    likedPaths: s.likedPaths,
-    hiddenPaths: s.hiddenPaths,
-    refreshAll: s.refreshAll,
-    toggleLike: s.toggleLike,
-    toggleHidden: s.toggleHidden,
-  }))
-)
+  const { songs, isLoading, refreshAll, likedPaths, hiddenPaths, toggleLike, toggleHidden } =
+    useLibraryStore(
+      useShallow((s) => ({
+        songs: s.songs,
+        isLoading: s.isLoading,
+        likedPaths: s.likedPaths,
+        hiddenPaths: s.hiddenPaths,
+        refreshAll: s.refreshAll,
+        toggleLike: s.toggleLike,
+        toggleHidden: s.toggleHidden,
+      }))
+    )
 
   const likedSongs = useMemo(() => {
-    return songs.filter(song => likedPaths.has(song.path) && !hiddenPaths.has(song.path))
+    return songs.filter((song) => likedPaths.has(song.path) && !hiddenPaths.has(song.path))
   }, [songs, likedPaths, hiddenPaths])
 
   const filteredSongs = useMemo(() => {
@@ -45,21 +46,30 @@ export default function LikedView() {
     handleAlbumSort,
   } = useSongSort(filteredSongs, undefined, 'liked')
 
-  const handlePlaySong = useCallback((song: Song) => {
-    playSong(song, likedSongs, 'liked')
-  }, [playSong, likedSongs])
+  const handlePlaySong = useCallback(
+    (song: Song) => {
+      playSong(song, filteredAndSortedSongs, 'liked')
+    },
+    [playSong, filteredAndSortedSongs]
+  )
 
   const handlePlayAll = useCallback(() => {
-    if (likedSongs.length > 0) {
-      playSong(likedSongs[0], likedSongs, 'liked')
+    if (filteredAndSortedSongs.length > 0) {
+      playSong(filteredAndSortedSongs[0], filteredAndSortedSongs, 'liked')
     }
-  }, [playSong, likedSongs])
+  }, [playSong, filteredAndSortedSongs])
 
   const { getPrimaryColor } = useThemeStore()
   const primaryColor = getPrimaryColor()
 
   return (
-    <div className="h-full flex flex-col transition-colors duration-700 select-none" style={{ backgroundColor: bgColor, transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)' }}>
+    <div
+      className="h-full flex flex-col transition-colors duration-700 select-none"
+      style={{
+        backgroundColor: bgColor,
+        transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)',
+      }}
+    >
       <ViewHeader
         title="我喜欢"
         count={likedSongs.length}
@@ -76,8 +86,12 @@ export default function LikedView() {
                 backgroundColor: hexToRgba(primaryColor, 0.2),
                 color: primaryColor,
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = hexToRgba(primaryColor, 0.3) }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = hexToRgba(primaryColor, 0.2) }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = hexToRgba(primaryColor, 0.3)
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = hexToRgba(primaryColor, 0.2)
+              }}
             >
               <Play size={14} className="fill-current" />
               播放全部

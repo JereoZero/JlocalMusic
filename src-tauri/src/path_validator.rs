@@ -1,16 +1,28 @@
 use std::path::Path;
 use crate::constants::{is_audio_extension, NORMAL_AUDIO_EXTENSIONS, ENCRYPTED_AUDIO_EXTENSIONS};
 
-pub fn is_path_in_music_folder(path: &str, music_folder: &str) -> bool {
-    let path = match Path::new(path).canonicalize() {
-        Ok(p) => p,
-        Err(_) => return false,
-    };
+pub fn is_path_in_music_folder(path_str: &str, music_folder: &str) -> bool {
+    let path = Path::new(path_str);
     let music_path = match Path::new(music_folder).canonicalize() {
         Ok(p) => p,
         Err(_) => return false,
     };
-    path.starts_with(&music_path)
+
+    if let Ok(canon) = path.canonicalize() {
+        return canon.starts_with(&music_path);
+    }
+
+    let parent = path.parent().unwrap_or(Path::new("."));
+    match parent.canonicalize() {
+        Ok(parent_canon) => {
+            if let Some(filename) = path.file_name() {
+                parent_canon.join(filename).starts_with(&music_path)
+            } else {
+                parent_canon.starts_with(&music_path)
+            }
+        }
+        Err(_) => false,
+    }
 }
 
 pub fn validate_audio_extension(path: &str) -> bool {

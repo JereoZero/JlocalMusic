@@ -1,6 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
 import type { ApiResponse, BackendPlayerState, Metadata } from './types'
-import type { Song } from '../../types'
 
 export async function playSong(path: string): Promise<void> {
   const response = await invoke<ApiResponse<void>>('play_song', { path })
@@ -44,8 +43,13 @@ export async function getMetadata(path: string): Promise<Metadata> {
   return response.data!
 }
 
-export async function getMetadataBatch(paths: string[]): Promise<Array<{ path: string; metadata: Metadata }>> {
-  const response = await invoke<ApiResponse<Array<{ path: string; metadata: Metadata }>>>('get_metadata_batch', { paths })
+export async function getMetadataBatch(
+  paths: string[]
+): Promise<Array<{ path: string; metadata: Metadata }>> {
+  const response = await invoke<ApiResponse<Array<{ path: string; metadata: Metadata }>>>(
+    'get_metadata_batch',
+    { paths }
+  )
   if (!response.success) throw new Error(response.error)
   return response.data || []
 }

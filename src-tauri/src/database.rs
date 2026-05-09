@@ -177,7 +177,7 @@ impl Database {
                     artist = excluded.artist,
                     album = excluded.album,
                     duration = excluded.duration,
-                    cover = excluded.cover
+                    cover = COALESCE(excluded.cover, songs.cover)
                 "#,
             )
             .bind(&song.id)

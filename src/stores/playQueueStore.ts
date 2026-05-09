@@ -53,16 +53,16 @@ interface PlayQueueStore extends PlayQueueState {
   removeFromQueue: (index: number) => void
   clearQueue: () => void
   moveInQueue: (fromIndex: number, toIndex: number) => void
-  
+
   getCurrentSong: () => Song | null
   getNextSong: (mode: PlayMode) => Song | null
   getPrevSong: (mode: PlayMode) => Song | null
   moveToNext: (mode: PlayMode) => Song | null
   moveToPrev: (mode: PlayMode) => Song | null
-  
+
   shuffleQueue: () => void
   unshuffleQueue: () => void
-  
+
   setLastSongPath: (path: string | null) => void
   setCurrentIndex: (index: number) => void
 }
@@ -106,18 +106,16 @@ export const usePlayQueueStore = create<PlayQueueStore>()(
           const newQueue = [...state.queue]
           const newOriginalQueue = [...state.originalQueue]
           const insertIndex = state.currentIndex + 1
-          
+
           newQueue.splice(insertIndex, 0, song)
-          
-          const originalIndex = state.originalQueue.findIndex(
-            (s, i) => i > state.currentIndex
-          )
+
+          const originalIndex = state.originalQueue.findIndex((s, i) => i > state.currentIndex)
           if (originalIndex >= 0) {
             newOriginalQueue.splice(originalIndex, 0, song)
           } else {
             newOriginalQueue.push(song)
           }
-          
+
           return {
             queue: newQueue,
             originalQueue: newOriginalQueue,
@@ -128,18 +126,18 @@ export const usePlayQueueStore = create<PlayQueueStore>()(
       removeFromQueue: (index) => {
         set((state) => {
           if (index < 0 || index >= state.queue.length) return state
-          
+
           const removedPath = state.queue[index].path
           const newQueue = state.queue.filter((_, i) => i !== index)
-          const newOriginalQueue = state.originalQueue.filter(s => s.path !== removedPath)
+          const newOriginalQueue = state.originalQueue.filter((s) => s.path !== removedPath)
           let newIndex = state.currentIndex
-          
+
           if (index < state.currentIndex) {
             newIndex = state.currentIndex - 1
           } else if (index === state.currentIndex) {
             newIndex = Math.min(state.currentIndex, newQueue.length - 1)
           }
-          
+
           return {
             queue: newQueue,
             originalQueue: newOriginalQueue,
@@ -166,7 +164,7 @@ export const usePlayQueueStore = create<PlayQueueStore>()(
           ) {
             return state
           }
-          
+
           const newQueue = [...state.queue]
           const [removed] = newQueue.splice(fromIndex, 1)
           newQueue.splice(toIndex, 0, removed)
@@ -174,7 +172,7 @@ export const usePlayQueueStore = create<PlayQueueStore>()(
           const newOriginalQueue = [...state.originalQueue]
           const [origRemoved] = newOriginalQueue.splice(fromIndex, 1)
           newOriginalQueue.splice(toIndex, 0, origRemoved)
-          
+
           let newIndex = state.currentIndex
           if (fromIndex === state.currentIndex) {
             newIndex = toIndex
@@ -183,7 +181,7 @@ export const usePlayQueueStore = create<PlayQueueStore>()(
           } else if (fromIndex > state.currentIndex && toIndex <= state.currentIndex) {
             newIndex = state.currentIndex + 1
           }
-          
+
           return {
             queue: newQueue,
             originalQueue: newOriginalQueue,
@@ -203,16 +201,16 @@ export const usePlayQueueStore = create<PlayQueueStore>()(
       getNextSong: (mode) => {
         const { queue, currentIndex } = get()
         if (queue.length === 0) return null
-        
+
         if (mode === 'loop') {
           return queue[currentIndex] || null
         }
-        
+
         if (mode === 'shuffle') {
           const randomIndex = Math.floor(Math.random() * queue.length)
           return queue[randomIndex]
         }
-        
+
         const nextIndex = (currentIndex + 1) % queue.length
         return queue[nextIndex]
       },
@@ -220,16 +218,16 @@ export const usePlayQueueStore = create<PlayQueueStore>()(
       getPrevSong: (mode) => {
         const { queue, currentIndex } = get()
         if (queue.length === 0) return null
-        
+
         if (mode === 'loop') {
           return queue[currentIndex] || null
         }
-        
+
         if (mode === 'shuffle') {
           const randomIndex = Math.floor(Math.random() * queue.length)
           return queue[randomIndex]
         }
-        
+
         const prevIndex = (currentIndex - 1 + queue.length) % queue.length
         return queue[prevIndex]
       },
@@ -237,9 +235,9 @@ export const usePlayQueueStore = create<PlayQueueStore>()(
       moveToNext: (mode) => {
         const { queue, currentIndex } = get()
         if (queue.length === 0) return null
-        
+
         let newIndex: number
-        
+
         if (mode === 'loop') {
           newIndex = currentIndex
         } else if (mode === 'shuffle') {
@@ -247,7 +245,7 @@ export const usePlayQueueStore = create<PlayQueueStore>()(
         } else {
           newIndex = (currentIndex + 1) % queue.length
         }
-        
+
         const song = queue[newIndex]
         set({ currentIndex: newIndex, lastSongPath: song?.path || null })
         return song
@@ -256,9 +254,9 @@ export const usePlayQueueStore = create<PlayQueueStore>()(
       moveToPrev: (mode) => {
         const { queue, currentIndex } = get()
         if (queue.length === 0) return null
-        
+
         let newIndex: number
-        
+
         if (mode === 'loop') {
           newIndex = currentIndex
         } else if (mode === 'shuffle') {
@@ -266,7 +264,7 @@ export const usePlayQueueStore = create<PlayQueueStore>()(
         } else {
           newIndex = (currentIndex - 1 + queue.length) % queue.length
         }
-        
+
         const song = queue[newIndex]
         set({ currentIndex: newIndex, lastSongPath: song?.path || null })
         return song
@@ -275,11 +273,11 @@ export const usePlayQueueStore = create<PlayQueueStore>()(
       shuffleQueue: () => {
         set((state) => {
           if (state.queue.length === 0) return state
-          
+
           const currentSong = state.queue[state.currentIndex]
           const shuffled = shuffleArray(state.queue)
-          const newIndex = shuffled.findIndex(s => s.path === currentSong?.path)
-          
+          const newIndex = shuffled.findIndex((s) => s.path === currentSong?.path)
+
           return {
             queue: shuffled,
             currentIndex: newIndex >= 0 ? newIndex : 0,
@@ -290,10 +288,10 @@ export const usePlayQueueStore = create<PlayQueueStore>()(
       unshuffleQueue: () => {
         set((state) => {
           if (state.originalQueue.length === 0) return state
-          
+
           const currentSong = state.queue[state.currentIndex]
-          const newIndex = state.originalQueue.findIndex(s => s.path === currentSong?.path)
-          
+          const newIndex = state.originalQueue.findIndex((s) => s.path === currentSong?.path)
+
           return {
             queue: [...state.originalQueue],
             currentIndex: newIndex >= 0 ? newIndex : 0,

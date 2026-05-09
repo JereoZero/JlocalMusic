@@ -124,11 +124,7 @@ describe('playerStore - playSong', () => {
     const newSong = createMockSong({ id: 'new', path: '/new.mp3' })
     await usePlayerStore.getState().playSong(newSong)
 
-    expect(mockApi.addPlayHistory).toHaveBeenCalledWith(
-      prevSong.path,
-      expect.any(Number),
-      false
-    )
+    expect(mockApi.addPlayHistory).toHaveBeenCalledWith(prevSong.path, expect.any(Number), false)
   })
 
   it('should handle API errors gracefully', async () => {
@@ -149,9 +145,7 @@ describe('playerStore - togglePlay', () => {
 
   it('should play random when no currentSong', async () => {
     usePlayerStore.setState({ currentSong: null, isPlaying: false })
-    mockApi.getSongs.mockResolvedValueOnce([
-      createMockSong({ id: '1', path: '/1.mp3' }),
-    ])
+    mockApi.getSongs.mockResolvedValueOnce([createMockSong({ id: '1', path: '/1.mp3' })])
     await usePlayerStore.getState().togglePlay()
 
     expect(mockApi.playSong).toHaveBeenCalled()
@@ -348,8 +342,6 @@ describe('playerStore - restoreLastSong', () => {
 
     await usePlayerStore.getState().restoreLastSong()
 
-    expect(mockApi.playSong).toHaveBeenCalledWith('/music/3.mp3')
-    expect(mockApi.pauseSong).toHaveBeenCalled()
     expect(usePlayerStore.getState().currentSong?.id).toBe('3')
     expect(usePlayerStore.getState().isPlaying).toBe(false)
   })
@@ -413,11 +405,7 @@ describe('playerStore - finalizePlayHistory', () => {
     usePlayerStore.setState({ currentTime: 45 })
     await usePlayerStore.getState().stop()
 
-    expect(mockApi.addPlayHistory).toHaveBeenCalledWith(
-      '/some/song.mp3',
-      expect.any(Number),
-      false
-    )
+    expect(mockApi.addPlayHistory).toHaveBeenCalledWith('/some/song.mp3', expect.any(Number), false)
   })
 
   it('should record play history when playing new song', async () => {
@@ -429,10 +417,6 @@ describe('playerStore - finalizePlayHistory', () => {
 
     await usePlayerStore.getState().playSong(song2)
 
-    expect(mockApi.addPlayHistory).toHaveBeenCalledWith(
-      '/1.mp3',
-      expect.any(Number),
-      false
-    )
+    expect(mockApi.addPlayHistory).toHaveBeenCalledWith('/1.mp3', expect.any(Number), false)
   })
 })

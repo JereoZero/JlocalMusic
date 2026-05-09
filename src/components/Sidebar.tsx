@@ -46,10 +46,15 @@ function NavItem({ icon: Icon, active, onClick, title, primaryColor }: NavItemPr
   )
 }
 
-export default function Sidebar({ currentView, onViewChange, onToggleSettings, bgColor }: SidebarProps) {
+export default function Sidebar({
+  currentView,
+  onViewChange,
+  onToggleSettings,
+  bgColor,
+}: SidebarProps) {
   const { getPrimaryColor } = useThemeStore()
   const primaryColor = getPrimaryColor()
-  
+
   const navItems = [
     { id: 'liked' as ViewType, icon: Heart, title: '我喜欢' },
     { id: 'history' as ViewType, icon: History, title: '播放历史' },
@@ -58,16 +63,16 @@ export default function Sidebar({ currentView, onViewChange, onToggleSettings, b
   ]
 
   return (
-    <div 
+    <div
       className="h-full flex flex-col p-3 w-20 transition-colors duration-700 select-none"
-      style={{ backgroundColor: bgColor || '#121212', transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)' }}
+      style={{
+        backgroundColor: bgColor || '#121212',
+        transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)',
+      }}
     >
       {/* Logo */}
       <div className="flex flex-col items-center justify-center py-4 mb-4">
-        <span
-          className="text-2xl font-bold tracking-wider"
-          style={{ color: primaryColor }}
-        >
+        <span className="text-2xl font-bold tracking-wider" style={{ color: primaryColor }}>
           Only
         </span>
         <span className="text-[10px] text-gray-500 mt-3">{APP_CONFIG.version}</span>

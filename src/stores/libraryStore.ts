@@ -92,7 +92,7 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
   toggleLike: async (path: string, context?: 'hidden') => {
     const { likedPaths, hiddenPaths } = get()
     const newLiked = !likedPaths.has(path)
-    
+
     log('点击喜欢', `${newLiked ? '添加' : '取消'}: ${path.split('/').pop()}`)
 
     try {
@@ -127,14 +127,14 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
   toggleHidden: async (path: string, shouldRemoveLike: boolean = false) => {
     const { hiddenPaths, likedPaths } = get()
     const newHidden = !hiddenPaths.has(path)
-    
+
     log('点击隐藏', `${newHidden ? '隐藏' : '显示'}: ${path.split('/').pop()}`)
 
     try {
       if (newHidden) {
         await api.hideSong(path)
         log('后台执行', `hideSong(${path})`)
-        
+
         // 如果需要同时取消喜欢
         if (shouldRemoveLike && likedPaths.has(path)) {
           await api.toggleLike(path, false)
@@ -142,7 +142,7 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
           newLikedPaths.delete(path)
           set({ likedPaths: newLikedPaths })
         }
-        
+
         toast('已隐藏歌曲', { icon: '🚫', duration: 2000 })
       } else {
         await api.unhideSong(path)

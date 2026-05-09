@@ -26,11 +26,14 @@ function readStoredSort<T extends string>(key: string, fallback: T): T {
 function writeStoredSort(key: string, value: string) {
   try {
     sessionStorage.setItem(SORT_KEY + key, value)
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 }
 
 export function getSortIcon(sortType: string): React.ReactNode {
-  if (sortType === 'default') return React.createElement(ArrowUpDown, { size: 14, className: 'opacity-30' })
+  if (sortType === 'default')
+    return React.createElement(ArrowUpDown, { size: 14, className: 'opacity-30' })
   if (sortType.includes('asc')) return React.createElement(ArrowUp, { size: 14 })
   return React.createElement(ArrowDown, { size: 14 })
 }
@@ -38,7 +41,7 @@ export function getSortIcon(sortType: string): React.ReactNode {
 export function useSongSort<T extends SortableItem>(
   items: T[],
   likedPaths?: Set<string>,
-  viewKey?: string,
+  viewKey?: string
 ) {
   const [titleSort, setTitleSortState] = useState<TitleSortType>(() =>
     viewKey ? readStoredSort(`${viewKey}_title`, 'default') : 'default'
@@ -50,27 +53,45 @@ export function useSongSort<T extends SortableItem>(
     viewKey ? readStoredSort(`${viewKey}_like`, 'default') : 'default'
   )
 
-  const persistSort = useCallback((key: string, value: string) => {
-    if (viewKey) writeStoredSort(`${viewKey}_${key}`, value)
-  }, [viewKey])
+  const persistSort = useCallback(
+    (key: string, value: string) => {
+      if (viewKey) writeStoredSort(`${viewKey}_${key}`, value)
+    },
+    [viewKey]
+  )
 
-  const setTitleSort = useCallback((value: TitleSortType) => {
-    setTitleSortState(value)
-    persistSort('title', value)
-  }, [persistSort])
+  const setTitleSort = useCallback(
+    (value: TitleSortType) => {
+      setTitleSortState(value)
+      persistSort('title', value)
+    },
+    [persistSort]
+  )
 
-  const setAlbumSort = useCallback((value: AlbumSortType) => {
-    setAlbumSortState(value)
-    persistSort('album', value)
-  }, [persistSort])
+  const setAlbumSort = useCallback(
+    (value: AlbumSortType) => {
+      setAlbumSortState(value)
+      persistSort('album', value)
+    },
+    [persistSort]
+  )
 
-  const setLikeSort = useCallback((value: LikeSortType) => {
-    setLikeSortState(value)
-    persistSort('like', value)
-  }, [persistSort])
+  const setLikeSort = useCallback(
+    (value: LikeSortType) => {
+      setLikeSortState(value)
+      persistSort('like', value)
+    },
+    [persistSort]
+  )
 
   const handleTitleSort = useCallback(() => {
-    const order: TitleSortType[] = ['default', 'title-asc', 'title-desc', 'artist-asc', 'artist-desc']
+    const order: TitleSortType[] = [
+      'default',
+      'title-asc',
+      'title-desc',
+      'artist-asc',
+      'artist-desc',
+    ]
     const currentIndex = order.indexOf(titleSort)
     const nextSort = order[(currentIndex + 1) % order.length]
     setTitleSort(nextSort)
@@ -118,16 +139,24 @@ export function useSongSort<T extends SortableItem>(
     } else if (titleSort !== 'default') {
       switch (titleSort) {
         case 'title-asc':
-          result.sort((a, b) => (a.title || '').toLowerCase().localeCompare((b.title || '').toLowerCase()))
+          result.sort((a, b) =>
+            (a.title || '').toLowerCase().localeCompare((b.title || '').toLowerCase())
+          )
           break
         case 'title-desc':
-          result.sort((a, b) => (b.title || '').toLowerCase().localeCompare((a.title || '').toLowerCase()))
+          result.sort((a, b) =>
+            (b.title || '').toLowerCase().localeCompare((a.title || '').toLowerCase())
+          )
           break
         case 'artist-asc':
-          result.sort((a, b) => (a.artist || '').toLowerCase().localeCompare((b.artist || '').toLowerCase()))
+          result.sort((a, b) =>
+            (a.artist || '').toLowerCase().localeCompare((b.artist || '').toLowerCase())
+          )
           break
         case 'artist-desc':
-          result.sort((a, b) => (b.artist || '').toLowerCase().localeCompare((a.artist || '').toLowerCase()))
+          result.sort((a, b) =>
+            (b.artist || '').toLowerCase().localeCompare((a.artist || '').toLowerCase())
+          )
           break
       }
     }

@@ -34,6 +34,13 @@ impl FolderScanner {
 
     /// 扫描文件夹
     pub async fn scan(&self, folder_path: &str) -> anyhow::Result<ScanResult> {
+        let scan_path = Path::new(folder_path);
+        if !scan_path.exists() {
+            anyhow::bail!("Directory does not exist: {}", folder_path);
+        }
+        if !scan_path.is_dir() {
+            anyhow::bail!("Path is not a directory: {}", folder_path);
+        }
         info!("Starting folder scan: {}", folder_path);
 
         let mut normal_songs = Vec::with_capacity(500);

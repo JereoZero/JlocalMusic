@@ -75,7 +75,20 @@ pub async fn get_audio_file(
 }
 
 #[tauri::command]
-pub async fn check_file_exists(path: String) -> Result<ApiResponse<bool>, String> {
+pub async fn check_file_exists(
+    db: State<'_, Database>,
+    path: String,
+) -> Result<ApiResponse<bool>, String> {
+    let music_folder = match db.get_setting("music_folder").await {
+        Ok(Some(folder)) => folder,
+        Ok(None) => return Ok(ApiResponse::err("Music folder not configured")),
+        Err(e) => return Ok(ApiResponse::err(e)),
+    };
+    
+    if !is_path_in_music_folder(&path, &music_folder) {
+        return Ok(ApiResponse::err("Access denied: path outside music folder"));
+    }
+    
     Ok(ApiResponse::ok(std::path::Path::new(&path).exists()))
 }
 

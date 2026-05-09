@@ -28,6 +28,10 @@ pub async fn play_song(
         return Ok(ApiResponse::err("Access denied: path outside music folder"));
     }
 
+    if !std::path::Path::new(&path).exists() {
+        return Ok(ApiResponse::err("File not found"));
+    }
+
     match player.play(&path).await {
         Ok(_) => {
             let _ = db.increment_play_count(&path).await;
@@ -92,7 +96,24 @@ pub async fn get_player_state(
 }
 
 #[tauri::command]
-pub async fn get_metadata(path: String) -> Result<ApiResponse<crate::metadata::Metadata>, String> {
+pub async fn get_metadata(
+    db: State<'_, Database>,
+    path: String,
+) -> Result<ApiResponse<crate::metadata::Metadata>, String> {
+    if !validate_audio_extension(&path) {
+        return Ok(ApiResponse::err("Invalid audio file format"));
+    }
+    
+    let music_folder = match db.get_setting("music_folder").await {
+        Ok(Some(folder)) => folder,
+        Ok(None) => return Ok(ApiResponse::err("Music folder not configured")),
+        Err(e) => return Ok(ApiResponse::err(e.to_string())),
+    };
+
+    if !is_path_in_music_folder(&path, &music_folder) {
+        return Ok(ApiResponse::err("Access denied: path outside music folder"));
+    }
+
     let extractor = MetadataExtractor::new();
     
     match extractor.extract(&path).await {
@@ -103,17 +124,36 @@ pub async fn get_metadata(path: String) -> Result<ApiResponse<crate::metadata::M
 
 #[tauri::command]
 pub async fn get_metadata_batch(
+    db: State<'_, Database>,
     paths: Vec<String>,
-) -> Result<ApiResponse<Vec<(String, crate::metadata::Metadata)>>, String> {
+) -> Result<ApiResponse<Vec<BatchMetadata>>, String> {
+    let music_folder = match db.get_setting("music_folder").await {
+        Ok(Some(folder)) => folder,
+        Ok(None) => return Ok(ApiResponse::err("Music folder not configured")),
+        Err(e) => return Ok(ApiResponse::err(e.to_string())),
+    };
+
     let extractor = MetadataExtractor::new();
     let mut results = Vec::new();
     
     for path in paths {
+        if !validate_audio_extension(&path) {
+            continue;
+        }
+        if !is_path_in_music_folder(&path, &music_folder) {
+            continue;
+        }
         match extractor.extract(&path).await {
-            Ok(metadata) => results.push((path, metadata)),
+            Ok(metadata) => results.push(BatchMetadata { path, metadata }),
             Err(_) => continue,
         }
     }
     
     Ok(ApiResponse::ok(results))
+}
+
+#[derive(serde::Serialize)]
+pub struct BatchMetadata {
+    pub path: String,
+    pub metadata: crate::metadata::Metadata,
 }

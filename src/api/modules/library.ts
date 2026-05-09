@@ -11,11 +11,8 @@ export async function getLikedPaths(): Promise<string[]> {
 }
 
 export async function getLikedSongs(): Promise<{ songs: Song[] }> {
-  const [allSongs, likedPaths] = await Promise.all([
-    getSongs(),
-    getLikedPaths(),
-  ])
-  const likedSongs = allSongs.filter(song => likedPaths.includes(song.path))
+  const [allSongs, likedPaths] = await Promise.all([getSongs(), getLikedPaths()])
+  const likedSongs = allSongs.filter((song) => likedPaths.includes(song.path))
   return { songs: likedSongs }
 }
 

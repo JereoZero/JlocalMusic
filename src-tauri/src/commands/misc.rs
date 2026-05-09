@@ -25,8 +25,26 @@ pub async fn select_folder(app: AppHandle) -> Result<ApiResponse<Option<String>>
 }
 
 #[tauri::command]
-pub fn get_lyrics(path: String) -> Result<ApiResponse<Option<crate::lyrics::LyricSource>>, String> {
+pub async fn get_lyrics(
+    app: AppHandle,
+    path: String,
+) -> Result<ApiResponse<Option<crate::lyrics::LyricSource>>, String> {
     use std::path::Path;
+    
+    if !crate::path_validator::validate_audio_extension(&path) {
+        return Ok(ApiResponse::err("Invalid audio file format"));
+    }
+    
+    let db = app.state::<crate::database::Database>();
+    let music_folder = match db.get_setting("music_folder").await {
+        Ok(Some(folder)) => folder,
+        Ok(None) => return Ok(ApiResponse::ok(None)),
+        Err(e) => return Ok(ApiResponse::err(e.to_string())),
+    };
+    
+    if !crate::path_validator::is_path_in_music_folder(&path, &music_folder) {
+        return Ok(ApiResponse::ok(None));
+    }
     
     let audio_path = Path::new(&path);
     
@@ -40,16 +58,18 @@ pub fn get_lyrics(path: String) -> Result<ApiResponse<Option<crate::lyrics::Lyri
 pub async fn get_primary_music_folder(app: AppHandle) -> Result<ApiResponse<String>, String> {
     let db = app.state::<crate::database::Database>();
     
-    // 先检查用户设置的 music_folder
     if let Ok(Some(custom_folder)) = db.get_setting("music_folder").await {
         if !custom_folder.is_empty() && std::path::Path::new(&custom_folder).exists() {
             return Ok(ApiResponse::ok(custom_folder));
         }
     }
     
-    // 如果没有设置或路径不存在，返回默认的 jmusic-file 目录
     let music_folder = crate::paths::ensure_music_folder_exists(&app)?;
-    Ok(ApiResponse::ok(music_folder.to_string_lossy().to_string()))
+    let folder_str = music_folder.to_string_lossy().to_string();
+    
+    let _ = db.set_setting("music_folder", &folder_str).await;
+    
+    Ok(ApiResponse::ok(folder_str))
 }
 
 #[tauri::command]
@@ -57,8 +77,6 @@ pub async fn add_secondary_folder(
     app: AppHandle,
     target_path: String,
 ) -> Result<ApiResponse<String>, String> {
-    use std::os::unix::fs::symlink;
-    
     let primary_folder = crate::paths::ensure_music_folder_exists(&app)?;
     
     let target_name = std::path::Path::new(&target_path)
@@ -81,7 +99,7 @@ pub async fn add_secondary_folder(
     
     #[cfg(unix)]
     {
-        symlink(&target_path, &link_path)
+        std::os::unix::fs::symlink(&target_path, &link_path)
             .map_err(|e| format!("创建符号链接失败: {}", e))?;
     }
     

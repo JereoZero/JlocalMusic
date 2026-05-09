@@ -2,9 +2,12 @@
 
 # 生成 TypeScript 类型文件脚本
 
+set -e
+
 echo "Generating TypeScript types from Rust..."
 
-cd "$(dirname "$0")/src-tauri"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/../src-tauri"
 
 # 创建临时测试文件来触发类型导出
 mkdir -p src/bin
@@ -32,7 +35,7 @@ EOF
 mkdir -p ../src/types/generated
 
 # 编译并运行
-cargo run --bin export_types 2>/dev/null
+cargo run --bin export_types
 
 # 清理
 rm -rf src/bin

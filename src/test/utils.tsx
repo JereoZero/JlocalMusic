@@ -6,10 +6,7 @@ import { ReactElement } from 'react'
  * 自定义 render 函数
  * 可以在这里添加全局的 Provider（如 ThemeProvider、Router 等）
  */
-function render(
-  ui: ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>
-) {
+function render(ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) {
   const Wrapper = ({ children }: { children: React.ReactNode }) => {
     // 可以在这里添加全局 Provider
     return <>{children}</>

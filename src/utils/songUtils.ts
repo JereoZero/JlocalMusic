@@ -8,7 +8,7 @@ interface Searchable {
 
 export function filterSongs(songs: Song[], query: string): Song[] {
   if (!query.trim()) return songs
-  
+
   const lowerQuery = query.toLowerCase()
   return songs.filter(
     (song) =>
@@ -20,7 +20,7 @@ export function filterSongs(songs: Song[], query: string): Song[] {
 
 export function filterByQuery<T extends Searchable>(items: T[], query: string): T[] {
   if (!query.trim()) return items
-  
+
   const lowerQuery = query.toLowerCase()
   return items.filter(
     (item) =>

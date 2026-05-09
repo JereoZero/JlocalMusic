@@ -19,19 +19,23 @@ export function useSongCover(path: string | undefined) {
 
   useEffect(() => {
     currentPathRef.current = path
-    
+
     if (!path) {
+      setCover(null)
+      setIsLoading(false)
       return
     }
 
     const cachedCover = coverCache.get(path)
     if (cachedCover) {
       setCover(cachedCover)
+      setIsLoading(false)
       return
     }
 
+    setCover(null)
     setIsLoading(true)
-    
+
     if (pendingRequests.has(path)) {
       pendingRequests.get(path)?.then((coverData) => {
         if (currentPathRef.current === path) {
@@ -42,7 +46,8 @@ export function useSongCover(path: string | undefined) {
       return
     }
 
-    const promise = api.getSongCoverFull(path)
+    const promise = api
+      .getSongCoverFull(path)
       .then((coverData) => {
         if (coverData) {
           coverCache.set(path, coverData)
@@ -64,7 +69,7 @@ export function useSongCover(path: string | undefined) {
           setIsLoading(false)
         }
       })
-    
+
     pendingRequests.set(path, promise)
   }, [path])
 
@@ -74,7 +79,7 @@ export function useSongCover(path: string | undefined) {
 export function useSongCovers(paths: string[]) {
   const [covers, setCovers] = useState<Map<string, string | null>>(() => {
     const initialCovers = new Map<string, string | null>()
-    paths.forEach(path => {
+    paths.forEach((path) => {
       const cached = coverCache.get(path)
       if (cached) {
         initialCovers.set(path, cached)
@@ -94,8 +99,8 @@ export function useSongCovers(paths: string[]) {
 
     const cachedCovers = new Map<string, string | null>()
     const uncachedPaths: string[] = []
-    
-    paths.forEach(path => {
+
+    paths.forEach((path) => {
       const cached = coverCache.get(path)
       if (cached) {
         cachedCovers.set(path, cached)
@@ -110,19 +115,20 @@ export function useSongCovers(paths: string[]) {
     }
 
     setIsLoading(true)
-    
+
     Promise.all(
-      uncachedPaths.map(path => 
-        api.getSongCoverFull(path)
+      uncachedPaths.map((path) =>
+        api
+          .getSongCoverFull(path)
           .catch(() => null)
-          .then(cover => {
+          .then((cover) => {
             if (cover) {
               coverCache.set(path, cover)
             }
             return { path, cover }
           })
       )
-    ).then(results => {
+    ).then((results) => {
       if (cancelled) return
       results.forEach(({ path, cover }) => {
         cachedCovers.set(path, cover)
@@ -130,7 +136,7 @@ export function useSongCovers(paths: string[]) {
       setCovers(new Map(cachedCovers))
       setIsLoading(false)
     })
-    
+
     return () => {
       cancelled = true
     }

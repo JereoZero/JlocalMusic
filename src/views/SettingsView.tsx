@@ -1,4 +1,18 @@
-import { X, Folder, Trash2, Info, RefreshCw, FileText, Copy, AlertCircle, CheckCircle, Edit2, Plus, Minus, Palette } from 'lucide-react'
+import {
+  X,
+  Folder,
+  Trash2,
+  Info,
+  RefreshCw,
+  FileText,
+  Copy,
+  AlertCircle,
+  CheckCircle,
+  Edit2,
+  Plus,
+  Minus,
+  Palette,
+} from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
 import * as api from '../api/modules'
 import { useLibraryStore } from '../stores/libraryStore'
@@ -36,10 +50,10 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
         // 获取主文件夹（jmusic-file）
         const primaryFolder = await api.getPrimaryMusicFolder()
         setMusicFolder(primaryFolder)
-        
+
         // 加载副文件夹列表
         const secondary = await api.getSecondaryFolders()
-        setSecondaryFolders(secondary.map(s => s.target))
+        setSecondaryFolders(secondary.map((s) => s.target))
       } catch (error) {
         handleError(error, '加载设置')
       }
@@ -61,23 +75,23 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
     try {
       const text = await api.copyLogsToClipboard()
       await navigator.clipboard.writeText(text)
-      toast.success( '日志已复制到剪贴板')
+      toast.success('日志已复制到剪贴板')
     } catch (error) {
-      toast.error( '复制失败')
+      toast.error('复制失败')
       handleError(error, '复制日志')
     }
   }
 
   const handleClearLogs = async () => {
     if (!confirm('确定要清空所有日志吗？')) return
-    
+
     setLoading(true)
     try {
       const count = await api.clearLogs()
-      toast.success( `已清空 ${count} 条日志`)
+      toast.success(`已清空 ${count} 条日志`)
       await loadLogs()
     } catch (error) {
-      toast.error( '清空失败')
+      toast.error('清空失败')
       handleError(error, '清空日志')
     } finally {
       setLoading(false)
@@ -106,7 +120,7 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
 
   const handleClearPlayHistory = async () => {
     if (!confirm('确定要清空播放历史吗？')) return
-    
+
     setLoading(true)
     try {
       await api.clearPlayHistory()
@@ -120,36 +134,41 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
   }
 
   const handleClearAllData = async () => {
-    if (!confirm('⚠️ 警告：确定要清除全部历史数据吗？\n\n这将清空：\n- 播放历史\n- 喜欢列表\n- 隐藏列表\n- 操作日志\n\n然后重新扫描当前文件夹。\n\n此操作不可恢复！')) return
-    
+    if (
+      !confirm(
+        '⚠️ 警告：确定要清除全部历史数据吗？\n\n这将清空：\n- 播放历史\n- 喜欢列表\n- 隐藏列表\n- 操作日志\n\n然后重新扫描当前文件夹。\n\n此操作不可恢复！'
+      )
+    )
+      return
+
     setLoading(true)
     try {
       // 清空播放历史
       await api.clearPlayHistory()
-      
+
       // 清空喜欢列表
       const likedPaths = await api.getLikedPaths()
       for (const path of likedPaths) {
         await api.toggleLike(path, false)
       }
-      
+
       // 清空隐藏列表
       await api.clearHiddenSongs()
-      
+
       // 清空操作日志
       clearOperationLogs()
-      
+
       // 刷新数据
       await fetchHiddenPaths()
       await fetchSongs()
-      
+
       // 重新扫描当前文件夹
       const result = await api.scanFolder(musicFolder)
       const totalCount = result.normal_songs.length + result.encrypted_songs.length
-      toast.success( `已清除全部历史数据，重新扫描发现 ${totalCount} 首歌曲`)
+      toast.success(`已清除全部历史数据，重新扫描发现 ${totalCount} 首歌曲`)
       await fetchSongs()
     } catch (error) {
-      toast.error( '清除失败')
+      toast.error('清除失败')
       handleError(error, '清除全部数据')
     } finally {
       setLoading(false)
@@ -158,15 +177,15 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
 
   const handleClearHiddenSongs = async () => {
     if (!confirm('确定要清空隐藏列表吗？')) return
-    
+
     setLoading(true)
     try {
       const count = await api.clearHiddenSongs()
-      toast.success( `已清空 ${count} 首隐藏歌曲`)
+      toast.success(`已清空 ${count} 首隐藏歌曲`)
       await fetchHiddenPaths()
       await fetchSongs()
     } catch (error) {
-      toast.error( '清空失败')
+      toast.error('清空失败')
       handleError(error, '清空隐藏列表')
     } finally {
       setLoading(false)
@@ -181,10 +200,11 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
 
   const copyDebugLogs = () => {
     const logs = useOperationLogStore.getState().getAll()
-    navigator.clipboard.writeText(logs.join('\n'))
-      .then(() => toast.success( '操作日志已复制'))
+    navigator.clipboard
+      .writeText(logs.join('\n'))
+      .then(() => toast.success('操作日志已复制'))
       .catch((e) => {
-        toast.error( '复制失败')
+        toast.error('复制失败')
         handleError(e, '复制操作日志')
       })
   }
@@ -201,15 +221,15 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
       if (selected) {
         setMusicFolder(selected)
         await api.setSetting('music_folder', selected)
-        
+
         // 自动扫描新文件夹
         const result = await api.scanFolder(selected)
         const totalCount = result.normal_songs.length + result.encrypted_songs.length
-        toast.success( `主文件夹已更新，发现 ${totalCount} 首歌曲`)
+        toast.success(`主文件夹已更新，发现 ${totalCount} 首歌曲`)
         await fetchSongs()
       }
     } catch (error) {
-      toast.error( '选择文件夹失败')
+      toast.error('选择文件夹失败')
       handleError(error, '选择主文件夹')
     } finally {
       setLoading(false)
@@ -224,17 +244,17 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
       if (selected) {
         // 在主文件夹内创建符号链接
         await api.addSecondaryFolder(selected)
-        setSecondaryFolders(prev => [...prev, selected])
-        toast.success( `已添加副文件夹`)
-        
+        setSecondaryFolders((prev) => [...prev, selected])
+        toast.success(`已添加副文件夹`)
+
         // 重新扫描主文件夹（会自动遍历符号链接）
         const result = await api.scanFolder(musicFolder)
         const totalCount = result.normal_songs.length + result.encrypted_songs.length
-        toast.success( `扫描完成！发现 ${totalCount} 首歌曲`)
+        toast.success(`扫描完成！发现 ${totalCount} 首歌曲`)
         await fetchSongs()
       }
     } catch (error) {
-      toast.error( '选择文件夹失败')
+      toast.error('选择文件夹失败')
       handleError(error, '选择二级文件夹')
     } finally {
       setLoading(false)
@@ -244,27 +264,27 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
   // 删除副文件夹
   const handleRemoveSecondaryFolder = async (index: number) => {
     if (!confirm('确定要删除这个副文件夹吗？\n\n注意：歌曲会从列表中移除，但不会删除文件。')) return
-    
+
     setLoading(true)
     try {
       // 获取副文件夹列表，找到对应的链接名称
       const secondary = await api.getSecondaryFolders()
       const folderToRemove = secondaryFolders[index]
-      const linkInfo = secondary.find(s => s.target === folderToRemove)
-      
+      const linkInfo = secondary.find((s) => s.target === folderToRemove)
+
       if (linkInfo) {
         await api.removeSecondaryFolder(linkInfo.name)
-        setSecondaryFolders(prev => prev.filter((_, i) => i !== index))
+        setSecondaryFolders((prev) => prev.filter((_, i) => i !== index))
 
         const result = await api.scanFolder(musicFolder)
         const totalCount = result.normal_songs.length + result.encrypted_songs.length
-        toast.success( `已删除副文件夹，扫描完成！发现 ${totalCount} 首歌曲`)
+        toast.success(`已删除副文件夹，扫描完成！发现 ${totalCount} 首歌曲`)
         await fetchSongs()
       } else {
-        toast.error( '找不到对应的链接')
+        toast.error('找不到对应的链接')
       }
     } catch (error) {
-      toast.error( '删除失败')
+      toast.error('删除失败')
       handleError(error, '删除副文件夹')
     } finally {
       setLoading(false)
@@ -277,10 +297,10 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
     try {
       const result = await api.scanFolder(musicFolder)
       const totalCount = result.normal_songs.length + result.encrypted_songs.length
-      toast.success( `扫描完成！发现 ${totalCount} 首歌曲`)
+      toast.success(`扫描完成！发现 ${totalCount} 首歌曲`)
       await fetchSongs()
     } catch (error) {
-      toast.error( '扫描失败')
+      toast.error('扫描失败')
       handleError(error, '重新扫描')
     } finally {
       setLoading(false)
@@ -288,7 +308,13 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
   }
 
   return (
-    <div className="h-full flex flex-col transition-colors duration-700 select-none" style={{ backgroundColor: bgColor, transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)' }}>
+    <div
+      className="h-full flex flex-col transition-colors duration-700 select-none"
+      style={{
+        backgroundColor: bgColor,
+        transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)',
+      }}
+    >
       {/* 头部 */}
       <div className="px-6 py-4 mt-8 flex items-center justify-between border-b border-[#2a2a2a]">
         <div className="flex items-center gap-4">
@@ -308,9 +334,7 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
             <button
               onClick={() => setActiveTab('logs')}
               className={`px-4 py-2 rounded-lg transition-colors ${
-                activeTab === 'logs'
-                  ? 'text-white'
-                  : 'bg-white/10 text-gray-400 hover:text-white'
+                activeTab === 'logs' ? 'text-white' : 'bg-white/10 text-gray-400 hover:text-white'
               }`}
               style={activeTab === 'logs' ? { backgroundColor: primaryColor } : undefined}
             >
@@ -319,9 +343,7 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
             <button
               onClick={() => setActiveTab('debug')}
               className={`px-4 py-2 rounded-lg transition-colors ${
-                activeTab === 'debug'
-                  ? 'text-white'
-                  : 'bg-white/10 text-gray-400 hover:text-white'
+                activeTab === 'debug' ? 'text-white' : 'bg-white/10 text-gray-400 hover:text-white'
               }`}
               style={activeTab === 'debug' ? { backgroundColor: primaryColor } : undefined}
             >
@@ -355,12 +377,12 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                       <p className="text-xs text-gray-400">主音乐文件夹</p>
                     </div>
                     <span
-                    className="text-xs px-2 py-1 rounded mr-2"
-                    style={{
-                      backgroundColor: hexToRgba(primaryColor, 0.2),
-                      color: primaryColor,
-                    }}
-                  >
+                      className="text-xs px-2 py-1 rounded mr-2"
+                      style={{
+                        backgroundColor: hexToRgba(primaryColor, 0.2),
+                        color: primaryColor,
+                      }}
+                    >
                       当前使用
                     </span>
                   </div>
@@ -370,8 +392,12 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                     onClick={handleSelectPrimaryFolder}
                     className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm text-white"
                     style={{ backgroundColor: primaryColor }}
-                    onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85' }}
-                    onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '0.85'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '1'
+                    }}
                   >
                     <Edit2 size={14} />
                     更改主文件夹
@@ -405,16 +431,18 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                         key={id}
                         onClick={() => setTheme(id)}
                         className={`p-3 rounded-lg border-2 transition-all ${
-                          isSelected 
-                            ? 'border-white bg-white/10' 
+                          isSelected
+                            ? 'border-white bg-white/10'
                             : 'border-transparent bg-white/10 hover:bg-white/15'
                         }`}
                       >
-                        <div 
+                        <div
                           className="w-8 h-8 rounded-full mx-auto mb-2"
                           style={{ backgroundColor: theme.primary }}
                         />
-                        <p className={`text-xs text-center ${isSelected ? 'text-white' : 'text-gray-400'}`}>
+                        <p
+                          className={`text-xs text-center ${isSelected ? 'text-white' : 'text-gray-400'}`}
+                        >
                           {theme.name}
                         </p>
                       </button>
@@ -435,10 +463,13 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                 <p className="text-xs text-gray-500 mb-4">
                   添加额外的音乐文件夹，歌曲会合并到本地音乐中
                 </p>
-                
+
                 <div className="space-y-3">
                   {secondaryFolders.map((folder, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-white/10 rounded-lg">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-white/10 rounded-lg"
+                    >
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-white truncate">{folder}</p>
                         <p className="text-xs text-gray-400">副文件夹 {index + 1}</p>
@@ -453,7 +484,7 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                       </button>
                     </div>
                   ))}
-                  
+
                   <button
                     onClick={handleAddSecondaryFolder}
                     disabled={loading}
@@ -520,9 +551,7 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                     <span className="text-gray-500">技术栈：</span>
                     <span className="text-white">Rust + Tauri 2 + React 19</span>
                   </p>
-                  <p className="pt-2">
-                    本地音乐播放器，支持 MP3、FLAC、WAV 等格式。
-                  </p>
+                  <p className="pt-2">本地音乐播放器，支持 MP3、FLAC、WAV 等格式。</p>
                 </div>
               </section>
 
@@ -550,7 +579,10 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                   </div>
 
                   {/* v0.7.7 */}
-                  <div className="border-l-2 pl-4" style={{ borderLeftColor: hexToRgba(primaryColor, 0.3) }}>
+                  <div
+                    className="border-l-2 pl-4"
+                    style={{ borderLeftColor: hexToRgba(primaryColor, 0.3) }}
+                  >
                     <p className="text-white font-medium">v0.7.7</p>
                     <p className="text-xs text-gray-500 mb-2">2026-05-07</p>
                     <ul className="text-gray-400 space-y-1 list-disc list-inside">
@@ -767,21 +799,33 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                   <button
                     onClick={() => setLogFilter('all')}
                     className="px-3 py-1.5 rounded-lg text-sm transition-colors bg-white/10 text-gray-400 hover:text-white"
-                    style={logFilter === 'all' ? { backgroundColor: primaryColor, color: 'white' } : undefined}
+                    style={
+                      logFilter === 'all'
+                        ? { backgroundColor: primaryColor, color: 'white' }
+                        : undefined
+                    }
                   >
                     全部
                   </button>
                   <button
                     onClick={() => setLogFilter('info')}
                     className="px-3 py-1.5 rounded-lg text-sm transition-colors bg-white/10 text-gray-400 hover:text-white"
-                    style={logFilter === 'info' ? { backgroundColor: primaryColor, color: 'white' } : undefined}
+                    style={
+                      logFilter === 'info'
+                        ? { backgroundColor: primaryColor, color: 'white' }
+                        : undefined
+                    }
                   >
                     信息
                   </button>
                   <button
                     onClick={() => setLogFilter('error')}
                     className="px-3 py-1.5 rounded-lg text-sm transition-colors bg-white/10 text-gray-400 hover:text-white"
-                    style={logFilter === 'error' ? { backgroundColor: primaryColor, color: 'white' } : undefined}
+                    style={
+                      logFilter === 'error'
+                        ? { backgroundColor: primaryColor, color: 'white' }
+                        : undefined
+                    }
                   >
                     错误
                   </button>
@@ -790,9 +834,7 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                 {/* 日志列表 */}
                 <div className="bg-[#121212] rounded-lg p-4 max-h-96 overflow-y-auto">
                   {logs.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      暂无日志
-                    </div>
+                    <div className="text-center py-8 text-gray-500">暂无日志</div>
                   ) : (
                     <div className="space-y-2">
                       {logs.map((log) => (
@@ -810,13 +852,9 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                                 {new Date(log.created_at).toLocaleString('zh-CN')}
                               </span>
                             </div>
-                            <p className="text-sm text-gray-300 break-words">
-                              {log.message}
-                            </p>
+                            <p className="text-sm text-gray-300 break-words">{log.message}</p>
                             {log.target && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                目标: {log.target}
-                              </p>
+                              <p className="text-xs text-gray-500 mt-1">目标: {log.target}</p>
                             )}
                           </div>
                         </div>
@@ -837,12 +875,14 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                 <p className="text-xs text-gray-500 mb-4">
                   清除所有历史数据，包括播放历史、喜欢列表、隐藏列表等
                 </p>
-                
+
                 <div className="space-y-3">
                   <div className="flex items-center justify-between p-3 bg-white/10 rounded-lg">
                     <div>
                       <p className="text-sm text-white">清除全部历史数据</p>
-                      <p className="text-xs text-gray-400">清空播放历史、喜欢列表、隐藏列表、操作日志</p>
+                      <p className="text-xs text-gray-400">
+                        清空播放历史、喜欢列表、隐藏列表、操作日志
+                      </p>
                     </div>
                     <button
                       onClick={handleClearAllData}
@@ -852,7 +892,7 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                       清除全部
                     </button>
                   </div>
-                  
+
                   <div className="flex items-center justify-between p-3 bg-white/10 rounded-lg">
                     <div>
                       <p className="text-sm text-white">仅清除播放历史</p>
@@ -878,7 +918,7 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                 <p className="text-xs text-gray-500 mb-4">
                   记录用户操作和后台执行情况，便于排查问题
                 </p>
-                
+
                 <div className="bg-[#121212] rounded-lg p-4 max-h-96 overflow-y-auto">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-gray-400">日志记录</span>
@@ -898,14 +938,14 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                     </div>
                   </div>
                   {operationLogs.length === 0 ? (
-                    <div className="text-center py-4 text-gray-500 text-sm">
-                      暂无操作记录
-                    </div>
+                    <div className="text-center py-4 text-gray-500 text-sm">暂无操作记录</div>
                   ) : (
                     <div className="space-y-1 font-mono text-xs">
                       {operationLogs.map((log, index) => (
                         <div key={index} className="text-gray-300">
-                          [{log.timestamp}] {log.action}{log.detail ? ` - ${log.detail}` : ''}{log.error ? ` [错误: ${log.error}]` : ''}
+                          [{log.timestamp}] {log.action}
+                          {log.detail ? ` - ${log.detail}` : ''}
+                          {log.error ? ` [错误: ${log.error}]` : ''}
                         </div>
                       ))}
                     </div>

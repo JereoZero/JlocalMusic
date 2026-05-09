@@ -22,7 +22,7 @@ export const THEMES = {
 } as const
 
 export type ThemeId = keyof typeof THEMES
-export type Theme = typeof THEMES[ThemeId]
+export type Theme = (typeof THEMES)[ThemeId]
 
 export const DEFAULT_THEME_ID: ThemeId = 'orange'
 

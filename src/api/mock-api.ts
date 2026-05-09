@@ -96,21 +96,21 @@ const mockHiddenPaths = new Set<string>([])
 export const mockApi = {
   // 歌曲相关
   getSongs: async (): Promise<Song[]> => mockSongs,
-  
+
   searchSongs: async (query: string): Promise<Song[]> => {
     const q = query.toLowerCase()
     return mockSongs.filter(
-      s =>
+      (s) =>
         s.title.toLowerCase().includes(q) ||
         s.artist.toLowerCase().includes(q) ||
         s.album.toLowerCase().includes(q)
     )
   },
-  
+
   deleteSong: async (path: string): Promise<void> => {
     console.warn('Mock: delete song', path)
   },
-  
+
   getSongCover: async (_path: string): Promise<string | null> => {
     return null
   },
@@ -125,60 +125,60 @@ export const mockApi = {
 
   getSongCoversBatch: async (paths: string[]): Promise<Map<string, string | null>> => {
     const result = new Map<string, string | null>()
-    paths.forEach(p => result.set(p, null))
+    paths.forEach((p) => result.set(p, null))
     return result
   },
-  
+
   // 喜欢相关
   getLikedPaths: async (): Promise<string[]> => Array.from(mockLikedPaths),
-  
+
   getLikedSongs: async (): Promise<{ songs: typeof mockSongs }> => {
     const likedPaths = Array.from(mockLikedPaths)
-    return { songs: mockSongs.filter(s => likedPaths.includes(s.path)) }
+    return { songs: mockSongs.filter((s) => likedPaths.includes(s.path)) }
   },
-  
+
   toggleLike: async (path: string, liked: boolean): Promise<void> => {
     if (liked) mockLikedPaths.add(path)
     else mockLikedPaths.delete(path)
   },
-  
+
   // 隐藏相关
   getHiddenPaths: async (): Promise<string[]> => Array.from(mockHiddenPaths),
-  
+
   hideSong: async (path: string): Promise<void> => {
     mockHiddenPaths.add(path)
   },
-  
+
   unhideSong: async (path: string): Promise<void> => {
     mockHiddenPaths.delete(path)
   },
-  
+
   // 播放历史
   getPlayHistory: async (limit?: number): Promise<PlayHistory[]> => {
     return mockPlayHistory.slice(0, limit || 100)
   },
-  
+
   addPlayHistory: async (path: string, _duration: number, _completed: boolean): Promise<void> => {
     console.warn('Mock: add play history', path)
   },
-  
+
   clearPlayHistory: async (): Promise<void> => {
     console.warn('Mock: clear play history')
   },
-  
+
   // 扫描
   scanFolder: async (folder: string): Promise<number> => {
     console.warn('Mock: scan folder', folder)
     return mockSongs.length
   },
-  
+
   selectFolder: async (): Promise<string | null> => '/mock/music/folder',
-  
+
   // 日志
   getLogs: async (): Promise<AppLog[]> => [],
   clearLogs: async (): Promise<void> => {},
   copyLogsToClipboard: async (): Promise<void> => {},
-  
+
   // 歌词
   getLyrics: async (_path: string): Promise<import('./modules/types').LyricSource | null> => {
     return {

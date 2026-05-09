@@ -56,9 +56,7 @@ class ErrorBoundary extends Component<Props, State> {
               </svg>
             </div>
             <h2 className="text-xl font-bold text-white mb-2">出错了</h2>
-            <p className="text-gray-400 mb-4">
-              应用遇到了一个错误。请尝试刷新页面。
-            </p>
+            <p className="text-gray-400 mb-4">应用遇到了一个错误。请尝试刷新页面。</p>
             {this.state.error && (
               <pre className="text-xs text-gray-500 bg-[#0a0a0a] p-2 rounded mb-4 overflow-auto max-h-32">
                 {this.state.error.message}

@@ -25,7 +25,7 @@ describe('useSongSort', () => {
   describe('初始状态', () => {
     it('应该返回未排序的项目', () => {
       const { result } = renderHook(() => useSongSort(mockSongs))
-      
+
       expect(result.current.titleSort).toBe('default')
       expect(result.current.albumSort).toBe('default')
       expect(result.current.likeSort).toBe('default')
@@ -36,11 +36,11 @@ describe('useSongSort', () => {
   describe('标题排序', () => {
     it('应该按标题升序排序', async () => {
       const { result } = renderHook(() => useSongSort(mockSongs))
-      
+
       await act(async () => {
         result.current.handleTitleSort()
       })
-      
+
       expect(result.current.titleSort).toBe('title-asc')
       expect(result.current.sortedItems[0].title).toBe('A Song')
       expect(result.current.sortedItems[2].title).toBe('C Song')
@@ -48,14 +48,14 @@ describe('useSongSort', () => {
 
     it('应该按标题降序排序', async () => {
       const { result } = renderHook(() => useSongSort(mockSongs))
-      
+
       await act(async () => {
         result.current.handleTitleSort()
       })
       await act(async () => {
         result.current.handleTitleSort()
       })
-      
+
       expect(result.current.titleSort).toBe('title-desc')
       expect(result.current.sortedItems[0].title).toBe('C Song')
       expect(result.current.sortedItems[2].title).toBe('A Song')
@@ -63,7 +63,7 @@ describe('useSongSort', () => {
 
     it('应该按歌手排序', async () => {
       const { result } = renderHook(() => useSongSort(mockSongs))
-      
+
       await act(async () => {
         result.current.handleTitleSort()
       })
@@ -73,7 +73,7 @@ describe('useSongSort', () => {
       await act(async () => {
         result.current.handleTitleSort()
       })
-      
+
       expect(result.current.titleSort).toBe('artist-asc')
       expect(result.current.sortedItems[0].artist).toBe('Artist A')
     })
@@ -82,25 +82,25 @@ describe('useSongSort', () => {
   describe('专辑排序', () => {
     it('应该按专辑升序排序', async () => {
       const { result } = renderHook(() => useSongSort(mockSongs))
-      
+
       await act(async () => {
         result.current.handleAlbumSort()
       })
-      
+
       expect(result.current.albumSort).toBe('album-asc')
       expect(result.current.sortedItems[0].album).toBe('Album A')
     })
 
     it('应该按专辑降序排序', async () => {
       const { result } = renderHook(() => useSongSort(mockSongs))
-      
+
       await act(async () => {
         result.current.handleAlbumSort()
       })
       await act(async () => {
         result.current.handleAlbumSort()
       })
-      
+
       expect(result.current.albumSort).toBe('album-desc')
       expect(result.current.sortedItems[0].album).toBe('Album C')
     })
@@ -114,13 +114,13 @@ describe('useSongSort', () => {
         createMockSong({ id: '2', path: '/music/test.mp3' }),
         createMockSong({ id: '3', path: '/music/3.mp3' }),
       ]
-      
+
       const { result } = renderHook(() => useSongSort(songsWithLiked, likedPaths))
-      
+
       await act(async () => {
         result.current.handleLikeSort()
       })
-      
+
       expect(result.current.likeSort).toBe('liked-first')
       expect(result.current.sortedItems[0].path).toBe('/music/test.mp3')
     })
@@ -129,28 +129,28 @@ describe('useSongSort', () => {
   describe('排序互斥', () => {
     it('标题排序应该重置专辑排序', async () => {
       const { result } = renderHook(() => useSongSort(mockSongs))
-      
+
       await act(async () => {
         result.current.handleAlbumSort()
       })
       await act(async () => {
         result.current.handleTitleSort()
       })
-      
+
       expect(result.current.titleSort).toBe('title-asc')
       expect(result.current.albumSort).toBe('default')
     })
 
     it('专辑排序应该重置标题排序', async () => {
       const { result } = renderHook(() => useSongSort(mockSongs))
-      
+
       await act(async () => {
         result.current.handleTitleSort()
       })
       await act(async () => {
         result.current.handleAlbumSort()
       })
-      
+
       expect(result.current.albumSort).toBe('album-asc')
       expect(result.current.titleSort).toBe('default')
     })

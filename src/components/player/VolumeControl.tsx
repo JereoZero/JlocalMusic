@@ -32,28 +32,37 @@ export default function VolumeControl({ volume, onVolumeChange }: VolumeControlP
     }
   }, [volume, isMuted])
 
-  const handleVolumeChange = useCallback((percentage: number) => {
-    const newVolume = Math.max(0, Math.min(1, percentage))
-    onVolumeChange(newVolume)
-    if (newVolume > 0) {
-      setIsMuted(false)
-    }
-  }, [onVolumeChange])
+  const handleVolumeChange = useCallback(
+    (percentage: number) => {
+      const newVolume = Math.max(0, Math.min(1, percentage))
+      onVolumeChange(newVolume)
+      if (newVolume > 0) {
+        setIsMuted(false)
+      }
+    },
+    [onVolumeChange]
+  )
 
-  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!volumeRef.current) return
-    
-    setIsDragging(true)
-    const rect = volumeRef.current.getBoundingClientRect()
-    const percentage = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
-    handleVolumeChange(percentage)
-  }, [handleVolumeChange])
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!volumeRef.current) return
 
-  const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    const newVolume = Math.max(0, Math.min(1, volume + (e.deltaY > 0 ? -0.05 : 0.05)))
-    onVolumeChange(newVolume)
-  }, [volume, onVolumeChange])
+      setIsDragging(true)
+      const rect = volumeRef.current.getBoundingClientRect()
+      const percentage = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+      handleVolumeChange(percentage)
+    },
+    [handleVolumeChange]
+  )
+
+  const handleWheel = useCallback(
+    (e: React.WheelEvent<HTMLDivElement>) => {
+      e.preventDefault()
+      const newVolume = Math.max(0, Math.min(1, volume + (e.deltaY > 0 ? -0.05 : 0.05)))
+      onVolumeChange(newVolume)
+    },
+    [volume, onVolumeChange]
+  )
 
   useEffect(() => {
     if (!isDragging) return
@@ -90,12 +99,12 @@ export default function VolumeControl({ volume, onVolumeChange }: VolumeControlP
         <div className="w-full h-1 bg-[#4a4a4a] rounded-full relative">
           <div
             className="h-full rounded-full relative transition-colors"
-            style={{ 
+            style={{
               width: `${(isMuted ? 0 : volume) * 100}%`,
-              backgroundColor: primaryColor
+              backgroundColor: primaryColor,
             }}
           >
-            <div 
+            <div
               className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
               style={{ backgroundColor: primaryColor }}
             />

@@ -22,7 +22,7 @@ interface PlayerStore {
   currentTime: number
   duration: number
   volume: number
-  
+
   playSong: (song: Song, queue?: Song[], source?: QueueSource) => Promise<void>
   playSongAtIndex: (index: number) => Promise<void>
   togglePlay: () => Promise<void>
@@ -51,15 +51,15 @@ let lastUpdateTime = 0
 let lastBackendSyncTime = 0
 let eventListenersInitialized = false
 let eventUnsubscribers: Array<() => void> = []
-let songStartTime = 0
 let currentPlayPath: string | null = null
+let accumulatedPlayedMs = 0
 
 async function finalizePlayHistory(completed: boolean) {
-  if (!currentPlayPath || songStartTime === 0) return
+  if (!currentPlayPath) return
   const path = currentPlayPath
-  const elapsed = Math.floor((Date.now() - songStartTime) / 1000)
+  const elapsed = Math.floor(accumulatedPlayedMs / 1000)
   currentPlayPath = null
-  songStartTime = 0
+  accumulatedPlayedMs = 0
   try {
     await api.addPlayHistory(path, elapsed, completed)
   } catch (e) {
@@ -73,24 +73,24 @@ function updateProgress() {
     animationFrameId = null
     return
   }
-  
+
   const now = performance.now()
   const delta = (now - lastUpdateTime) / 1000
   lastUpdateTime = now
-  
+
+  accumulatedPlayedMs += delta * 1000
+
   const newTime = store.currentTime + delta
   const maxTime = store.duration || store.currentSong.duration || 0
-  
+
   if (maxTime <= 0) {
     animationFrameId = requestAnimationFrame(updateProgress)
     return
   }
-  
+
   if (newTime >= maxTime) {
+    animationFrameId = null
     usePlayerStore.setState({ currentTime: maxTime })
-    store.playNext().catch((e) => {
-      handleError(e, 'rAF自动切歌')
-    })
   } else {
     usePlayerStore.setState({ currentTime: newTime })
     animationFrameId = requestAnimationFrame(updateProgress)
@@ -99,7 +99,7 @@ function updateProgress() {
 
 function startProgressTimer() {
   if (animationFrameId !== null) return
-  
+
   lastUpdateTime = performance.now()
   animationFrameId = requestAnimationFrame(updateProgress)
 }
@@ -113,19 +113,23 @@ function stopProgressTimer() {
 
 async function playSongInternal(song: Song, logAction: string) {
   log(logAction, song.title)
-  
+
   finalizePlayHistory(false)
-  
+
   try {
     await api.playSong(song.path)
     log('播放成功', song.title)
-    usePlayerStore.setState({ currentSong: song, isPlaying: true, currentTime: 0, duration: song.duration })
+    usePlayerStore.setState({
+      currentSong: song,
+      isPlaying: true,
+      currentTime: 0,
+      duration: song.duration,
+    })
     usePlayQueueStore.getState().setLastSongPath(song.path)
     lastUpdateTime = performance.now()
-    songStartTime = Date.now()
     currentPlayPath = song.path
     startProgressTimer()
-    
+
     usePlayerStore.getState().updateMediaSession(song)
     return true
   } catch (error) {
@@ -144,12 +148,12 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
   playSong: async (song, queue, source = 'local') => {
     const queueStore = usePlayQueueStore.getState()
-    
+
     if (queue && queue.length > 0) {
-      const startIndex = queue.findIndex(s => s.path === song.path)
+      const startIndex = queue.findIndex((s) => s.path === song.path)
       queueStore.setQueue(queue, startIndex >= 0 ? startIndex : 0, source)
     }
-    
+
     await playSongInternal(song, '点击播放')
   },
 
@@ -157,22 +161,22 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     const queueStore = usePlayQueueStore.getState()
     const song = queueStore.queue[index]
     if (!song) return
-    
+
     queueStore.setCurrentIndex(index)
     await playSongInternal(song, `播放列表项 ${index}`)
   },
 
   togglePlay: async () => {
     const { isPlaying, currentSong } = get()
-    
+
     log('点击播放/暂停', `当前状态: ${isPlaying ? '播放中' : '暂停中'}`)
-    
+
     if (!currentSong) {
       log('无当前歌曲', '播放随机歌曲')
       await get().playRandomSong()
       return
     }
-    
+
     try {
       if (isPlaying) {
         log('后台执行', 'pauseSong()')
@@ -213,7 +217,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       await get().playRandomSong()
       return
     }
-    
+
     log('恢复播放')
     try {
       await api.resumeSong()
@@ -240,7 +244,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       handleError(error, '停止')
     }
   },
-  
+
   seek: async (time) => {
     log('拖动进度条', `${time.toFixed(1)}s`)
     try {
@@ -255,7 +259,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       log('跳转失败', String(error))
     }
   },
-  
+
   setVolume: async (volume) => {
     log('调节音量', `${Math.round(volume * 100)}%`)
     try {
@@ -272,62 +276,66 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   playNext: async () => {
     log('点击下一首')
     const queueStore = usePlayQueueStore.getState()
-    const settingsStore = usePlayerSettingsStore.getState()
-    let { playMode } = settingsStore.settings
-    
+    const { playMode } = usePlayerSettingsStore.getState().settings
+
     if (playMode === 'loop') {
-      settingsStore.setPlayMode('list')
-      playMode = 'list'
+      const current = get().currentSong
+      if (current) {
+        await playSongInternal(current, '下一首(单曲循环)')
+      }
+      return
     }
-    
+
     const nextSong = queueStore.moveToNext(playMode)
     if (!nextSong) {
       log('没有下一首')
       return
     }
-    
+
     await playSongInternal(nextSong, '下一首')
   },
 
   playPrev: async () => {
     log('点击上一首')
     const queueStore = usePlayQueueStore.getState()
-    const settingsStore = usePlayerSettingsStore.getState()
-    let { playMode } = settingsStore.settings
-    
+    const { playMode } = usePlayerSettingsStore.getState().settings
+
     if (playMode === 'loop') {
-      settingsStore.setPlayMode('list')
-      playMode = 'list'
+      const current = get().currentSong
+      if (current) {
+        await playSongInternal(current, '上一首(单曲循环)')
+      }
+      return
     }
-    
+
     const prevSong = queueStore.moveToPrev(playMode)
     if (!prevSong) {
       log('没有上一首')
       return
     }
-    
+
     await playSongInternal(prevSong, '上一首')
   },
 
   initMediaSession: () => {
     if (!('mediaSession' in navigator) || !navigator.mediaSession) return
-    
+
     navigator.mediaSession.setActionHandler('play', () => {
       get().resume()
     })
-    
+
     navigator.mediaSession.setActionHandler('pause', () => {
       get().pause()
     })
-    
+
     navigator.mediaSession.setActionHandler('previoustrack', () => {
       get().playPrev()
     })
-    
+
     navigator.mediaSession.setActionHandler('nexttrack', () => {
       get().playNext()
     })
-    
+
     navigator.mediaSession.setActionHandler('seekto', (details: { seekTime?: number }) => {
       if (details.seekTime !== undefined) {
         get().seek(details.seekTime)
@@ -337,14 +345,15 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
   updateMediaSession: (song: Song) => {
     if (!('mediaSession' in navigator) || !navigator.mediaSession) return
-    
+    if (typeof MediaMetadata === 'undefined') return
+
     try {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: song.title,
         artist: song.artist,
         album: song.album,
       })
-      
+
       navigator.mediaSession.setPositionState?.({
         duration: song.duration,
         position: 0,
@@ -357,15 +366,15 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   restoreLastSong: async () => {
     const queueStore = usePlayQueueStore.getState()
     const { lastSongPath, queueSource } = queueStore
-    
+
     if (!lastSongPath) {
       await get().playRandomSong()
       return
     }
-    
+
     let songs: Song[]
     let source: QueueSource
-    
+
     if (queueSource === 'liked') {
       const { songs: likedSongs } = await api.getLikedSongs()
       songs = likedSongs
@@ -374,22 +383,14 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       songs = await api.getSongs()
       source = 'local'
     }
-    
-    const songIndex = songs.findIndex(s => s.path === lastSongPath)
+
+    const songIndex = songs.findIndex((s) => s.path === lastSongPath)
     if (songIndex >= 0) {
       const song = songs[songIndex]
       queueStore.setQueue(songs, songIndex, source)
-      
-      try {
-        await api.playSong(song.path)
-        await api.pauseSong()
-        log('恢复歌曲', song.title)
-      } catch (e) {
-        handleError(e, '恢复上次歌曲')
-      }
-      
       set({ currentSong: song, currentTime: 0, duration: song.duration, isPlaying: false })
       get().updateMediaSession(song)
+      log('恢复歌曲(仅本地状态)', song.title)
     } else {
       await get().playRandomSong()
     }
@@ -400,7 +401,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     const { queueSource } = queueStore
     let songs: Song[] = []
     let source: QueueSource = 'local'
-    
+
     if (queueSource === 'liked') {
       try {
         const { songs: likedSongs } = await api.getLikedSongs()
@@ -412,7 +413,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         handleError(e, '加载喜欢列表')
       }
     }
-    
+
     if (songs.length === 0) {
       try {
         songs = await api.getSongs()
@@ -422,12 +423,12 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         return
       }
     }
-    
+
     if (songs.length === 0) return
-    
+
     const randomIndex = Math.floor(Math.random() * songs.length)
     const song = songs[randomIndex]
-    
+
     queueStore.setQueue(songs, randomIndex, source)
     await playSongInternal(song, '随机播放')
   },
@@ -440,12 +441,13 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     const unsubProgress = listen<PlaybackProgressEvent>('playback_progress', (event) => {
       const { position, duration } = event.payload
       const store = usePlayerStore.getState()
-      
+
       if (store.isPlaying && store.currentSong) {
         const now = performance.now()
         const gap = Math.abs(position - store.currentTime)
-        const shouldSync = gap > 0.3 || position > store.currentTime || (now - lastBackendSyncTime) > 3000
-        
+        const shouldSync =
+          gap > 0.3 || position > store.currentTime || now - lastBackendSyncTime > 3000
+
         if (shouldSync) {
           lastUpdateTime = now
           lastBackendSyncTime = now
@@ -459,29 +461,34 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         }
       }
     })
-    eventUnsubscribers.push(() => { unsubProgress.then(fn => fn()) })
+    eventUnsubscribers.push(() => {
+      unsubProgress.then((fn) => fn())
+    })
 
     // 监听歌曲播放完成事件
     const unsubFinished = listen('track_finished', () => {
       log('歌曲播放完成')
+      stopProgressTimer()
       finalizePlayHistory(true)
       usePlayerStore.getState().playNext()
     })
-    eventUnsubscribers.push(() => { unsubFinished.then(fn => fn()) })
+    eventUnsubscribers.push(() => {
+      unsubFinished.then((fn) => fn())
+    })
 
     log('事件监听器初始化完成')
   },
 
   cleanupEventListeners: () => {
-    eventUnsubscribers.forEach(fn => fn())
+    eventUnsubscribers.forEach((fn) => fn())
     eventUnsubscribers = []
     eventListenersInitialized = false
-    
+
     if (animationFrameId !== null) {
       cancelAnimationFrame(animationFrameId)
       animationFrameId = null
     }
-    
+
     log('事件监听器已清理')
   },
 }))

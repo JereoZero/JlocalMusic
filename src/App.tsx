@@ -25,12 +25,12 @@ function AppContent() {
   const previousViewRef = useRef<ViewType>('liked')
   const [showLyrics, setShowLyrics] = useState(false)
 
-  const { 
-    currentSong, 
-    isPlaying, 
-    currentTime, 
-    duration, 
-    volume, 
+  const {
+    currentSong,
+    isPlaying,
+    currentTime,
+    duration,
+    volume,
     togglePlay,
     playNext,
     playPrev,
@@ -42,23 +42,19 @@ function AppContent() {
     cleanupEventListeners,
   } = usePlayerStore()
   const { fetchSongs, fetchLikedPaths, fetchHiddenPaths } = useLibraryStore()
-  
+
   // 获取专辑颜色
   const { cover } = useSongCover(currentSong?.path)
   const albumColors = useAlbumColor(cover, currentSong?.path)
   const mainBgColor = albumColors.main || '#121212'
   const sidebarBgColor = albumColors.sidebar || '#121212'
-  
+
   // 初始化主题
   useTheme()
 
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([
-        fetchSongs(),
-        fetchLikedPaths(),
-        fetchHiddenPaths()
-      ])
+      await Promise.all([fetchSongs(), fetchLikedPaths(), fetchHiddenPaths()])
       toast('加载完成')
     }
     loadData()
@@ -71,30 +67,59 @@ function AppContent() {
 
     const frontendVolume = usePlayerStore.getState().volume
     api.setVolume(frontendVolume).catch(createErrorHandler('启动音量同步'))
-    
+
     return () => {
       cleanupEventListeners()
     }
   }, [initEventListeners, initMediaSession, restoreLastSong, cleanupEventListeners])
 
-  useHotkeys('space', () => {
-    togglePlay()
-    toast(isPlaying ? '已暂停' : '正在播放')
-  }, { preventDefault: true, enableOnFormTags: false }, [togglePlay, isPlaying])
-  
-  useHotkeys('mod+left', () => playPrev(), { preventDefault: true, enableOnFormTags: false }, [playPrev])
-  useHotkeys('mod+right', () => playNext(), { preventDefault: true, enableOnFormTags: false }, [playNext])
-  
-  useHotkeys('left', () => {
-    if (currentSong) seek(Math.max(0, currentTime - 5))
-  }, { preventDefault: true, enableOnFormTags: false }, [currentSong, currentTime, seek])
-  
-  useHotkeys('right', () => {
-    if (currentSong) seek(Math.min(duration, currentTime + 5))
-  }, { preventDefault: true, enableOnFormTags: false }, [currentSong, currentTime, duration, seek])
-  
-  useHotkeys('up', () => setVolume(Math.min(1, volume + 0.1)), { preventDefault: true, enableOnFormTags: false }, [volume, setVolume])
-  useHotkeys('down', () => setVolume(Math.max(0, volume - 0.1)), { preventDefault: true, enableOnFormTags: false }, [volume, setVolume])
+  useHotkeys(
+    'space',
+    () => {
+      togglePlay()
+      toast(isPlaying ? '已暂停' : '正在播放')
+    },
+    { preventDefault: true, enableOnFormTags: false },
+    [togglePlay, isPlaying]
+  )
+
+  useHotkeys('mod+left', () => playPrev(), { preventDefault: true, enableOnFormTags: false }, [
+    playPrev,
+  ])
+  useHotkeys('mod+right', () => playNext(), { preventDefault: true, enableOnFormTags: false }, [
+    playNext,
+  ])
+
+  useHotkeys(
+    'left',
+    () => {
+      if (currentSong) seek(Math.max(0, currentTime - 5))
+    },
+    { preventDefault: true, enableOnFormTags: false },
+    [currentSong, currentTime, seek]
+  )
+
+  useHotkeys(
+    'right',
+    () => {
+      if (currentSong) seek(Math.min(duration, currentTime + 5))
+    },
+    { preventDefault: true, enableOnFormTags: false },
+    [currentSong, currentTime, duration, seek]
+  )
+
+  useHotkeys(
+    'up',
+    () => setVolume(Math.min(1, volume + 0.1)),
+    { preventDefault: true, enableOnFormTags: false },
+    [volume, setVolume]
+  )
+  useHotkeys(
+    'down',
+    () => setVolume(Math.max(0, volume - 0.1)),
+    { preventDefault: true, enableOnFormTags: false },
+    [volume, setVolume]
+  )
 
   const handleViewChange = useCallback((view: ViewType) => {
     setShowLyrics(false)
@@ -107,7 +132,7 @@ function AppContent() {
 
   const handleToggleSettings = useCallback(() => {
     setShowLyrics(false)
-    setCurrentView(prev => {
+    setCurrentView((prev) => {
       if (prev === 'settings') {
         return previousViewRef.current
       } else {
@@ -119,7 +144,7 @@ function AppContent() {
   }, [])
 
   const handleToggleLyrics = useCallback(() => {
-    setShowLyrics(prev => !prev)
+    setShowLyrics((prev) => !prev)
   }, [])
 
   const renderView = () => {
@@ -144,9 +169,12 @@ function AppContent() {
   }
 
   return (
-    <div 
+    <div
       className="h-screen flex flex-col text-white overflow-hidden transition-colors duration-700 select-none"
-      style={{ backgroundColor: mainBgColor, transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)' }}
+      style={{
+        backgroundColor: mainBgColor,
+        transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)',
+      }}
     >
       <div className="flex-1 flex overflow-hidden">
         <Sidebar
@@ -155,9 +183,7 @@ function AppContent() {
           onToggleSettings={handleToggleSettings}
           bgColor={sidebarBgColor}
         />
-        <main className="flex-1 overflow-hidden">
-          {renderView()}
-        </main>
+        <main className="flex-1 overflow-hidden">{renderView()}</main>
       </div>
 
       <PlayerBar onToggleLyrics={handleToggleLyrics} />

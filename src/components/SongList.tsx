@@ -9,7 +9,9 @@ import { AUDIO_FORMATS } from '../constants'
 import type { QueueSource } from '../stores/playQueueStore'
 
 const UNSUPPORTED_EXTENSIONS = new Set(['wma', 'ape', 'oga'])
-const SUPPORTED_FORMATS: Set<string> = new Set(AUDIO_FORMATS.normal.filter(f => !UNSUPPORTED_EXTENSIONS.has(f)))
+const SUPPORTED_FORMATS: Set<string> = new Set(
+  AUDIO_FORMATS.normal.filter((f) => !UNSUPPORTED_EXTENSIONS.has(f))
+)
 
 function isSupportedFormat(path: string): boolean {
   const ext = path.toLowerCase().split('.').pop()
@@ -62,21 +64,30 @@ const SongItem = memo(function SongItem({
   const { getPrimaryColor } = useThemeStore()
   const primaryColor = getPrimaryColor()
 
-  const handleToggleLike = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation()
-    onToggleLike(song.path)
-  }, [onToggleLike, song.path])
+  const handleToggleLike = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      onToggleLike(song.path)
+    },
+    [onToggleLike, song.path]
+  )
 
-  const handleToggleHidden = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation()
-    onToggleHidden(song.path)
-  }, [onToggleHidden, song.path])
+  const handleToggleHidden = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      onToggleHidden(song.path)
+    },
+    [onToggleHidden, song.path]
+  )
 
-  const handlePlay = useCallback((e: React.MouseEvent) => {
-    if (!isPlayable) return
-    e.stopPropagation()
-    onPlay(song)
-  }, [onPlay, song, isPlayable])
+  const handlePlay = useCallback(
+    (e: React.MouseEvent) => {
+      if (!isPlayable) return
+      e.stopPropagation()
+      onPlay(song)
+    },
+    [onPlay, song, isPlayable]
+  )
 
   return (
     <div
@@ -89,7 +100,7 @@ const SongItem = memo(function SongItem({
       onDoubleClick={handlePlay}
       style={{ height: 56 }}
     >
-      <div 
+      <div
         className="w-8 text-right text-sm flex-shrink-0"
         style={{ color: isCurrent ? primaryColor : undefined }}
       >
@@ -108,13 +119,13 @@ const SongItem = memo(function SongItem({
           ) : (
             <div className="w-full h-full bg-[#3a3a3a] flex items-center justify-center">
               <svg className="w-5 h-5 text-[#5a5a5a]" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
               </svg>
             </div>
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <div 
+          <div
             className="font-medium truncate flex items-center gap-2"
             style={{ color: isCurrent ? primaryColor : undefined }}
           >
@@ -126,9 +137,7 @@ const SongItem = memo(function SongItem({
               </span>
             )}
           </div>
-          <div className="text-sm text-gray-400 truncate">
-            {song.artist || '未知歌手'}
-          </div>
+          <div className="text-sm text-gray-400 truncate">{song.artist || '未知歌手'}</div>
         </div>
       </div>
 
@@ -201,9 +210,12 @@ export default function SongList({
 
   const items = virtualizer.getVirtualItems()
 
-  const handlePlay = useCallback((song: Song) => {
-    onPlay(song, songs, source)
-  }, [onPlay, songs, source])
+  const handlePlay = useCallback(
+    (song: Song) => {
+      onPlay(song, songs, source)
+    },
+    [onPlay, songs, source]
+  )
 
   if (songs.length === 0) {
     return (
