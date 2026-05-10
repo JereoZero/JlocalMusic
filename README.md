@@ -127,9 +127,10 @@ npm run lint         # Linting
 
 ## 📝 Changelog
 
-### v0.7.12
-> 🔥 Code review release — 15 bugs fixed (3 P0 critical, 6 P1 important, 6 P2 quality)
+### v0.7.12 + patch (2026-05-10)
+> 🔥 Code review release — 15 bugs fixed (3 P0 critical, 6 P1 important, 6 P2 quality) + 7 post-release fixes
 
+**v0.7.12 (Original)**
 - 🐛 **SongListHeader visible** — Removed `hidden` class, header columns now show
 - 🐛 **Play history fix** — `finalizePlayHistory` now awaited properly
 - 🛡️ **CSP security** — Replaced null CSP with restrict-to-self policy
@@ -137,14 +138,23 @@ npm run lint         # Linting
 - ⚡ **Batch covers** — `useSongCovers` uses single RPC instead of N sequential calls
 - 📦 **Type dedup** — `ViewType`/`PlayMode` unified under `types.ts`
 - ⚙️ **Config dedup** — `PLAYER_CONFIG` merged, `progressInterval` fixed
-- 🪟 **Resizable window** — min 900×600, previously fixed 1200×750
-- 🔧 **Rust path validator** — Duplicate `is_path_in_music_folder` removed
-- 🧹 **Unused deps** — `clsx`, `tailwind-merge`, `config`, `regex` cleaned
-- 🔧 **Type cast hack** — `SortableItem` now includes `path: string`
-- 🔁 **HistoryView stable ref** — `loadPlayHistory` wrapped in `useCallback`
-- ⏱️ **Volume debounce** — 100ms debounce for `setVolume` calls
-- 🚀 **getLikedSongs SQL JOIN** — Backend query replaces client-side filter
+- 🪟 **Resizable window** — min 900×600, no longer fixed 1200×750
+- 🔧 **Rust path validation dedup** — removed duplicate in `settings.rs`
+- 🧹 **Cleaned unused deps** — frontend `clsx`/`tailwind-merge`, Rust `config`/`regex`
+- 🔧 **Type cast hack fixed** — `SortableItem` interface added `path` field
+- 🔁 **HistoryView stable ref** — `loadPlayHistory` wrapped with `useCallback`
+- ⏱️ **Volume debounce** — 100ms debounce reduces backend RPC frequency
+- 🚀 **`getLikedSongs` SQL JOIN** — backend JOIN query replaces client-side filtering
 - 🗑️ **Batch unlike** — `clear_liked_songs` RPC eliminates per-song loop
+
+**v0.7.12-patch (Additional fixes)**
+- 🐛 **Windows build** — `lto = true` → `lto = "thin"` for MSVC linker compatibility
+- 🐛 **Player sink lifecycle** — `sink.take()` now properly stops sink on track completion
+- 🐛 **`get_song_play_count` type fix** — `fetch_optional` + `?` replaces broken `unwrap_or(0)`
+- 🎚️ **ProgressBar stale closure** — `displayTimeRef` keeps latest value for `handleMouseUp`
+- 🔇 **`scan_folder` error handling** — explicit `match` replaces silent `unwrap_or((0,0))`
+- ⚡ **Player CPU usage** — `recv_timeout(50ms)` → `100ms` reduces idle CPU
+- 📝 **Blocking IO documented** — `get_duration_from_symphonia` sync I/O noted for future refactor
 
 ### v0.7.11
 > 🔧 CI build fix + BUGS.md archive — 21 CODEX items compacted to summary

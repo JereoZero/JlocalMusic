@@ -27,10 +27,33 @@ All notable changes to JlocalMusic will be documented in this file.
 - 🚀 **`getLikedSongs` backend SQL JOIN** — Replaced client-side filter (fetch all → filter in JS) with SQL INNER JOIN for O(1) lookup ([database.rs](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/src/database.rs), [library.ts](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src/api/modules/library.ts))
 - 🗑️ **Batch unlike in clearAllData** — Added `clear_liked_songs` RPC eliminating per-song DELETE loop in SettingsView ([database.rs](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/src/database.rs), [SettingsView.tsx](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src/views/SettingsView.tsx))
 
+### CI & Build
+- 🔧 **Windows CI 暂时移除** — `lto = true` 与 Windows MSVC 链接器不兼容，CI 矩阵改为仅 macOS，Windows 支持后续处理
+- 🖥️ **GitHub Actions runner** — `windows-latest` → `windows-2022` 测试（已回滚）
+
 ### Lint & Verification
 - ✅ TypeScript `tsc --noEmit` — 0 errors
 - ✅ ESLint `--max-warnings 0` — 0 warnings
 - ✅ Rust `cargo check` — clean compile
+
+---
+
+## v0.7.12-patch (2026-05-10)
+
+### 🔥 Additional Fixes — Post-release code review
+
+#### P0 — Critical (3)
+- 🐛 **Windows build failure** — `lto = true` in `[profile.release]` causes MSVC linker error on Windows; changed to `lto = "thin"` with `codegen-units = 1` ([Cargo.toml](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/Cargo.toml))
+- 🐛 **Player sink lifecycle bug** — `sink.take()` on track completion consumed the sink without stopping it, leaving state inconsistent; now properly stops sink and clears `duration` ([player.rs](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/src/player.rs))
+- 🐛 **`get_song_play_count` type mismatch** — `fetch_one` + `unwrap_or(0)` mixed `sqlx::Error` with `i64`; changed to `fetch_optional` + `?` + `unwrap_or(0)` ([database.rs](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/src/database.rs))
+
+#### P1 — Important (3)
+- 🎚️ **ProgressBar stale closure** — `handleMouseUp` captured stale `displayTime` from closure, causing seek to jump to old position after drag; fixed with `displayTimeRef` ([ProgressBar.tsx](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src/components/player/ProgressBar.tsx))
+- 🔇 **`scan_folder` silent error swallowing** — `upsert_songs().unwrap_or((0,0))` hid database errors, preventing encrypted songs from being auto-hidden; replaced with explicit `match` error handling ([commands/song.rs](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/src/commands/song.rs))
+- ⚡ **Player thread CPU usage** — `recv_timeout(50ms)` caused busy-loop; increased to 100ms to reduce idle CPU ([player.rs](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/src/player.rs))
+
+#### P2 — Documentation (1)
+- 📝 **Symphonia blocking IO noted** — `get_duration_from_symphonia` performs sync file I/O in async context; added comment warning for future `spawn_blocking` refactor ([scanner.rs](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/src/scanner.rs))
 
 ---
 

@@ -114,9 +114,10 @@ npm run lint        # 代码检查
 
 ## 📝 版本历史
 
-### v0.7.12
-> 🔥 代码审查修复版本 — 修复 15 个问题（3 严重 + 6 重要 + 6 代码质量）
+### v0.7.12 + patch (2026-05-10)
+> 🔥 代码审查修复版本 — 修复 15 个问题（3 严重 + 6 重要 + 6 代码质量）+ 7 个发布后修复
 
+**v0.7.12（原始版本）**
 - 🐛 **SongListHeader 表头可见** — 移除 `hidden` 类，列标签正常显示
 - 🐛 **播放历史修复** — `finalizePlayHistory` 正确 await，切歌不再丢失历史
 - 🛡️ **CSP 安全策略** — 从 null 改为限制性安全策略
@@ -132,6 +133,15 @@ npm run lint        # 代码检查
 - ⏱️ **音量防抖** — 100ms 防抖减少后端频繁调用
 - 🚀 **getLikedSongs SQL JOIN** — 后端 JOIN 查询替代客户端过滤
 - 🗑️ **批量取消喜欢** — `clear_liked_songs` RPC 取消循环逐个操作
+
+**v0.7.12-patch（发布后修复）**
+- 🐛 **Windows 构建** — `lto = true` → `lto = "thin"` 修复 MSVC 链接器兼容性
+- 🐛 **播放器 sink 生命周期** — `sink.take()` 现在正确停止 sink 并清理状态
+- 🐛 **`get_song_play_count` 类型修复** — `fetch_optional` + `?` 替代错误的 `unwrap_or(0)`
+- 🎚️ **ProgressBar 闭包陈旧** — `displayTimeRef` 保持最新值供 `handleMouseUp` 使用
+- 🔇 **`scan_folder` 错误处理** — 显式 `match` 替代静默的 `unwrap_or((0,0))`
+- ⚡ **播放器 CPU 占用** — `recv_timeout(50ms)` → `100ms` 降低空闲 CPU
+- 📝 **阻塞 IO 注释** — `get_duration_from_symphonia` 同步文件 I/O 添加重构提示
 
 ### v0.7.11
 > 🔧 CI 构建修复 + BUGS.md 归档 — 21 个 CODEX 精简为汇总表

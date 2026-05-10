@@ -76,6 +76,51 @@
 
 ---
 
+## v0.7.12-patch (2026-05-10) — Post-release fixes
+
+### P0 — Critical (3)
+
+#### 15. 🐛 Windows build failure
+**文件**: [Cargo.toml](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/Cargo.toml)  
+**问题**: `[profile.release]` 中 `lto = true`（全程序链接时优化）在 Windows MSVC 链接器上导致内存不足/内部错误，CI 构建持续失败。  
+**修复**: 改为 `lto = "thin"`（增量式 ThinLTO），并添加 `codegen-units = 1` 保持优化效果。Windows CI 暂时移除，仅保留 macOS。
+
+#### 16. 🐛 Player sink 生命周期 bug
+**文件**: [player.rs](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/src/player.rs)  
+**问题**: 歌曲播放完成时 `sink.take()` 消费了 `Option<Sink>` 但未调用 `stop()`，导致音频资源未释放；同时 `duration` 未重置，后续状态检查可能 panic。  
+**修复**: `if let Some(s) = sink.take() { s.stop(); }`，并同步重置 `duration = None` 和状态中的 `duration`。
+
+#### 17. 🐛 `get_song_play_count` 类型不匹配
+**文件**: [database.rs](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/src/database.rs)  
+**问题**: `fetch_one(&self.pool).await.unwrap_or(0)` 中 `unwrap_or` 的默认类型是 `sqlx::Error` 而非 `i64`，编译器推断错误，运行时可能 panic。  
+**修复**: `fetch_optional` + `?` + `unwrap_or(0)`，正确分离错误处理和默认值。
+
+### P1 — Important (3)
+
+#### 18. 🎚️ ProgressBar 闭包陈旧
+**文件**: [ProgressBar.tsx](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src/components/player/ProgressBar.tsx)  
+**问题**: `handleMouseUp` 事件处理器通过闭包捕获 `displayTime`，但闭包创建时的值是拖拽开始时的旧值，松开后 `handleSeek` 跳回拖拽前的位置。  
+**修复**: 引入 `displayTimeRef`（`useRef`），在 `displayTime` 更新时同步更新 ref，`handleMouseUp` 从 ref 读取最新值。
+
+#### 19. 🔇 `scan_folder` 静默吞错误
+**文件**: [commands/song.rs](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/src/commands/song.rs)  
+**问题**: `db.upsert_songs().unwrap_or((0, 0))` 在数据库插入失败时静默返回 `(0,0)`，导致加密歌曲不会被自动隐藏，且错误完全丢失。  
+**修复**: 用显式 `match` 处理 `Result`，错误时记录 `tracing::error`，成功时才执行后续逻辑。
+
+#### 20. ⚡ Player 线程 CPU 占用
+**文件**: [player.rs](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/src/player.rs)  
+**问题**: `recv_timeout(Duration::from_millis(50))` 每 50ms 唤醒一次，空闲时形成忙循环，CPU 占用高。  
+**修复**: 改为 `100ms`，降低唤醒频率，对播放进度更新无感知影响（进度通过 `requestAnimationFrame` 在前端计算）。
+
+### P2 — Documentation (1)
+
+#### 21. 📝 Symphonia 阻塞 IO 注释
+**文件**: [scanner.rs](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/src/scanner.rs)  
+**问题**: `get_duration_from_symphonia` 在 async 函数中执行同步文件 I/O，可能阻塞 tokio 运行时。  
+**修复**: 添加文档注释说明此函数执行阻塞 IO，提示未来应使用 `tokio::task::spawn_blocking` 包裹。
+
+---
+
 ## ✅ 验证
 
 | 检查项 | 结果 |
@@ -113,6 +158,16 @@
 - `src-tauri/tauri.conf.json` — CSP + resizable
 
 **Docs (4 files)**:
-- `CHANGELOG.md` — v0.7.12 日志
-- `README.md` — v0.7.12 日志 (EN)
-- `README-zh.md` — v0.7.12 日志 (ZH)
+- `CHANGELOG.md` — v0.7.12 + patch 日志
+- `README.md` — v0.7.12 + patch 日志 (EN)
+- `README-zh.md` — v0.7.12 + patch 日志 (ZH)
+- `RELEASE_v0.7.12.md` — 补充 patch 修复记录
+
+**Patch Files Changed (6 files)**:
+- `src-tauri/Cargo.toml` — `lto = true` → `lto = "thin"`, `codegen-units = 1`
+- `src-tauri/src/player.rs` — sink 生命周期修复, recv_timeout 100ms
+- `src-tauri/src/database.rs` — `get_song_play_count` `fetch_optional` 修复
+- `src-tauri/src/commands/song.rs` — `scan_folder` 显式错误处理
+- `src-tauri/src/scanner.rs` — 阻塞 IO 注释
+- `src/components/player/ProgressBar.tsx` — `displayTimeRef` 修复闭包陈旧
+- `.github/workflows/build.yml` — 移除 Windows CI，仅保留 macOS
