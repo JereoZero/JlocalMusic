@@ -175,7 +175,7 @@ impl FolderScanner {
         Some(song)
     }
 
-    /// 使用 Symphonia 获取音频时长
+    /// 使用 Symphonia 获取音频时长（阻塞 IO，应在 spawn_blocking 中调用）
     fn get_duration_from_symphonia(&self, path: &str) -> Option<f64> {
         use symphonia::core::codecs::CODEC_TYPE_NULL;
         use symphonia::core::formats::FormatOptions;

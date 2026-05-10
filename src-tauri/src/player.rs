@@ -119,7 +119,7 @@ impl AudioPlayer {
         let mut last_emit = Instant::now();
         
         loop {
-            match cmd_rx.recv_timeout(Duration::from_millis(50)) {
+            match cmd_rx.recv_timeout(Duration::from_millis(100)) {
                 Ok(cmd) => {
                     match cmd {
                         PlayerCmd::Play(path) => {
@@ -303,14 +303,18 @@ impl AudioPlayer {
                     if let Some(d) = duration {
                         if position >= d {
                             // 播放完成
-                            sink.take();
+                            if let Some(s) = sink.take() {
+                                s.stop();
+                            }
                             start_time = None;
                             base_position = 0.0;
+                            duration = None;
 
                             let mut st = state.blocking_write();
                             st.state = PlaybackState::Stopped;
                             st.current_path = None;
                             st.position = 0.0;
+                            st.duration = None;
 
                             let _ = app_handle.emit("track_finished", "");
 

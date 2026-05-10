@@ -292,15 +292,14 @@ impl Database {
 
     /// 获取歌曲的播放次数
     pub async fn get_song_play_count(&self, path: &str) -> Result<i64, DatabaseError> {
-        let count: i64 = sqlx::query_scalar(
-            "SELECT COALESCE(count, 0) FROM play_counts WHERE path = ?"
+        let count: Option<i64> = sqlx::query_scalar(
+            "SELECT count FROM play_counts WHERE path = ?"
         )
         .bind(path)
-        .fetch_one(&self.pool)
-        .await
-        .unwrap_or(0);
+        .fetch_optional(&self.pool)
+        .await?;
 
-        Ok(count)
+        Ok(count.unwrap_or(0))
     }
 
     /// 获取播放历史
