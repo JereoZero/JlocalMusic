@@ -1,4 +1,9 @@
 export const THEMES = {
+  blue: {
+    id: 'blue',
+    name: '蓝色',
+    primary: '#00A8FF',
+  },
   orange: {
     id: 'orange',
     name: '橙色',
@@ -24,7 +29,7 @@ export const THEMES = {
 export type ThemeId = keyof typeof THEMES
 export type Theme = (typeof THEMES)[ThemeId]
 
-export const DEFAULT_THEME_ID: ThemeId = 'orange'
+export const DEFAULT_THEME_ID: ThemeId = 'blue'
 
 export function getTheme(id: ThemeId): Theme {
   return THEMES[id]

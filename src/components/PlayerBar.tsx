@@ -32,8 +32,8 @@ export default function PlayerBar({ onToggleLyrics }: { onToggleLyrics?: () => v
       toggleHidden: s.toggleHidden,
     }))
   )
-  const { settings, setPlayMode } = usePlayerSettingsStore()
-  const { shuffleQueue, unshuffleQueue } = usePlayQueueStore()
+  const { settings } = usePlayerSettingsStore()
+  const { toggleShuffle } = usePlayQueueStore()
   const { getPrimaryColor } = useThemeStore()
   const primaryColor = getPrimaryColor()
 
@@ -53,13 +53,13 @@ export default function PlayerBar({ onToggleLyrics }: { onToggleLyrics?: () => v
     const nextMode = modes[(currentIndex + 1) % modes.length]
 
     if (nextMode === 'shuffle' && playMode !== 'shuffle') {
-      shuffleQueue()
+      toggleShuffle()
     } else if (playMode === 'shuffle' && nextMode !== 'shuffle') {
-      unshuffleQueue()
+      toggleShuffle()
+    } else {
+      usePlayerSettingsStore.getState().setPlayMode(nextMode)
     }
-
-    setPlayMode(nextMode)
-  }, [playMode, setPlayMode, shuffleQueue, unshuffleQueue])
+  }, [playMode, toggleShuffle])
 
   return (
     <div

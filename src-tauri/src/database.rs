@@ -337,19 +337,48 @@ impl Database {
         Ok(())
     }
 
-    /// 清理不存在的歌曲 - 检查全部歌曲
+    /// 清理不存在的歌曲 - 分批处理，只查path避免全量加载
     pub async fn cleanup_nonexistent_songs(&self) -> Result<usize, DatabaseError> {
-        let songs = self.get_songs().await?;
-        let mut removed_count = 0;
+        let paths: Vec<String> = sqlx::query_scalar("SELECT path FROM songs")
+            .fetch_all(&self.pool)
+            .await?;
 
-        for song in songs {
-            if !std::path::Path::new(&song.path).exists() {
-                info!("Removing non-existent song from database: {}", song.path);
-                match self.delete_song(&song.path).await {
-                    Ok(_) => removed_count += 1,
-                    Err(e) => error!("Failed to delete song {}: {}", song.path, e),
-                }
+        let mut removed_count = 0;
+        let mut paths_to_delete = Vec::new();
+
+        for path in &paths {
+            if !std::path::Path::new(path).exists() {
+                info!("Found non-existent song: {}", path);
+                paths_to_delete.push(path.clone());
             }
+        }
+
+        for chunk in paths_to_delete.chunks(50) {
+            let mut tx = self.pool.begin().await?;
+            for path in chunk {
+                sqlx::query("DELETE FROM play_counts WHERE path = ?")
+                    .bind(path)
+                    .execute(&mut *tx)
+                    .await?;
+                sqlx::query("DELETE FROM play_history WHERE path = ?")
+                    .bind(path)
+                    .execute(&mut *tx)
+                    .await?;
+                sqlx::query("DELETE FROM liked_songs WHERE path = ?")
+                    .bind(path)
+                    .execute(&mut *tx)
+                    .await?;
+                sqlx::query("DELETE FROM hidden_songs WHERE path = ?")
+                    .bind(path)
+                    .execute(&mut *tx)
+                    .await?;
+                sqlx::query("DELETE FROM songs WHERE path = ?")
+                    .bind(path)
+                    .execute(&mut *tx)
+                    .await?;
+                removed_count += 1;
+            }
+            tx.commit().await?;
         }
 
         info!("Cleanup complete: removed {} non-existent songs", removed_count);

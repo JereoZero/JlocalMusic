@@ -1,4 +1,7 @@
-# JlocalMusic 音乐播放器
+<div align="center">
+  <img src="logo/Jlogo.PNG" alt="JlocalMusic Logo" width="120"/>
+  <h1>JlocalMusic 音乐播放器</h1>
+</div>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tauri](https://img.shields.io/badge/Tauri-2.0-blue.svg)](https://tauri.app)

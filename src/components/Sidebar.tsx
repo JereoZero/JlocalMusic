@@ -72,9 +72,12 @@ export default function Sidebar({
     >
       {/* Logo */}
       <div className="flex flex-col items-center justify-center py-4 mb-4">
-        <span className="text-2xl font-bold tracking-wider" style={{ color: primaryColor }}>
-          Only
-        </span>
+        <img
+          src="/logo.png"
+          alt="Jlocal"
+          className="w-10 h-10 object-contain rounded-lg"
+          draggable={false}
+        />
         <span className="text-[10px] text-gray-500 mt-3">{APP_CONFIG.version}</span>
       </div>
 

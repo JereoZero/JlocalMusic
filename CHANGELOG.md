@@ -2,6 +2,16 @@
 
 All notable changes to JlocalMusic will be documented in this file.
 
+## v0.7.13 (2026-05-10)
+
+### 🎨 Brand & Theme Update
+- 🎵 **New Logo** — Replaced "Only" text with blue musical note icon (`logo/Jlogo.PNG`), sidebar now displays the brand logo
+- 🎨 **New default theme: Blue** — Added `#00A8FF` (Logo blue) as the new default theme color, placed first in theme list
+- 🎨 **Theme system expanded** — 4 themes → 5 themes: Blue (new), Orange, Khaki, Gray Blue, Olive Green
+- 📝 **Settings history updated** — v0.7.4 changelog reflects the new logo change
+
+---
+
 ## v0.7.12 (2026-05-09)
 
 ### 🔥 Bug Fixes — 15 issues fixed from comprehensive code review

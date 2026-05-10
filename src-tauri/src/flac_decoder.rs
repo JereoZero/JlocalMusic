@@ -9,6 +9,9 @@ use rodio::{Source, source::SeekError};
 use std::fs::File;
 use std::path::PathBuf;
 use std::time::Duration;
+use tracing::{warn, debug};
+
+const MAX_CONSECUTIVE_DECODE_ERRORS: u32 = 20;
 
 #[allow(dead_code)]
 pub struct SymphoniaDecoder {
@@ -22,6 +25,7 @@ pub struct SymphoniaDecoder {
     sample_buffer: Option<SampleBuffer<i16>>,
     buffer_pos: usize,
     current_frame: u64,
+    consecutive_errors: u32,
 }
 
 impl SymphoniaDecoder {
@@ -75,6 +79,7 @@ impl SymphoniaDecoder {
             sample_buffer: None,
             buffer_pos: 0,
             current_frame: 0,
+            consecutive_errors: 0,
         })
     }
     
@@ -88,6 +93,7 @@ impl SymphoniaDecoder {
                     
                     match self.decoder.decode(&packet) {
                         Ok(audio_buf) => {
+                            self.consecutive_errors = 0;
                             let spec = SignalSpec::new(
                                 audio_buf.spec().rate,
                                 audio_buf.spec().channels,
@@ -102,11 +108,29 @@ impl SymphoniaDecoder {
                             self.current_frame += duration;
                             return true;
                         }
-                        Err(_) => continue,
+                        Err(e) => {
+                            self.consecutive_errors += 1;
+                            if self.consecutive_errors <= 3 {
+                                warn!("Decode error for {}: {}", self.path.display(), e);
+                            }
+                            if self.consecutive_errors >= MAX_CONSECUTIVE_DECODE_ERRORS {
+                                warn!("Too many consecutive decode errors ({}), stopping playback of {}",
+                                    self.consecutive_errors, self.path.display());
+                                return false;
+                            }
+                            continue;
+                        }
                     }
                 }
                 Err(SymphoniaError::IoError(_)) => return false,
-                Err(_) => continue,
+                Err(e) => {
+                    self.consecutive_errors += 1;
+                    debug!("Format reader error for {}: {}", self.path.display(), e);
+                    if self.consecutive_errors >= MAX_CONSECUTIVE_DECODE_ERRORS {
+                        return false;
+                    }
+                    continue;
+                }
             }
         }
     }

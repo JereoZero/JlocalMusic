@@ -12,19 +12,14 @@ use ts_rs::TS;
 use uuid::Uuid;
 use walkdir::WalkDir;
 
-/// 扫描结果
 #[derive(Serialize, TS)]
 #[ts(export)]
 pub struct ScanResult {
-    /// 正常歌曲（可以播放）
     pub normal_songs: Vec<Song>,
-    /// 加密歌曲（NCM/QMC 等会员歌曲）
     pub encrypted_songs: Vec<Song>,
-    /// 元数据提取错误
     pub metadata_errors: Vec<String>,
 }
 
-/// 文件夹扫描器
 pub struct FolderScanner;
 
 impl FolderScanner {
@@ -32,8 +27,12 @@ impl FolderScanner {
         Self
     }
 
-    /// 扫描文件夹
     pub async fn scan(&self, folder_path: &str) -> anyhow::Result<ScanResult> {
+        let folder_path = folder_path.to_string();
+        tokio::task::spawn_blocking(move || Self::scan_blocking(&folder_path)).await?
+    }
+
+    fn scan_blocking(folder_path: &str) -> anyhow::Result<ScanResult> {
         let scan_path = Path::new(folder_path);
         if !scan_path.exists() {
             anyhow::bail!("Directory does not exist: {}", folder_path);
@@ -49,8 +48,6 @@ impl FolderScanner {
         let mut scanned = 0usize;
         let mut errors = 0usize;
         let mut visited: HashSet<PathBuf> = HashSet::new();
-
-        let extractor = MetadataExtractor::new();
 
         for entry in WalkDir::new(folder_path)
             .follow_links(true)
@@ -74,20 +71,15 @@ impl FolderScanner {
 
             scanned += 1;
 
-            // 处理音频文件
             if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
                 let ext_lower = ext.to_lowercase();
-                
-                // 支持的格式（非加密）
+
                 let is_supported = is_audio_extension(&ext_lower) && !is_encrypted_extension(&ext_lower);
-                
-                // 加密格式（NCM/QMC）
                 let is_encrypted = is_ncm_file(path) || is_qmc_file(path) || is_encrypted_extension(&ext_lower);
-                
+
                 if is_supported {
-                    // 支持的格式 - 正常处理
                     debug!("Processing supported file: {:?} ({})", path.file_name(), ext_lower);
-                    match self.process_normal_file(path, &extractor, &mut metadata_errors).await {
+                    match Self::process_normal_file(path, &mut metadata_errors) {
                         Some(song) => {
                             normal_songs.push(song);
                         }
@@ -97,8 +89,7 @@ impl FolderScanner {
                         }
                     }
                 } else if is_encrypted || Self::is_unsupported_format(&ext_lower) {
-                    // 不支持的格式（包括加密格式）- 自动隐藏
-                    if let Some(song) = self.process_unsupported_file(path, &ext_lower, is_encrypted).await {
+                    if let Some(song) = Self::process_unsupported_file(path, &ext_lower, is_encrypted) {
                         encrypted_songs.push(song);
                         info!("Found unsupported song: {:?} ({})", path.file_name(), ext_lower);
                     }
@@ -122,17 +113,13 @@ impl FolderScanner {
         })
     }
 
-    /// 处理正常音频文件
-    async fn process_normal_file(
-        &self,
+    fn process_normal_file(
         path: &Path,
-        extractor: &MetadataExtractor,
         metadata_errors: &mut Vec<String>,
     ) -> Option<Song> {
         let path_str = path.to_string_lossy().to_string();
 
-        // 尝试提取元数据，如果失败则使用默认值
-        let metadata = match extractor.extract(&path_str).await {
+        let metadata = match MetadataExtractor::extract_blocking(&path_str) {
             Ok(m) => Some(m),
             Err(e) => {
                 let err_msg = format!("Failed to extract metadata from {}: {}", path_str, e);
@@ -142,15 +129,14 @@ impl FolderScanner {
             }
         };
 
-        // 如果 lofty 没有获取到时长，尝试用 Symphonia 获取
         let duration = if let Some(ref m) = metadata {
             if m.duration > 0.0 {
                 m.duration
             } else {
-                self.get_duration_from_symphonia(&path_str).unwrap_or(0.0)
+                Self::get_duration_from_symphonia(&path_str).unwrap_or(0.0)
             }
         } else {
-            self.get_duration_from_symphonia(&path_str).unwrap_or(0.0)
+            Self::get_duration_from_symphonia(&path_str).unwrap_or(0.0)
         };
 
         let filename = path
@@ -175,8 +161,7 @@ impl FolderScanner {
         Some(song)
     }
 
-    /// 使用 Symphonia 获取音频时长（阻塞 IO，应在 spawn_blocking 中调用）
-    fn get_duration_from_symphonia(&self, path: &str) -> Option<f64> {
+    fn get_duration_from_symphonia(path: &str) -> Option<f64> {
         use symphonia::core::codecs::CODEC_TYPE_NULL;
         use symphonia::core::formats::FormatOptions;
         use symphonia::core::io::MediaSourceStream;
@@ -188,24 +173,24 @@ impl FolderScanner {
         let path = PathBuf::from(path);
         let file = File::open(&path).ok()?;
         let mss = MediaSourceStream::new(Box::new(file), Default::default());
-        
+
         let mut hint = Hint::new();
         if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
             hint.with_extension(ext);
         }
-        
+
         let format_opts = FormatOptions::default();
         let metadata_opts = MetadataOptions::default();
-        
+
         let probed = symphonia::default::get_probe().format(&hint, mss, &format_opts, &metadata_opts).ok()?;
         let format_reader = probed.format;
-        
+
         let track = format_reader.tracks()
             .iter()
             .find(|t| t.codec_params.codec != CODEC_TYPE_NULL)?;
-        
+
         let codec_params = &track.codec_params;
-        
+
         codec_params.time_base.and_then(|tb| {
             codec_params.n_frames.map(|frames| {
                 frames as f64 * tb.numer as f64 / tb.denom as f64
@@ -213,23 +198,21 @@ impl FolderScanner {
         })
     }
 
-    /// 检查是否是不支持的格式
     fn is_unsupported_format(ext: &str) -> bool {
         UNSUPPORTED_AUDIO_EXTENSIONS.contains(&ext)
             || ENCRYPTED_AUDIO_EXTENSIONS.contains(&ext)
             || matches!(ext, "kgm" | "mgg" | "vpr" | "kwm")
     }
 
-    /// 处理不支持的格式文件（自动隐藏）
-    async fn process_unsupported_file(&self, path: &Path, ext: &str, _is_encrypted: bool) -> Option<Song> {
+    fn process_unsupported_file(path: &Path, ext: &str, _is_encrypted: bool) -> Option<Song> {
         let path_str = path.to_string_lossy().to_string();
-        
+
         let filename = path
             .file_stem()
             .and_then(|n| n.to_str())
             .unwrap_or("Unknown")
             .to_string();
-        
+
         let format_note = match ext {
             "ncm" => "网易云加密格式",
             "qmc" | "qmc0" | "qmc3" => "QQ音乐加密格式",

@@ -48,13 +48,9 @@ interface PlayerStore {
   playRandomSong: () => Promise<void>
   initEventListeners: () => void
   cleanupEventListeners: () => void
+  destroy: () => void
 }
 
-// 模块级变量用于管理全局单例资源
-// 这些变量需要在模块级别维护，因为：
-// 1. 定时器需要在组件卸载后继续运行
-// 2. 事件监听器只需要注册一次
-// 3. 避免在 React 严格模式下重复初始化
 let animationFrameId: number | null = null
 let lastUpdateTime = 0
 let lastBackendSyncTime = 0
@@ -62,6 +58,19 @@ let eventListenersInitialized = false
 let eventUnsubscribers: Array<() => void> = []
 let currentPlayPath: string | null = null
 let accumulatedPlayedMs = 0
+let playOperationId = 0
+
+function resetModuleState() {
+  stopProgressTimer()
+  eventUnsubscribers.forEach((fn) => fn())
+  eventUnsubscribers = []
+  eventListenersInitialized = false
+  currentPlayPath = null
+  accumulatedPlayedMs = 0
+  playOperationId = 0
+  lastUpdateTime = 0
+  lastBackendSyncTime = 0
+}
 
 async function finalizePlayHistory(completed: boolean) {
   if (!currentPlayPath) return
@@ -121,12 +130,17 @@ function stopProgressTimer() {
 }
 
 async function playSongInternal(song: Song, logAction: string) {
+  const opId = ++playOperationId
   log(logAction, song.title)
 
   await finalizePlayHistory(false)
 
+  if (opId !== playOperationId) return
+
   try {
     await api.playSong(song.path)
+    if (opId !== playOperationId) return
+
     log('播放成功', song.title)
     usePlayerStore.setState({
       currentSong: song,
@@ -142,6 +156,7 @@ async function playSongInternal(song: Song, logAction: string) {
     usePlayerStore.getState().updateMediaSession(song)
     return true
   } catch (error) {
+    if (opId !== playOperationId) return
     handleError(error, '播放歌曲')
     log('播放失败', String(error))
     return false
@@ -186,22 +201,27 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       return
     }
 
+    const opId = ++playOperationId
+
     try {
       if (isPlaying) {
         log('后台执行', 'pauseSong()')
         await api.pauseSong()
+        if (opId !== playOperationId) return
         stopProgressTimer()
         set({ isPlaying: false })
         log('暂停成功')
       } else {
         log('后台执行', 'resumeSong()')
         await api.resumeSong()
+        if (opId !== playOperationId) return
         lastUpdateTime = performance.now()
         startProgressTimer()
         set({ isPlaying: true })
         log('恢复成功')
       }
     } catch (error) {
+      if (opId !== playOperationId) return
       log('操作失败', String(error))
       handleError(error, '播放切换')
     }
@@ -209,12 +229,15 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
   pause: async () => {
     log('暂停播放')
+    const opId = ++playOperationId
     try {
       await api.pauseSong()
+      if (opId !== playOperationId) return
       log('后台执行', 'pauseSong()')
       stopProgressTimer()
       set({ isPlaying: false })
     } catch (error) {
+      if (opId !== playOperationId) return
       log('暂停失败', String(error))
       handleError(error, '暂停')
     }
@@ -228,13 +251,16 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     }
 
     log('恢复播放')
+    const opId = ++playOperationId
     try {
       await api.resumeSong()
+      if (opId !== playOperationId) return
       log('后台执行', 'resumeSong()')
       lastUpdateTime = performance.now()
       startProgressTimer()
       set({ isPlaying: true })
     } catch (error) {
+      if (opId !== playOperationId) return
       log('恢复失败', String(error))
       handleError(error, '恢复播放')
     }
@@ -242,6 +268,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
   stop: async () => {
     log('停止播放')
+    ++playOperationId
     await finalizePlayHistory(false)
     try {
       await api.stopSong()
@@ -259,7 +286,6 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     try {
       await api.seekSong(time)
       log('后台执行', `seekSong(${time.toFixed(1)})`)
-      // 停止定时器，更新状态，然后重启定时器
       stopProgressTimer()
       set({ currentTime: time })
       lastUpdateTime = performance.now()
@@ -440,7 +466,6 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     if (eventListenersInitialized) return
     eventListenersInitialized = true
 
-    // 监听后端播放进度事件
     const unsubProgress = listen<PlaybackProgressEvent>('playback_progress', (event) => {
       const { position, duration } = event.payload
       const store = usePlayerStore.getState()
@@ -468,7 +493,6 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       unsubProgress.then((fn) => fn())
     })
 
-    // 监听歌曲播放完成事件
     const unsubFinished = listen('track_finished', () => {
       log('歌曲播放完成')
       stopProgressTimer()
@@ -493,5 +517,16 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     }
 
     log('事件监听器已清理')
+  },
+
+  destroy: () => {
+    resetModuleState()
+    set({
+      currentSong: null,
+      isPlaying: false,
+      currentTime: 0,
+      duration: 0,
+    })
+    log('播放器已销毁')
   },
 }))

@@ -669,10 +669,10 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                     <ul className="text-gray-400 space-y-1 list-disc list-inside">
                       <li>专辑色动态背景：根据当前播放歌曲的专辑封面提取主色调</li>
                       <li>背景亮度分层：歌词背景 12%、主界面 10%、侧边栏 9%、底边栏 7%</li>
-                      <li>主题色系统：支持橙色、卡其色、雾霾蓝、橄榄绿四种主题</li>
+                      <li>主题色系统：支持蓝色（Logo 色）、橙色、卡其色、雾霾蓝、橄榄绿五种主题</li>
                       <li>颜色过渡动画：丝滑过渡效果</li>
                       <li>UI 细节优化：灰色背景改为透明度、专辑图禁止拖动、进度条触发范围增大</li>
-                      <li>Logo 简化：移除图片，Only 文字作为新 logo</li>
+                      <li>Logo 更新：全新蓝色音符图标，与主题色系统统一</li>
                       <li>全局禁止文字选择，提升操作体验</li>
                     </ul>
                   </div>

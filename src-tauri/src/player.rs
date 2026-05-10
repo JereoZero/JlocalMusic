@@ -85,9 +85,9 @@ impl AudioPlayer {
             position: 0.0,
             duration: None,
         }));
-        
+
         let (cmd_tx, cmd_rx) = mpsc::channel();
-        
+
         let state_clone = state.clone();
         std::thread::spawn(move || {
             Self::player_thread(cmd_rx, state_clone, app_handle);
@@ -97,70 +97,97 @@ impl AudioPlayer {
         Ok(Self { state, cmd_tx })
     }
 
+    fn try_create_output_stream() -> Option<(OutputStream, rodio::OutputStreamHandle)> {
+        match OutputStream::try_default() {
+            Ok(pair) => Some(pair),
+            Err(e) => {
+                warn!("Failed to create output stream: {}", e);
+                None
+            }
+        }
+    }
+
     fn player_thread(
         cmd_rx: mpsc::Receiver<PlayerCmd>,
         state: Arc<RwLock<PlayerState>>,
         app_handle: AppHandle,
     ) {
-        let (_stream, stream_handle) = match OutputStream::try_default() {
-            Ok(s) => s,
-            Err(e) => {
-                warn!("Failed to create output stream: {}", e);
-                return;
-            }
-        };
-        
+        let mut output: Option<(OutputStream, rodio::OutputStreamHandle)> =
+            Self::try_create_output_stream();
         let mut sink: Option<Sink> = None;
         let mut start_time: Option<Instant> = None;
         let mut base_position: f64 = 0.0;
         let mut duration: Option<f64> = None;
         let mut volume: f32 = 0.8;
-        
         let mut last_emit = Instant::now();
-        
+        let mut has_source = false;
+        let mut stream_retry_counter: u32 = 0;
+
+        if output.is_some() {
+            info!("Output stream created successfully");
+        } else {
+            warn!("Failed to create initial output stream, will retry...");
+        }
+
         loop {
             match cmd_rx.recv_timeout(Duration::from_millis(100)) {
                 Ok(cmd) => {
                     match cmd {
                         PlayerCmd::Play(path) => {
+                            if output.is_none() {
+                                output = Self::try_create_output_stream();
+                            }
+
+                            if output.is_none() {
+                                error!("Cannot play: no output stream available");
+                                let _ = app_handle.emit("playback_error", serde_json::json!({
+                                    "error": "No audio output device available"
+                                }));
+                                continue;
+                            }
+
                             if let Some(s) = sink.take() {
                                 s.stop();
                             }
-                            
+                            has_source = false;
+
                             if !Path::new(&path).exists() {
                                 warn!("File not found: {}", path);
                                 continue;
                             }
-                            
+
                             let path_lower = path.to_lowercase();
-                            let is_symphonia_format = is_symphonia_format(&path_lower);
-                            
-                            let new_sink = match Sink::try_new(&stream_handle) {
+                            let use_symphonia = is_symphonia_format(&path_lower);
+
+                            let (_, ref stream_handle) = output.as_ref().unwrap();
+                            let new_sink = match Sink::try_new(stream_handle) {
                                 Ok(s) => s,
                                 Err(e) => {
                                     error!("Failed to create sink: {}", e);
+                                    output = None;
                                     continue;
                                 }
                             };
-                            
-                            if is_symphonia_format {
+
+                            if use_symphonia {
                                 match SymphoniaDecoder::new(&path) {
                                     Ok(source) => {
                                         duration = source.total_duration().map(|d| d.as_secs_f64());
                                         new_sink.set_volume(volume);
                                         new_sink.append(source);
                                         new_sink.play();
-                                        
+
                                         sink = Some(new_sink);
+                                        has_source = true;
                                         start_time = Some(Instant::now());
                                         base_position = 0.0;
-                                        
+
                                         let mut s = state.blocking_write();
                                         s.state = PlaybackState::Playing;
                                         s.current_path = Some(path.clone());
                                         s.position = 0.0;
                                         s.duration = duration;
-                                        
+
                                         info!("Playing with Symphonia: {}", path);
                                     }
                                     Err(e) => {
@@ -176,7 +203,7 @@ impl AudioPlayer {
                                         continue;
                                     }
                                 };
-                                
+
                                 let source = match Decoder::new(BufReader::new(file)) {
                                     Ok(s) => s,
                                     Err(e) => {
@@ -184,25 +211,26 @@ impl AudioPlayer {
                                         continue;
                                     }
                                 };
-                                
+
                                 duration = source.total_duration().map(|d| d.as_secs_f64());
                                 new_sink.set_volume(volume);
                                 new_sink.append(source);
                                 new_sink.play();
-                                
+
                                 sink = Some(new_sink);
+                                has_source = true;
                                 start_time = Some(Instant::now());
                                 base_position = 0.0;
-                                
+
                                 let mut s = state.blocking_write();
                                 s.state = PlaybackState::Playing;
                                 s.current_path = Some(path.clone());
                                 s.position = 0.0;
                                 s.duration = duration;
-                                
+
                                 info!("Playing: {}", path);
                             }
-                            
+
                             if let Some(d) = duration {
                                 let _ = app_handle.emit("playback_progress", serde_json::json!({
                                     "position": 0.0,
@@ -217,11 +245,11 @@ impl AudioPlayer {
                                     base_position += t.elapsed().as_secs_f64();
                                 }
                                 start_time = None;
-                                
+
                                 let mut st = state.blocking_write();
                                 st.state = PlaybackState::Paused;
                                 st.position = base_position;
-                                
+
                                 info!("Paused at {:.1}s", base_position);
                             }
                         }
@@ -229,10 +257,10 @@ impl AudioPlayer {
                             if let Some(ref s) = sink {
                                 s.play();
                                 start_time = Some(Instant::now());
-                                
+
                                 let mut st = state.blocking_write();
                                 st.state = PlaybackState::Playing;
-                                
+
                                 info!("Resumed from {:.1}s", base_position);
                             }
                         }
@@ -240,14 +268,15 @@ impl AudioPlayer {
                             if let Some(s) = sink.take() {
                                 s.stop();
                             }
+                            has_source = false;
                             start_time = None;
                             base_position = 0.0;
-                            
+
                             let mut st = state.blocking_write();
                             st.state = PlaybackState::Stopped;
                             st.current_path = None;
                             st.position = 0.0;
-                            
+
                             info!("Stopped");
                         }
                         PlayerCmd::Seek(time) => {
@@ -256,10 +285,10 @@ impl AudioPlayer {
                                     Ok(_) => {
                                         base_position = time;
                                         start_time = Some(Instant::now());
-                                        
+
                                         let mut st = state.blocking_write();
                                         st.position = time;
-                                        
+
                                         info!("Seeked to {:.1}s", time);
                                     }
                                     Err(e) => {
@@ -273,57 +302,60 @@ impl AudioPlayer {
                             if let Some(ref s) = sink {
                                 s.set_volume(volume);
                             }
-                            
+
                             let mut st = state.blocking_write();
                             st.volume = volume;
-                            
-                            info!("Volume: {:.2}", volume);
                         }
                     }
                 }
                 Err(mpsc::RecvTimeoutError::Timeout) => {
+                    if output.is_none() {
+                        stream_retry_counter += 1;
+                        if stream_retry_counter >= 10 {
+                            output = Self::try_create_output_stream();
+                            if output.is_some() {
+                                info!("Output stream recreated successfully");
+                                stream_retry_counter = 0;
+                            }
+                        }
+                    }
                 }
                 Err(mpsc::RecvTimeoutError::Disconnected) => {
                     info!("Command channel closed, exiting player thread");
                     break;
                 }
             }
-            
-            // 更新进度
+
             let is_playing = sink.as_ref().map(|s| !s.is_paused()).unwrap_or(false);
 
             if is_playing {
                 let elapsed = start_time.map(|t| t.elapsed().as_secs_f64()).unwrap_or(0.0);
                 let position = base_position + elapsed;
 
+                if has_source && sink.as_ref().map(|s| s.empty()).unwrap_or(false) {
+                    if let Some(s) = sink.take() {
+                        s.stop();
+                    }
+                    has_source = false;
+                    start_time = None;
+                    base_position = 0.0;
+                    duration = None;
+
+                    let mut st = state.blocking_write();
+                    st.state = PlaybackState::Stopped;
+                    st.current_path = None;
+                    st.position = 0.0;
+                    st.duration = None;
+
+                    let _ = app_handle.emit("track_finished", "");
+
+                    info!("Track finished");
+                    continue;
+                }
+
                 if last_emit.elapsed().as_millis() >= 500 {
                     last_emit = Instant::now();
 
-                    // 检查是否播放完成（仅在有时长信息时）
-                    if let Some(d) = duration {
-                        if position >= d {
-                            // 播放完成
-                            if let Some(s) = sink.take() {
-                                s.stop();
-                            }
-                            start_time = None;
-                            base_position = 0.0;
-                            duration = None;
-
-                            let mut st = state.blocking_write();
-                            st.state = PlaybackState::Stopped;
-                            st.current_path = None;
-                            st.position = 0.0;
-                            st.duration = None;
-
-                            let _ = app_handle.emit("track_finished", "");
-
-                            info!("Track finished");
-                            continue;
-                        }
-                    }
-
-                    // 发送进度更新（无论是否有时长信息）
                     let mut st = state.blocking_write();
                     st.position = position;
 

@@ -10,6 +10,14 @@ const coverCache = new LRUCache<string, string>({
 
 const pendingRequests = new Map<string, Promise<string | null>>()
 
+const PENDING_REQUEST_TTL = 30_000
+
+function cleanupStalePendingRequests() {
+  if (pendingRequests.size > 100) {
+    pendingRequests.clear()
+  }
+}
+
 export function useSongCover(path: string | undefined) {
   const [cover, setCover] = useState<string | null>(() => {
     if (!path) return null
@@ -47,6 +55,12 @@ export function useSongCover(path: string | undefined) {
       return
     }
 
+    cleanupStalePendingRequests()
+
+    const timeoutId = setTimeout(() => {
+      pendingRequests.delete(path)
+    }, PENDING_REQUEST_TTL)
+
     const promise = api
       .getSongCoverFull(path)
       .then((coverData) => {
@@ -65,6 +79,7 @@ export function useSongCover(path: string | undefined) {
         return null
       })
       .finally(() => {
+        clearTimeout(timeoutId)
         pendingRequests.delete(path)
         if (currentPathRef.current === path) {
           setIsLoading(false)
