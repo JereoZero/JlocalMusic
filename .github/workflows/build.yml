@@ -19,7 +19,7 @@ jobs:
             args: '--target aarch64-apple-darwin'
             target: 'aarch64-apple-darwin'
           - platform: 'windows-2022'
-            args: ''
+            args: '--verbose'
             target: 'x86_64-pc-windows-msvc'
 
     runs-on: ${{ matrix.platform }}
@@ -51,10 +51,21 @@ jobs:
       - name: Install frontend dependencies
         run: npm install --legacy-peer-deps
 
+      - name: Verify toolchain (Windows)
+        if: matrix.platform == 'windows-2022'
+        run: |
+          rustc --version
+          cargo --version
+          rustup target list --installed
+          node --version
+          npm --version
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUST_BACKTRACE: full
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'Jlocal ${{ github.ref_name }}'
