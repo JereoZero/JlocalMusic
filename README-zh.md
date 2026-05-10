@@ -26,23 +26,33 @@
       <td align="center"><b>📋 播放历史</b></td>
     </tr>
     <tr>
-      <td><img src="screenshots/歌词界面1.png" alt="歌词界面" width="380"/></td>
-      <td><img src="screenshots/歌词界面2.png" alt="歌词界面" width="380"/></td>
-      <td><img src="screenshots/设置界面.png" alt="设置界面" width="380"/></td>
+      <td><img src="screenshots/歌词界面.png" alt="歌词界面" width="380"/></td>
+      <td><img src="screenshots/歌曲播放.png" alt="歌曲播放" width="380"/></td>
+      <td><img src="screenshots/歌曲暂停.png" alt="歌曲暂停" width="380"/></td>
     </tr>
     <tr>
       <td align="center"><b>🎤 歌词界面</b></td>
-      <td align="center"><b>🎤 歌词界面</b></td>
-      <td align="center"><b>⚙️ 设置界面</b></td>
+      <td align="center"><b>▶️ 歌曲播放</b></td>
+      <td align="center"><b>⏸️ 歌曲暂停</b></td>
     </tr>
     <tr>
+      <td><img src="screenshots/专辑封面改变背景颜色.png" alt="专辑封面改变背景颜色" width="380"/></td>
+      <td><img src="screenshots/不同颜色专辑的效果.png" alt="不同颜色专辑的效果" width="380"/></td>
+      <td><img src="screenshots/设置.png" alt="设置" width="380"/></td>
+    </tr>
+    <tr>
+      <td align="center"><b>🎨 专辑封面改变背景颜色</b></td>
+      <td align="center"><b>🌈 不同颜色专辑的效果</b></td>
+      <td align="center"><b>⚙️ 设置</b></td>
+    </tr>
+    <tr>
+      <td><img src="screenshots/本地歌单.png" alt="本地歌单" width="380"/></td>
       <td><img src="screenshots/隐藏歌曲.png" alt="隐藏歌曲" width="380"/></td>
       <td></td>
-      <td></td>
     </tr>
     <tr>
+      <td align="center"><b>📁 本地歌单</b></td>
       <td align="center"><b>🙈 隐藏歌曲</b></td>
-      <td></td>
       <td></td>
     </tr>
   </table>
@@ -145,6 +155,21 @@ npm run lint        # 代码检查
 ```
 
 ## 📝 版本历史
+
+### v0.8.2 (2026-05-10)
+> 🔥 音频引擎重写 — 修复首次播放无声音 + 窗口拖拽
+
+- 🔊 **首次播放无声修复** — SineWave 预热 CoreAudio 管线，永久 Sink 保持全生命周期连接不断开
+- 🖱️ **窗口拖拽修复** — 三层保障：`data-tauri-drag-region` + CSS `-webkit-app-region: drag` + inline 样式；移除侧边栏冲突
+
+### v0.8.1 (2026-05-10)
+> 🎨 macOS 深色标题栏 + 版本号修复 + 前后端连接优化
+
+- 🖤 **macOS 深色标题栏** — Overlay 透明标题栏模式，标题栏区域融入深色背景
+- 🖱️ **窗口拖拽修复** — 顶部区域（边栏/主内容区）支持拖拽移动窗口
+- 🔗 **前后端连接优化** — `get_audio_file` 移入 `spawn_blocking` + 50MB 大小限制
+- 🚀 **批量封面并发** — `get_song_covers_batch` 20 个并发处理替代串行
+- 🔢 **版本号统一** — 修复 APP_CONFIG 版本号未同步问题（0.7.12 → 0.8.1）
 
 ### v0.8.0 (2026-05-10)
 > 🎨 全新 Logo + 稳定性大修 — 10 项稳定性修复 + 新 Logo + 荧光绿主题

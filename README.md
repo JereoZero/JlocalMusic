@@ -26,23 +26,33 @@ A local music player built with Tauri 2 + React 19, focused on a clean and effic
       <td align="center"><b>📋 Play History</b></td>
     </tr>
     <tr>
-      <td><img src="screenshots/歌词界面1.png" alt="Lyrics View" width="380"/></td>
-      <td><img src="screenshots/歌词界面2.png" alt="Lyrics View" width="380"/></td>
-      <td><img src="screenshots/设置界面.png" alt="Settings" width="380"/></td>
+      <td><img src="screenshots/歌词界面.png" alt="Lyrics View" width="380"/></td>
+      <td><img src="screenshots/歌曲播放.png" alt="Playing" width="380"/></td>
+      <td><img src="screenshots/歌曲暂停.png" alt="Paused" width="380"/></td>
     </tr>
     <tr>
       <td align="center"><b>🎤 Lyrics View</b></td>
-      <td align="center"><b>🎤 Lyrics View</b></td>
+      <td align="center"><b>▶️ Playing</b></td>
+      <td align="center"><b>⏸️ Paused</b></td>
+    </tr>
+    <tr>
+      <td><img src="screenshots/专辑封面改变背景颜色.png" alt="Album Cover Background" width="380"/></td>
+      <td><img src="screenshots/不同颜色专辑的效果.png" alt="Different Album Colors" width="380"/></td>
+      <td><img src="screenshots/设置.png" alt="Settings" width="380"/></td>
+    </tr>
+    <tr>
+      <td align="center"><b>🎨 Album Cover Background</b></td>
+      <td align="center"><b>🌈 Different Album Colors</b></td>
       <td align="center"><b>⚙️ Settings</b></td>
     </tr>
     <tr>
+      <td><img src="screenshots/本地歌单.png" alt="Local Playlist" width="380"/></td>
       <td><img src="screenshots/隐藏歌曲.png" alt="Hidden Songs" width="380"/></td>
-      <td></td>
       <td></td>
     </tr>
     <tr>
+      <td align="center"><b>📁 Local Playlist</b></td>
       <td align="center"><b>🙈 Hidden Songs</b></td>
-      <td></td>
       <td></td>
     </tr>
   </table>
@@ -158,6 +168,21 @@ npm run lint         # Linting
 ```
 
 ## 📝 Changelog
+
+### v0.8.2 (2026-05-10)
+> 🔥 Audio Engine Rewrite — Fixed first-play no sound + window dragging
+
+- 🔊 **First-Play No Sound Fixed** — CoreAudio pipeline now properly initialized with SineWave warmup; permanent Sink stays alive across entire app lifecycle
+- 🖱️ **Window Dragging Fixed** — Triple-layer insurance: `data-tauri-drag-region` + CSS `-webkit-app-region: drag` + inline style; sidebar conflict removed
+
+### v0.8.1 (2026-05-10)
+> 🎨 macOS Dark Title Bar + Version Fix + Backend Connection Optimization
+
+- 🖤 **macOS Dark Title Bar** — Overlay transparent title bar mode, title bar area blends into dark background
+- 🖱️ **Window Drag Fix** — Top area (sidebar/main content) now supports drag-to-move window
+- 🔗 **Backend Connection Optimization** — `get_audio_file` moved to `spawn_blocking` + 50MB size limit
+- 🚀 **Batch Cover Concurrency** — `get_song_covers_batch` processes 20 covers concurrently instead of sequentially
+- 🔢 **Version Number Sync** — Fixed APP_CONFIG version out of sync (0.7.12 → 0.8.1)
 
 ### v0.8.0 (2026-05-10)
 > 🎨 New Logo + Major Stability Overhaul — 10 stability fixes, new logo, neon green theme

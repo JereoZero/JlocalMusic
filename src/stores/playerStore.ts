@@ -397,7 +397,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     const { lastSongPath, queueSource } = queueStore
 
     if (!lastSongPath) {
-      await get().playRandomSong()
+      log('无上次播放记录', '仅恢复本地状态')
       return
     }
 
@@ -421,7 +421,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       get().updateMediaSession(song)
       log('恢复歌曲(仅本地状态)', song.title)
     } else {
-      await get().playRandomSong()
+      log('上次歌曲未找到', '仅恢复本地状态')
     }
   },
 

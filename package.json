@@ -1,6 +1,6 @@
 {
   "name": "jlocal",
-  "version": "0.8.0",
+  "version": "0.8.2",
   "description": "本地音乐播放器 - Rust + Tauri 2",
   "type": "module",
   "scripts": {
@@ -33,6 +33,7 @@
     "@tauri-apps/plugin-dialog": "^2.0.0",
     "@tauri-apps/plugin-fs": "^2.0.0",
     "@tauri-apps/plugin-shell": "^2.0.0",
+    "@tauri-apps/plugin-window-state": "^2.4.1",
     "colorthief": "^3.3.1",
     "es-toolkit": "^1.46.1",
     "lrc-file-parser": "^2.4.1",

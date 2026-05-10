@@ -1,4 +1,4 @@
-use rodio::{Decoder, OutputStream, Sink, Source};
+use rodio::{Decoder, OutputStream, Sink, Source, source::SineWave};
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
@@ -122,9 +122,25 @@ impl AudioPlayer {
         let mut last_emit = Instant::now();
         let mut has_source = false;
         let mut stream_retry_counter: u32 = 0;
+        let mut first_play = true;
 
-        if output.is_some() {
-            info!("Output stream created successfully");
+        if let Some((_, ref stream_handle)) = output {
+            info!("Output stream created, warming up audio pipeline...");
+            match Sink::try_new(stream_handle) {
+                Ok(s) => {
+                    info!("Permanent sink created, warming mixer with tone...");
+                    let warmup = SineWave::new(440.0)
+                        .take_duration(Duration::from_millis(20))
+                        .amplify(0.0001);
+                    s.append(warmup);
+                    sink = Some(s);
+                    std::thread::sleep(Duration::from_millis(100));
+                    info!("Audio pipeline warmed up and ready");
+                }
+                Err(e) => {
+                    warn!("Failed to create initial sink: {}", e);
+                }
+            }
         } else {
             warn!("Failed to create initial output stream, will retry...");
         }
@@ -136,6 +152,12 @@ impl AudioPlayer {
                         PlayerCmd::Play(path) => {
                             if output.is_none() {
                                 output = Self::try_create_output_stream();
+                                if let Some((_, ref stream_handle)) = output {
+                                    if let Ok(s) = Sink::try_new(stream_handle) {
+                                        sink = Some(s);
+                                        info!("Recreated output stream and sink");
+                                    }
+                                }
                             }
 
                             if output.is_none() {
@@ -146,49 +168,41 @@ impl AudioPlayer {
                                 continue;
                             }
 
-                            if let Some(s) = sink.take() {
-                                s.stop();
-                            }
-                            has_source = false;
-
                             if !Path::new(&path).exists() {
                                 warn!("File not found: {}", path);
                                 continue;
                             }
 
+                            if sink.is_none() {
+                                if let Some((_, ref stream_handle)) = output {
+                                    match Sink::try_new(stream_handle) {
+                                        Ok(s) => sink = Some(s),
+                                        Err(e) => {
+                                            error!("Failed to create sink: {}", e);
+                                            output = None;
+                                            continue;
+                                        }
+                                    }
+                                } else {
+                                    continue;
+                                }
+                            }
+
                             let path_lower = path.to_lowercase();
                             let use_symphonia = is_symphonia_format(&path_lower);
 
-                            let (_, ref stream_handle) = output.as_ref().unwrap();
-                            let new_sink = match Sink::try_new(stream_handle) {
-                                Ok(s) => s,
-                                Err(e) => {
-                                    error!("Failed to create sink: {}", e);
-                                    output = None;
-                                    continue;
-                                }
-                            };
-
                             if use_symphonia {
                                 match SymphoniaDecoder::new(&path) {
-                                    Ok(source) => {
-                                        duration = source.total_duration().map(|d| d.as_secs_f64());
-                                        new_sink.set_volume(volume);
-                                        new_sink.append(source);
-                                        new_sink.play();
-
-                                        sink = Some(new_sink);
-                                        has_source = true;
-                                        start_time = Some(Instant::now());
-                                        base_position = 0.0;
-
-                                        let mut s = state.blocking_write();
-                                        s.state = PlaybackState::Playing;
-                                        s.current_path = Some(path.clone());
-                                        s.position = 0.0;
-                                        s.duration = duration;
-
-                                        info!("Playing with Symphonia: {}", path);
+                                    Ok(src) => {
+                                        duration = src.total_duration().map(|d| d.as_secs_f64());
+                                        if let Some(ref s) = sink {
+                                            if !first_play {
+                                                s.stop();
+                                            }
+                                            s.append(src);
+                                            s.set_volume(volume);
+                                            s.play();
+                                        }
                                     }
                                     Err(e) => {
                                         warn!("Failed to decode with Symphonia: {}", e);
@@ -203,33 +217,38 @@ impl AudioPlayer {
                                         continue;
                                     }
                                 };
-
-                                let source = match Decoder::new(BufReader::new(file)) {
-                                    Ok(s) => s,
+                                match Decoder::new(BufReader::new(file)) {
+                                    Ok(src) => {
+                                        duration = src.total_duration().map(|d| d.as_secs_f64());
+                                        if let Some(ref s) = sink {
+                                            if !first_play {
+                                                s.stop();
+                                            }
+                                            s.append(src);
+                                            s.set_volume(volume);
+                                            s.play();
+                                        }
+                                    }
                                     Err(e) => {
                                         warn!("Failed to decode with rodio: {}", e);
                                         continue;
                                     }
-                                };
-
-                                duration = source.total_duration().map(|d| d.as_secs_f64());
-                                new_sink.set_volume(volume);
-                                new_sink.append(source);
-                                new_sink.play();
-
-                                sink = Some(new_sink);
-                                has_source = true;
-                                start_time = Some(Instant::now());
-                                base_position = 0.0;
-
-                                let mut s = state.blocking_write();
-                                s.state = PlaybackState::Playing;
-                                s.current_path = Some(path.clone());
-                                s.position = 0.0;
-                                s.duration = duration;
-
-                                info!("Playing: {}", path);
+                                }
                             }
+
+                            first_play = false;
+
+                            has_source = true;
+                            start_time = Some(Instant::now());
+                            base_position = 0.0;
+
+                            let mut st = state.blocking_write();
+                            st.state = PlaybackState::Playing;
+                            st.current_path = Some(path.clone());
+                            st.position = 0.0;
+                            st.duration = duration;
+
+                            info!("Playing: {}", path);
 
                             if let Some(d) = duration {
                                 let _ = app_handle.emit("playback_progress", serde_json::json!({
@@ -265,8 +284,9 @@ impl AudioPlayer {
                             }
                         }
                         PlayerCmd::Stop => {
-                            if let Some(s) = sink.take() {
+                            if let Some(ref s) = sink {
                                 s.stop();
+                                s.pause();
                             }
                             has_source = false;
                             start_time = None;
@@ -313,8 +333,11 @@ impl AudioPlayer {
                         stream_retry_counter += 1;
                         if stream_retry_counter >= 10 {
                             output = Self::try_create_output_stream();
-                            if output.is_some() {
-                                info!("Output stream recreated successfully");
+                            if let Some((_, ref stream_handle)) = output {
+                                info!("Output stream recreated, warming up...");
+                                if let Ok(s) = Sink::try_new(stream_handle) {
+                                    sink = Some(s);
+                                }
                                 stream_retry_counter = 0;
                             }
                         }
@@ -333,8 +356,9 @@ impl AudioPlayer {
                 let position = base_position + elapsed;
 
                 if has_source && sink.as_ref().map(|s| s.empty()).unwrap_or(false) {
-                    if let Some(s) = sink.take() {
+                    if let Some(ref s) = sink {
                         s.stop();
+                        s.pause();
                     }
                     has_source = false;
                     start_time = None;

@@ -144,14 +144,19 @@ pub async fn get_song_covers_batch(
     
     let mut result = HashMap::new();
     
-    for path in &paths {
-        match get_or_create_thumbnail(&db, path, THUMBNAIL_SMALL_SIZE).await {
-            Ok(thumbnail) => {
-                result.insert(path.clone(), thumbnail);
-            }
-            Err(_) => {
-                result.insert(path.clone(), None);
-            }
+    for chunk in paths.chunks(20) {
+        let mut tasks = Vec::new();
+        for path in chunk {
+            let db_clone = db.inner().clone();
+            let path = path.clone();
+            tasks.push(async move {
+                let thumbnail = get_or_create_thumbnail(&db_clone, &path, THUMBNAIL_SMALL_SIZE).await.ok();
+                (path, thumbnail.flatten())
+            });
+        }
+        let chunk_results = futures::future::join_all(tasks).await;
+        for (path, thumbnail) in chunk_results {
+            result.insert(path, thumbnail);
         }
     }
     

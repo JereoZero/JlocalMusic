@@ -39,7 +39,7 @@ function ViewHeader({
   }, [])
 
   return (
-    <div className="px-6 py-4 mt-8 flex items-center justify-between border-b border-[#2a2a2a]">
+    <div className="px-6 py-4 flex items-center justify-between border-b border-[#2a2a2a]">
       <div className="flex items-end gap-4">
         <h2 className="text-2xl font-bold text-white">{title}</h2>
         {count !== undefined && <span className="text-sm text-gray-400">{count} 首</span>}

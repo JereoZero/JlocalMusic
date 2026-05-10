@@ -313,7 +313,7 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
       }}
     >
       {/* 头部 */}
-      <div className="px-6 py-4 mt-8 flex items-center justify-between border-b border-[#2a2a2a]">
+      <div className="px-6 py-4 flex items-center justify-between border-b border-[#2a2a2a]">
         <div className="flex items-center gap-4">
           <h2 className="text-2xl font-bold text-white">设置</h2>
           <div className="flex gap-2">

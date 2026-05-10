@@ -53,9 +53,17 @@ pub async fn get_audio_file(
     if !path_validator::is_path_in_music_folder(&path, &music_folder) {
         return Ok(ApiResponse::err("Access denied: path outside music folder"));
     }
+
+    let path_clone = path.clone();
+    let bytes = tokio::task::spawn_blocking(move || std::fs::read(&path_clone))
+        .await
+        .map_err(|e| e.to_string())?;
     
-    match std::fs::read(&path) {
+    match bytes {
         Ok(bytes) => {
+            if bytes.len() > 50 * 1024 * 1024 {
+                return Ok(ApiResponse::err("File too large (>50MB), use streaming instead"));
+            }
             let base64 = general_purpose::STANDARD.encode(&bytes);
             Ok(ApiResponse::ok(base64))
         }

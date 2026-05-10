@@ -23,6 +23,7 @@ function NavItem({ icon: Icon, active, onClick, title, primaryColor }: NavItemPr
     <button
       onClick={onClick}
       title={title}
+      data-tauri-drag-region={false}
       className="w-full flex items-center justify-center px-2 py-3 rounded-lg transition-colors duration-200 select-none"
       style={{
         backgroundColor: active ? `${primaryColor}26` : 'transparent',

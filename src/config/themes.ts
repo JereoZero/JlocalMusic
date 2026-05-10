@@ -27,7 +27,7 @@ export const THEMES = {
   neonGreen: {
     id: 'neonGreen',
     name: '荧光绿',
-    primary: '#39FF14',
+    primary: '#2DD32A',
   },
 } as const
 

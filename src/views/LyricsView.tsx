@@ -231,9 +231,16 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
 
       {/* 内容层 */}
       <div className="relative h-full w-full flex">
+        {/* 顶部拖拽区域 - macOS Overlay 标题栏 */}
+        <div
+          data-tauri-drag-region
+          className="absolute top-0 left-0 right-0 h-10 z-40"
+          style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+        />
+
         {/* 最左侧功能栏点击区域 - 退出歌词 */}
         <div
-          className="absolute left-0 top-0 bottom-0 w-16 z-20 cursor-pointer"
+          className="absolute left-0 top-8 bottom-0 w-16 z-20 cursor-pointer"
           onClick={onClose}
           title="点击返回"
         />
@@ -241,7 +248,8 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
         {/* 关闭按钮 */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 transition-colors z-30"
+          data-tauri-drag-region={false}
+          className="absolute top-9 right-4 p-2 rounded-full hover:bg-white/10 transition-colors z-30"
         >
           <X size={24} className="text-gray-400 hover:text-white" />
         </button>

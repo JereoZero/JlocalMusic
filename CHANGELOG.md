@@ -2,6 +2,26 @@
 
 All notable changes to JlocalMusic will be documented in this file.
 
+## v0.8.2 (2026-05-10)
+
+### 🔥 Critical Bug Fixes — Audio Engine Rewrite + Window Dragging
+
+- 🔊 **First-Play No Sound Fixed** — CoreAudio pipeline now properly initialized with a `SineWave` tone warmup before first play; permanent Sink stays alive across the entire app lifecycle, never dropping the mixer connection ([player.rs](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/src/player.rs))
+- 🖱️ **Window Dragging Fixed** — Triple-layer insurance: `data-tauri-drag-region` + CSS `-webkit-app-region: drag` + inline `WebkitAppRegion: 'drag'` style; sidebar conflict removed ([App.tsx](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src/App.tsx), [Sidebar.tsx](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src/components/Sidebar.tsx), [index.css](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src/styles/index.css))
+
+---
+
+## v0.8.1 (2026-05-10)
+
+### 🎨 macOS Dark Title Bar + Version Fix + Backend Optimization
+- 🖤 **macOS Dark Title Bar** — Overlay transparent title bar mode, title bar area blends into dark background
+- 🖱️ **Window Drag Fix** — Top area (sidebar/main content) now supports drag-to-move window via `data-tauri-drag-region`
+- 🔗 **Backend Connection Optimization** — `get_audio_file` moved to `spawn_blocking` + 50MB size limit to prevent UI freeze
+- 🚀 **Batch Cover Concurrency** — `get_song_covers_batch` processes 20 covers concurrently instead of sequentially
+- 🔢 **Version Number Sync** — Fixed APP_CONFIG version out of sync (0.7.12 → 0.8.1)
+
+---
+
 ## v0.8.0 (2026-05-10)
 
 ### 🎨 Brand & Stability Update

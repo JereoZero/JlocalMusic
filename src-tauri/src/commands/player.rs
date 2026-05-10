@@ -137,21 +137,26 @@ pub async fn get_metadata_batch(
         Err(e) => return Ok(ApiResponse::err(e.to_string())),
     };
 
-    let extractor = MetadataExtractor::new();
-    let mut results = Vec::new();
-    
-    for path in paths {
-        if !validate_audio_extension(&path) {
-            continue;
+    let paths = paths.clone();
+    let results = tokio::task::spawn_blocking(move || {
+        let _extractor = MetadataExtractor::new();
+        let mut results = Vec::new();
+        
+        for path in paths {
+            if !validate_audio_extension(&path) {
+                continue;
+            }
+            if !is_path_in_music_folder(&path, &music_folder) {
+                continue;
+            }
+            match MetadataExtractor::extract_blocking(&path) {
+                Ok(metadata) => results.push(BatchMetadata { path, metadata }),
+                Err(_) => continue,
+            }
         }
-        if !is_path_in_music_folder(&path, &music_folder) {
-            continue;
-        }
-        match extractor.extract(&path).await {
-            Ok(metadata) => results.push(BatchMetadata { path, metadata }),
-            Err(_) => continue,
-        }
-    }
+        
+        results
+    }).await.map_err(|e| e.to_string())?;
     
     Ok(ApiResponse::ok(results))
 }
