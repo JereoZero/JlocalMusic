@@ -16,14 +16,34 @@ A local music player built with Tauri 2 + React 19, focused on a clean and effic
 <div align="center">
   <table>
     <tr>
-      <td><img src="screenshots/main.png" alt="Main Interface" width="380"/></td>
-      <td><img src="screenshots/player.png" alt="Player Controls" width="380"/></td>
-      <td><img src="screenshots/lyrics.png" alt="Lyrics View" width="380"/></td>
+      <td><img src="screenshots/本地音乐.png" alt="Local Music" width="380"/></td>
+      <td><img src="screenshots/我喜欢.png" alt="Liked Songs" width="380"/></td>
+      <td><img src="screenshots/播放历史.png" alt="Play History" width="380"/></td>
     </tr>
     <tr>
-      <td align="center"><b>🎵 Main Interface</b></td>
-      <td align="center"><b>🎛️ Player Controls</b></td>
+      <td align="center"><b>🎵 Local Music</b></td>
+      <td align="center"><b>❤️ Liked Songs</b></td>
+      <td align="center"><b>📋 Play History</b></td>
+    </tr>
+    <tr>
+      <td><img src="screenshots/歌词界面1.png" alt="Lyrics View" width="380"/></td>
+      <td><img src="screenshots/歌词界面2.png" alt="Lyrics View" width="380"/></td>
+      <td><img src="screenshots/设置界面.png" alt="Settings" width="380"/></td>
+    </tr>
+    <tr>
       <td align="center"><b>🎤 Lyrics View</b></td>
+      <td align="center"><b>🎤 Lyrics View</b></td>
+      <td align="center"><b>⚙️ Settings</b></td>
+    </tr>
+    <tr>
+      <td><img src="screenshots/隐藏歌曲.png" alt="Hidden Songs" width="380"/></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td align="center"><b>🙈 Hidden Songs</b></td>
+      <td></td>
+      <td></td>
     </tr>
   </table>
 </div>
@@ -33,10 +53,19 @@ A local music player built with Tauri 2 + React 19, focused on a clean and effic
 - 🚀 **Lightweight & Fast** - Built with Tauri 2, small bundle size, quick startup
 - 🎵 **Wide Format Support** - MP3, FLAC, WAV, DSF, DFF, OGG, AAC, M4A and more
 - 🎤 **Lyrics Support** - LRC lyrics files and embedded lyrics with auto-scroll
-- 🎨 **Theme System** - 4 themes (Orange, Khaki, Gray Blue, Olive Green), dynamic background colors
+- 🎨 **Theme System** - 5 themes (Blue, Orange, Khaki, Gray Blue, Olive Green, Neon Green), dynamic background colors
 - 🔒 **Privacy First** - All data stored locally
 - 📁 **Smart Management** - Multi-folder support, auto-cleanup deleted songs
 - ▶️ **Independent Play Queues** - Each view (Local/Liked/Hidden/History) has its own play queue
+
+## 🖱️ Interactions
+
+- 🖱️ **Scroll to Seek** - Hover over the progress bar and scroll the mouse wheel to fast-forward/rewind
+- 🔊 **Scroll to Adjust Volume** - Hover near the volume bar and scroll the mouse wheel to adjust volume
+- 🎤 **Click Album to Play/Pause** - Click the album cover in the lyrics view to toggle play/pause
+- 🔄 **Mini Icon for Lyrics** - Click the small album icon in the bottom-left to enter or exit the lyrics view
+- 👁️ **Hover to Reveal Lyrics** - Hover the mouse over the lyrics view to display all lyrics clearly
+- ✋ **Drag Lyrics to Seek** - Drag the lyrics to a specific line to start playing from that position
 
 > 💡 Currently developed and tested on macOS Apple Silicon. Windows/Linux support coming soon.
 
@@ -129,6 +158,22 @@ npm run lint         # Linting
 ```
 
 ## 📝 Changelog
+
+### v0.8.0 (2026-05-10)
+> 🎨 New Logo + Major Stability Overhaul — 10 stability fixes, new logo, neon green theme
+
+- 🎨 **New Logo** — Replaced with a cleaner, more modern logo design
+- 🟢 **Neon Green Theme** — Added neon green (`#39FF14`) theme color
+- 🛡️ **OutputStream Recovery** — Auto-retry & rebuild on audio device failure, no restart needed
+- ⚡ **Blocking IO Isolated** — Scanner/metadata extraction moved to `spawn_blocking`, no more UI freeze on large libraries
+- 🎯 **Race Condition Protection** — Play operation sequence number prevents state corruption on rapid song switching
+- 🎚️ **Accurate Track End Detection** — Uses `sink.empty()` instead of time estimation for precise track transition
+- 🔀 **Shuffle Rewrite** — Fisher-Yates pre-shuffle replaces runtime random pick, guarantees no repeats
+- 🗄️ **Database Optimization** — `cleanup_nonexistent_songs` uses batch transactions + path-only queries
+- 🔇 **Decode Error Tolerance** — Flac decoder gains consecutive error limits + logging, corrupt files no longer skip silently
+- 🧹 **HMR Compatible** — playerStore adds `destroy()` method, no more stale state in React Strict Mode/HMR
+- 🖼️ **Screenshots Updated** — 7 new UI screenshots replace old ones
+- 📘 **README Enhanced** — New "Interactions" section, full UI screenshot gallery
 
 ### v0.7.12 + patch (2026-05-10)
 > 🔥 Code review release — 15 bugs fixed (3 P0 critical, 6 P1 important, 6 P2 quality) + 7 post-release fixes

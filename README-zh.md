@@ -16,14 +16,34 @@
 <div align="center">
   <table>
     <tr>
-      <td><img src="screenshots/main.png" alt="主界面" width="380"/></td>
-      <td><img src="screenshots/player.png" alt="播放控制" width="380"/></td>
-      <td><img src="screenshots/lyrics.png" alt="歌词界面" width="380"/></td>
+      <td><img src="screenshots/本地音乐.png" alt="本地音乐" width="380"/></td>
+      <td><img src="screenshots/我喜欢.png" alt="我喜欢" width="380"/></td>
+      <td><img src="screenshots/播放历史.png" alt="播放历史" width="380"/></td>
     </tr>
     <tr>
-      <td align="center"><b>🎵 主界面</b></td>
-      <td align="center"><b>🎛️ 播放控制</b></td>
+      <td align="center"><b>🎵 本地音乐</b></td>
+      <td align="center"><b>❤️ 我喜欢</b></td>
+      <td align="center"><b>📋 播放历史</b></td>
+    </tr>
+    <tr>
+      <td><img src="screenshots/歌词界面1.png" alt="歌词界面" width="380"/></td>
+      <td><img src="screenshots/歌词界面2.png" alt="歌词界面" width="380"/></td>
+      <td><img src="screenshots/设置界面.png" alt="设置界面" width="380"/></td>
+    </tr>
+    <tr>
       <td align="center"><b>🎤 歌词界面</b></td>
+      <td align="center"><b>🎤 歌词界面</b></td>
+      <td align="center"><b>⚙️ 设置界面</b></td>
+    </tr>
+    <tr>
+      <td><img src="screenshots/隐藏歌曲.png" alt="隐藏歌曲" width="380"/></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td align="center"><b>🙈 隐藏歌曲</b></td>
+      <td></td>
+      <td></td>
     </tr>
   </table>
 </div>
@@ -33,10 +53,19 @@
 - 🚀 **轻量快速** - 基于 Tauri 2，包体积小，启动速度快
 - 🎵 **格式丰富** - 支持 MP3、FLAC、WAV、DSF、DFF、OGG、AAC、M4A 等主流格式
 - 🎤 **歌词支持** - 支持 LRC 歌词文件和内嵌歌词，自动同步滚动
-- 🎨 **主题系统** - 4 种主题（橙色/卡其/雾霾蓝/橄榄绿），动态背景色
+- 🎨 **主题系统** - 5 种主题（蓝色/橙色/卡其/雾霾蓝/橄榄绿/荧光绿），动态背景色
 - 🔒 **本地优先** - 所有数据存储在本地，保护隐私
 - 📁 **智能管理** - 多文件夹支持，自动清理已删除歌曲
 - ▶️ **独立播放队列** - 每个视图（本地/我喜欢/已隐藏/历史）维护自己的播放队列
+
+## 🖱️ 交互操作
+
+- 🖱️ **滚轮调节进度** - 鼠标悬停在进度条上，滚动滚轮即可快进/快退
+- 🔊 **滚轮调节音量** - 鼠标悬停在音量条附近，滚动滚轮即可调节音量
+- 🎤 **点击专辑播放/暂停** - 在歌词界面点击专辑封面即可切换播放/暂停
+- 🔄 **小图标切换歌词** - 点击左下角小专辑图标可进入或退出歌词界面
+- 👁️ **悬停显示歌词** - 鼠标在歌词界面悬停时，全部歌词清晰显示
+- ✋ **拖动歌词定位** - 可拖动歌词到具体位置，从该歌词处开始播放
 
 ## 🛠️ 技术栈
 
@@ -116,6 +145,22 @@ npm run lint        # 代码检查
 ```
 
 ## 📝 版本历史
+
+### v0.8.0 (2026-05-10)
+> 🎨 全新 Logo + 稳定性大修 — 10 项稳定性修复 + 新 Logo + 荧光绿主题
+
+- 🎨 **全新 Logo** — 替换为更简洁现代的新 Logo 设计
+- 🟢 **荧光绿主题** — 新增荧光绿 (`#39FF14`) 主题色
+- 🛡️ **OutputStream 恢复** — 音频设备失效后自动重试重建，无需重启应用
+- ⚡ **阻塞 IO 隔离** — 扫描器/元数据提取移入 `spawn_blocking`，大库扫描不再卡 UI
+- 🎯 **竞态防护** — 播放操作引入序列号机制，快速切歌不再状态混乱
+- 🎚️ **播放完成检测** — 改用 `sink.empty()` 替代时间估算，切歌更精准
+- 🔀 **Shuffle 重构** — Fisher-Yates 预洗牌替代运行时随机选取，保证不重复
+- 🗄️ **数据库优化** — `cleanup_nonexistent_songs` 分批事务 + 只查 path 字段
+- 🔇 **解码容错** — flac_decoder 连续错误限制 + 日志记录，损坏文件不再静默跳过
+- 🧹 **HMR 兼容** — playerStore 增加 `destroy()` 方法，React 严格模式/HMR 不再残留
+- 🖼️ **截图更新** — 7 张新版界面截图替换旧截图
+- 📘 **README 增强** — 新增「交互操作」章节，文档包含完整界面截图
 
 ### v0.7.12 + patch (2026-05-10)
 > 🔥 代码审查修复版本 — 修复 15 个问题（3 严重 + 6 重要 + 6 代码质量）+ 7 个发布后修复
