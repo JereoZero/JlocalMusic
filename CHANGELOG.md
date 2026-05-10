@@ -2,6 +2,24 @@
 
 All notable changes to JlocalMusic will be documented in this file.
 
+## v0.8.0 (2026-05-10)
+
+### 🎨 Brand & Stability Update
+- 🎨 **New Logo** — Replaced with a cleaner, more modern logo design
+- 🟢 **Neon Green Theme** — Added neon green (`#39FF14`) theme color
+- 🛡️ **OutputStream Recovery** — Auto-retry & rebuild on audio device failure, no restart needed
+- ⚡ **Blocking IO Isolated** — Scanner/metadata extraction moved to `spawn_blocking`, no more UI freeze on large libraries
+- 🎯 **Race Condition Protection** — Play operation sequence number prevents state corruption on rapid song switching
+- 🎚️ **Accurate Track End Detection** — Uses `sink.empty()` instead of time estimation for precise track transition
+- 🔀 **Shuffle Rewrite** — Fisher-Yates pre-shuffle replaces runtime random pick, guarantees no repeats
+- 🗄️ **Database Optimization** — `cleanup_nonexistent_songs` uses batch transactions + path-only queries
+- 🔇 **Decode Error Tolerance** — Flac decoder gains consecutive error limits + logging
+- 🧹 **HMR Compatible** — playerStore adds `destroy()` method for React Strict Mode/HMR
+- 🖼️ **Screenshots Updated** — 7 new UI screenshots replace old ones
+- 📘 **README Enhanced** — New "Interactions" section, full UI screenshot gallery
+
+---
+
 ## v0.7.13 (2026-05-10)
 
 ### 🎨 Brand & Theme Update
