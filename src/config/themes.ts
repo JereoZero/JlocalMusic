@@ -24,6 +24,11 @@ export const THEMES = {
     name: '橄榄绿',
     primary: '#6b8e6b',
   },
+  neonGreen: {
+    id: 'neonGreen',
+    name: '荧光绿',
+    primary: '#39FF14',
+  },
 } as const
 
 export type ThemeId = keyof typeof THEMES
