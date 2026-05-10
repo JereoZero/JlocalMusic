@@ -18,7 +18,7 @@ jobs:
           - platform: 'macos-latest'
             args: '--target aarch64-apple-darwin'
             target: 'aarch64-apple-darwin'
-          - platform: 'windows-latest'
+          - platform: 'windows-2022'
             args: ''
             target: 'x86_64-pc-windows-msvc'
 
@@ -73,7 +73,7 @@ jobs:
             src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.app
 
       - name: Upload artifacts (Windows)
-        if: matrix.platform == 'windows-latest'
+        if: matrix.platform == 'windows-2022'
         uses: actions/upload-artifact@v4
         with:
           name: jlocal-windows
