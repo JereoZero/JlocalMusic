@@ -19,7 +19,7 @@ jobs:
             args: '--target aarch64-apple-darwin'
             target: 'aarch64-apple-darwin'
           - platform: 'windows-2022'
-            args: '--verbose'
+            args: ''
             target: 'x86_64-pc-windows-msvc'
 
     runs-on: ${{ matrix.platform }}
@@ -45,47 +45,12 @@ jobs:
 
       - name: Install dependencies (macOS)
         if: matrix.platform == 'macos-latest'
-        run: |
-          brew install create-dmg
+        run: brew install create-dmg
 
       - name: Install frontend dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Verify toolchain (Windows)
-        if: matrix.platform == 'windows-2022'
-        run: |
-          rustc --version
-          cargo --version
-          rustup target list --installed
-          node --version
-          npm --version
-
-      - name: Build frontend (Windows)
-        if: matrix.platform == 'windows-2022'
-        run: npm run build
-
-      - name: Cargo build (Windows)
-        if: matrix.platform == 'windows-2022'
-        run: cargo build --release 2>&1 | Tee-Object -FilePath cargo-build.log
-        working-directory: ./src-tauri
-        continue-on-error: true
-
-      - name: Upload cargo build log (Windows)
-        if: always() && matrix.platform == 'windows-2022'
-        uses: actions/upload-artifact@v4
-        with:
-          name: cargo-build-log
-          path: src-tauri/cargo-build.log
-
-      - name: Tauri bundle (Windows)
-        if: matrix.platform == 'windows-2022'
-        run: npx tauri build --verbose
-        env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-
-      - name: Build Tauri app (macOS)
-        if: matrix.platform == 'macos-latest'
+      - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

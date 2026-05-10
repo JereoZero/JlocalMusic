@@ -12,14 +12,20 @@ export default function ProgressBar({ currentTime, duration, onSeek }: ProgressB
   const progressRef = useRef<HTMLDivElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [displayTime, setDisplayTime] = useState(currentTime)
+  const displayTimeRef = useRef(displayTime)
   const { getPrimaryColor } = useThemeStore()
   const primaryColor = getPrimaryColor()
 
   const progress = duration > 0 ? (displayTime / duration) * 100 : 0
 
   useEffect(() => {
+    displayTimeRef.current = displayTime
+  }, [displayTime])
+
+  useEffect(() => {
     if (!isDragging) {
       setDisplayTime(currentTime)
+      displayTimeRef.current = currentTime
     }
   }, [currentTime, isDragging])
 
@@ -82,7 +88,7 @@ export default function ProgressBar({ currentTime, duration, onSeek }: ProgressB
 
     const handleMouseUp = () => {
       if (duration > 0) {
-        handleSeek(displayTime)
+        handleSeek(displayTimeRef.current)
       }
       setIsDragging(false)
     }
@@ -94,7 +100,7 @@ export default function ProgressBar({ currentTime, duration, onSeek }: ProgressB
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isDragging, duration, displayTime, handleSeek])
+  }, [isDragging, duration, handleSeek])
 
   return (
     <div className="w-full flex items-center gap-2">

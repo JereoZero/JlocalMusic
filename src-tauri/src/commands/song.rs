@@ -222,29 +222,39 @@ pub async fn scan_folder(
     match scanner.scan(&path).await {
         Ok(result) => {
             if !result.normal_songs.is_empty() {
-                let (success, errors) = db.upsert_songs(result.normal_songs.clone()).await
-                    .unwrap_or((0, 0));
-                if errors > 0 {
-                    tracing::warn!("{} normal songs failed to insert", errors);
+                match db.upsert_songs(result.normal_songs.clone()).await {
+                    Ok((success, errors)) => {
+                        if errors > 0 {
+                            tracing::warn!("{} normal songs failed to insert", errors);
+                        }
+                        tracing::info!("Saved {} normal songs, {} errors", success, errors);
+                    }
+                    Err(e) => {
+                        tracing::error!("Failed to save normal songs: {}", e);
+                    }
                 }
-                tracing::info!("Saved {} normal songs, {} errors", success, errors);
             }
 
             if !result.encrypted_songs.is_empty() {
-                let (success, errors) = db.upsert_songs(result.encrypted_songs.clone()).await
-                    .unwrap_or((0, 0));
-                if success > 0 {
-                    let encrypted_paths: Vec<String> = result
-                        .encrypted_songs
-                        .iter()
-                        .map(|s| s.path.clone())
-                        .collect();
-                    if let Err(e) = db.hide_songs_batch(encrypted_paths, true).await {
-                        tracing::error!("Failed to auto-hide encrypted songs: {}", e);
+                match db.upsert_songs(result.encrypted_songs.clone()).await {
+                    Ok((success, errors)) => {
+                        if success > 0 {
+                            let encrypted_paths: Vec<String> = result
+                                .encrypted_songs
+                                .iter()
+                                .map(|s| s.path.clone())
+                                .collect();
+                            if let Err(e) = db.hide_songs_batch(encrypted_paths, true).await {
+                                tracing::error!("Failed to auto-hide encrypted songs: {}", e);
+                            }
+                        }
+                        if errors > 0 {
+                            tracing::warn!("{} encrypted songs failed to insert", errors);
+                        }
                     }
-                }
-                if errors > 0 {
-                    tracing::warn!("{} encrypted songs failed to insert", errors);
+                    Err(e) => {
+                        tracing::error!("Failed to save encrypted songs: {}", e);
+                    }
                 }
             }
 
