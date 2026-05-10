@@ -66,8 +66,16 @@ jobs:
 
       - name: Cargo build (Windows)
         if: matrix.platform == 'windows-2022'
-        run: cargo build --release
+        run: cargo build --release 2>&1 | Tee-Object -FilePath cargo-build.log
         working-directory: ./src-tauri
+        continue-on-error: true
+
+      - name: Upload cargo build log (Windows)
+        if: always() && matrix.platform == 'windows-2022'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cargo-build-log
+          path: src-tauri/cargo-build.log
 
       - name: Tauri bundle (Windows)
         if: matrix.platform == 'windows-2022'
