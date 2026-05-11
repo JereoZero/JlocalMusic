@@ -1,5 +1,8 @@
 import { memo } from 'react'
+import { Heart, Eye, Clock } from 'lucide-react'
 import type { TitleSortType, AlbumSortType } from '../hooks'
+import { cn } from '../utils/cn'
+import { getSongListGridColumns, type SongListColumnConfig } from './songListColumns'
 
 interface SongListHeaderProps {
   onTitleSort?: () => void
@@ -18,6 +21,33 @@ function getSortIcon(sort?: TitleSortType | AlbumSortType) {
   return null
 }
 
+function SortButton({
+  children,
+  onClick,
+  disabled,
+  className,
+}: {
+  children: React.ReactNode
+  onClick?: () => void
+  disabled?: boolean
+  className?: string
+}) {
+  return (
+    <button
+      className={cn(
+        'flex items-center gap-1.5 text-left transition-colors duration-200',
+        'hover:text-zinc-300',
+        disabled && 'cursor-default opacity-50',
+        className
+      )}
+      onClick={onClick}
+      disabled={disabled}
+    >
+      {children}
+    </button>
+  )
+}
+
 function SongListHeader({
   onTitleSort,
   onAlbumSort,
@@ -27,38 +57,63 @@ function SongListHeader({
   showLikeColumn = true,
   showHideColumn = true,
 }: SongListHeaderProps) {
+  const columnConfig: SongListColumnConfig = {
+    showLike: showLikeColumn,
+    showHide: showHideColumn,
+  }
+
   return (
-    <div className="grid grid-cols-[40px_40px_1fr_128px_40px_40px_48px] gap-x-4 items-center px-6 py-3 text-sm text-gray-400 border-b border-[#2a2a2a] bg-[#0a0a0a]">
-      <div>#</div>
-      <div></div>
-      <button
-        className="flex items-center gap-2 hover:text-white text-left"
+    <div
+      className="grid items-center px-6 py-3 text-xs font-medium text-zinc-600 uppercase tracking-wider border-b border-white/5 select-none"
+      style={{
+        gridTemplateColumns: getSongListGridColumns(columnConfig),
+        gap: '16px',
+      }}
+    >
+      {/* 序号 */}
+      <div className="text-right">#</div>
+
+      {/* 标题 */}
+      <SortButton
         onClick={onTitleSort}
         disabled={!onTitleSort}
       >
         <span>标题</span>
-        {getSortIcon(titleSort)}
-      </button>
-      <button
-        className="hidden md:flex items-center gap-2 hover:text-white text-left"
+        {getSortIcon(titleSort) && (
+          <span className="text-zinc-500">{getSortIcon(titleSort)}</span>
+        )}
+      </SortButton>
+
+      {/* 专辑 */}
+      <SortButton
         onClick={onAlbumSort}
         disabled={!onAlbumSort}
+        className="hidden md:flex"
       >
         <span>专辑</span>
-        {getSortIcon(albumSort)}
-      </button>
+        {getSortIcon(albumSort) && (
+          <span className="text-zinc-500">{getSortIcon(albumSort)}</span>
+        )}
+      </SortButton>
+
+      {/* 喜欢 */}
       {showLikeColumn && (
-        <button
-          className="flex justify-center hover:text-white"
-          onClick={onLikeSort}
-          title="按喜欢状态排序"
-          disabled={!onLikeSort}
-        >
-          喜欢
-        </button>
+        <div className="flex justify-center">
+          <Heart size={14} />
+        </div>
       )}
-      {showHideColumn && <div className="flex justify-center">隐藏</div>}
-      <div className="text-right pr-2">时长</div>
+
+      {/* 隐藏 */}
+      {showHideColumn && (
+        <div className="flex justify-center">
+          <Eye size={14} />
+        </div>
+      )}
+
+      {/* 时长 */}
+      <div className="text-right">
+        <Clock size={14} />
+      </div>
     </div>
   )
 }

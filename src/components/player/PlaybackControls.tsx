@@ -2,6 +2,8 @@ import { Play, Pause, SkipBack, SkipForward } from 'lucide-react'
 import type { PlayMode } from '../../types'
 import { useThemeStore } from '../../stores/themeStore'
 import { getPlayModeIcon, getPlayModeTitle } from './playModeUtils'
+import { cn } from '../../utils/cn'
+import { motion } from 'framer-motion'
 
 interface PlaybackControlsProps {
   isPlaying: boolean
@@ -23,43 +25,40 @@ export default function PlaybackControls({
   const { getPrimaryColor } = useThemeStore()
   const primaryColor = getPrimaryColor()
 
+  const iconButtonClass = cn(
+    'p-2 rounded-full transition-all duration-200',
+    'text-zinc-500 hover:text-white hover:bg-white/5',
+    'active:scale-90'
+  )
+
   return (
-    <div className="flex items-center gap-4">
-      <button
+    <div className="flex items-center gap-1">
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={onTogglePlayMode}
-        className="p-2 rounded-full transition-all duration-200 hover:bg-white/10 text-[#9ca3af]"
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = primaryColor
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = '#9ca3af'
-        }}
+        className={iconButtonClass}
         title={getPlayModeTitle(playMode)}
       >
         {getPlayModeIcon(playMode)}
-      </button>
-      <button
+      </motion.button>
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={onPlayPrev}
-        className="p-2 rounded-full transition-all duration-200 hover:bg-white/10 text-[#9ca3af]"
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = primaryColor
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = '#9ca3af'
-        }}
+        className={iconButtonClass}
       >
         <SkipBack size={20} />
-      </button>
-      <button
+      </motion.button>
+      <motion.button
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.92 }}
         onClick={onTogglePlay}
-        className="p-3 rounded-full transition-colors"
+        className={cn(
+          'p-3 rounded-full transition-all duration-200',
+          'shadow-lg hover:shadow-xl hover:brightness-110'
+        )}
         style={{ backgroundColor: primaryColor }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.opacity = '0.9'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.opacity = '1'
-        }}
       >
         <span className="block w-5 h-5 flex items-center justify-center">
           {isPlaying ? (
@@ -68,19 +67,15 @@ export default function PlaybackControls({
             <Play size={20} className="text-white ml-0.5" />
           )}
         </span>
-      </button>
-      <button
+      </motion.button>
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={onPlayNext}
-        className="p-2 rounded-full transition-all duration-200 hover:bg-white/10 text-[#9ca3af]"
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = primaryColor
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = '#9ca3af'
-        }}
+        className={iconButtonClass}
       >
         <SkipForward size={20} />
-      </button>
+      </motion.button>
     </div>
   )
 }

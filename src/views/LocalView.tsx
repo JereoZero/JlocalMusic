@@ -3,7 +3,6 @@ import { useShallow } from 'zustand/shallow'
 import { usePlayerStore } from '../stores/playerStore'
 import { useLibraryStore } from '../stores/libraryStore'
 import SongList from '../components/SongList'
-import SongListHeader from '../components/SongListHeader'
 import ViewHeader from '../components/ViewHeader'
 import { useDebouncedValue, useSongSort, useMainBgColor } from '../hooks'
 import { filterSongs } from '../utils/songUtils'
@@ -69,29 +68,25 @@ export default function LocalView() {
         isLoading={isLoading}
       />
 
-      <SongListHeader
+      <SongList
+        songs={filteredAndSortedSongs}
+        currentSong={currentSong}
+        isPlaying={isPlaying}
+        likedPaths={likedPaths}
+        hiddenPaths={hiddenPaths}
+        onPlay={handlePlaySong}
+        onToggleLike={toggleLike}
+        onToggleHidden={toggleHidden}
+        showHeader
         onTitleSort={handleTitleSort}
         onAlbumSort={handleAlbumSort}
         onLikeSort={handleLikeSort}
         titleSort={titleSort}
         albumSort={albumSort}
+        emptyTitle="暂无歌曲"
+        emptyDescription="请添加音乐文件夹"
+        source="local"
       />
-
-      <div className="flex-1 overflow-y-auto px-6 py-2">
-        <SongList
-          songs={filteredAndSortedSongs}
-          currentSong={currentSong}
-          isPlaying={isPlaying}
-          likedPaths={likedPaths}
-          hiddenPaths={hiddenPaths}
-          onPlay={handlePlaySong}
-          onToggleLike={toggleLike}
-          onToggleHidden={toggleHidden}
-          emptyTitle="暂无歌曲"
-          emptyDescription="请添加音乐文件夹"
-          source="local"
-        />
-      </div>
     </div>
   )
 }

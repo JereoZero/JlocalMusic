@@ -1,6 +1,8 @@
 export const APP_CONFIG = {
-  version: '0.8.3',
+  version: '0.8.4',
   name: 'JlocalMusic',
+  repository: 'https://github.com/jz0ojiang/jlocalmusic',
+  releasesUrl: 'https://github.com/jz0ojiang/jlocalmusic/releases',
 
   player: {
     defaultVolume: 0.8,

@@ -2,6 +2,26 @@
 
 All notable changes to JlocalMusic will be documented in this file.
 
+## v0.8.4 (2026-05-12)
+
+### 🎨 UI 重构与列对齐修复
+- 📐 **Grid 布局重构** — 歌曲列表改为 CSS Grid，Header 与 SongItem 列宽统一计算
+- 🧩 **组件合并** — SongListHeader 内置到 SongList 组件，消除容器宽度差异
+- 🔧 **列配置管理** — 新增 `songListColumns.ts` 统一列定义函数
+- ✅ **视图一致性** — 修复本地/喜欢/历史/隐藏四个视图的列显示一致性
+- 🎯 **对齐优化** — 序号和时长列改为居中对齐
+
+### ⚙️ 功能增强
+- 🌐 **设置页面** — 新增项目地址展示
+- 🔄 **检查更新** — 基于 GitHub Release API 的版本检测功能
+- 🎨 **设计系统** — 新增 tokens.ts 设计令牌和 cn.ts 工具函数
+
+### Verification
+- ✅ TypeScript build — compiles clean
+- ✅ Grid 列对齐 — 可视化调试验证通过
+
+---
+
 ## v0.8.3 (2026-05-11)
 
 ### 🐛 Bug Fixes — v0.8.2 Regressions Resolved

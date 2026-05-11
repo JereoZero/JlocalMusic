@@ -7,6 +7,8 @@ import { useSongCover } from '../hooks/useSongCover'
 import { useAlbumColor } from '../hooks/useAlbumColor'
 import LyricParser from 'lrc-file-parser'
 import { createErrorHandler } from '../utils/errorHandler'
+import { cn } from '../utils/cn'
+import { motion } from 'framer-motion'
 
 interface LyricsViewProps {
   onClose: () => void
@@ -127,7 +129,6 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
   }, [currentTime, lyricLines])
 
   useEffect(() => {
-    // 用户滚动时不自动滚动
     if (isUserScrolling) return
 
     if (currentLineRef.current && lyricsContainerRef.current) {
@@ -166,34 +167,28 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
     await togglePlay()
   }, [togglePlay])
 
-  // 用户滚动处理
   const handleScroll = useCallback(() => {
     if (suppressScrollRef.current) return
 
     setIsUserScrolling(true)
 
-    // 清除之前的定时器
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current)
     }
 
-    // 2秒后恢复自动滚动
     scrollTimeoutRef.current = setTimeout(() => {
       setIsUserScrolling(false)
     }, 2000)
   }, [])
 
-  // 鼠标进入歌词区域
   const handleMouseEnter = useCallback(() => {
     setIsMouseOverLyrics(true)
   }, [])
 
-  // 鼠标离开歌词区域
   const handleMouseLeave = useCallback(() => {
     setIsMouseOverLyrics(false)
   }, [])
 
-  // 清理定时器
   useEffect(() => {
     return () => {
       if (scrollTimeoutRef.current) {
@@ -204,14 +199,16 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
 
   if (!currentSong) {
     return (
-      <div className="h-full flex flex-col items-center justify-center bg-[#181818] text-gray-500">
+      <div className="h-full flex flex-col items-center justify-center bg-black/20 text-zinc-600">
         <p>暂无歌曲</p>
-        <button
+        <motion.button
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
           onClick={onClose}
-          className="mt-4 px-4 py-2 rounded-full bg-[#2a2a2a] hover:bg-[#3a3a3a] transition-colors"
+          className="mt-4 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors text-sm"
         >
           返回
-        </button>
+        </motion.button>
       </div>
     )
   }
@@ -219,8 +216,6 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
   const title = currentSong.title || '未知歌曲'
   const artist = currentSong.artist || '未知歌手'
   const album = currentSong.album || '未知专辑'
-
-  // 背景颜色：使用专辑色调或默认深色
   const bgColor = albumColors.lyrics || '#181818'
 
   return (
@@ -244,19 +239,23 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
         />
 
         {/* 关闭按钮 */}
-        <button
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
           onClick={onClose}
-          className="absolute top-9 right-4 p-2 rounded-full hover:bg-white/10 transition-colors z-30"
+          className="absolute top-9 right-4 p-2 rounded-full hover:bg-white/10 transition-colors z-30 text-zinc-500 hover:text-white"
         >
-          <X size={24} className="text-gray-400 hover:text-white" />
-        </button>
+          <X size={24} />
+        </motion.button>
 
         {/* 左侧专辑区域 */}
         <div className="w-[35%] h-full flex flex-col items-center justify-center px-8 z-10 ml-8">
           <div className="flex flex-col items-center gap-4">
-            {/* 专辑封面 - 点击暂停/播放 */}
-            <div
-              className="rounded-lg overflow-hidden bg-[#2a2a2a] flex items-center justify-center cursor-pointer select-none"
+            {/* 专辑封面 */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="rounded-xl overflow-hidden bg-white/5 flex items-center justify-center cursor-pointer select-none shadow-2xl"
               style={{
                 width: isPaused ? '200px' : '280px',
                 height: isPaused ? '200px' : '280px',
@@ -270,27 +269,26 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
                 <img
                   src={`data:image/jpeg;base64,${coverBase64}`}
                   alt={title}
-                  className="w-full h-full object-cover pointer-events-none"
+                  className="w-full h-full object-cover"
                   draggable={false}
                 />
               ) : (
-                <div className="w-full h-full bg-[#3a3a3a] flex items-center justify-center">
-                  <svg className="w-20 h-20 text-[#5a5a5a]" fill="currentColor" viewBox="0 0 24 24">
+                <div className="w-full h-full flex items-center justify-center">
+                  <svg className="w-20 h-20 text-zinc-700" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
                   </svg>
                 </div>
               )}
-            </div>
+            </motion.div>
 
-            {/* 歌曲信息 - 固定大小 */}
+            {/* 歌曲信息 */}
             <div className="text-center" style={{ width: '280px' }}>
               <h2 className="text-xl font-bold text-white mb-2 truncate">{title}</h2>
-              <p className="text-sm text-gray-400 mb-1 truncate">专辑：{album}</p>
-              <p className="text-sm text-gray-400 truncate">歌手：{artist}</p>
-              {/* 暂停时显示横线 */}
+              <p className="text-sm text-zinc-500 mb-1 truncate">专辑：{album}</p>
+              <p className="text-sm text-zinc-500 truncate">歌手：{artist}</p>
               {isPaused && (
                 <div
-                  className="mt-4 w-12 h-0.5 mx-auto rounded"
+                  className="mt-4 w-12 h-0.5 mx-auto rounded-full"
                   style={{ backgroundColor: primaryColor }}
                 />
               )}
@@ -309,12 +307,19 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
           >
             {isLoading ? (
               <div className="flex items-center justify-center h-full">
-                <p className="text-gray-500 text-sm">加载歌词中...</p>
+                <div className="flex items-center gap-2 text-zinc-600">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    className="w-4 h-4 border-2 border-zinc-600 border-t-transparent rounded-full"
+                  />
+                  <p className="text-sm">加载歌词中...</p>
+                </div>
               </div>
             ) : lyricLines.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full">
-                <p className="text-gray-500 text-sm">暂无歌词</p>
-                <p className="text-xs mt-2 text-gray-600">可将 .lrc 歌词文件放在歌曲同目录下</p>
+                <p className="text-zinc-600 text-sm">暂无歌词</p>
+                <p className="text-xs mt-2 text-zinc-700">可将 .lrc 歌词文件放在歌曲同目录下</p>
               </div>
             ) : (
               <div className="py-32 text-center">
@@ -323,7 +328,6 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
                   const isPast = index < lineIndex
                   const distance = Math.abs(index - lineIndex)
 
-                  // 鼠标在歌词区域时不模糊
                   let opacity = 1
                   let shouldBlur = false
                   if (!isMouseOverLyrics && distance > 2) {
@@ -332,27 +336,25 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
                   }
 
                   return (
-                    <div
+                    <motion.div
                       key={`${line.time}-${index}`}
                       ref={isCurrent ? currentLineRef : null}
                       onClick={() => handleLineClick(line)}
-                      className={`
-                        py-4 px-4 rounded-lg cursor-pointer mb-2
-                        transition-all duration-500 ease-in-out
-                        ${
-                          isCurrent
-                            ? 'text-white text-3xl font-medium scale-110'
-                            : isPast
-                              ? 'text-gray-600 text-2xl hover:text-gray-400'
-                              : 'text-gray-500 text-2xl hover:text-gray-300 hover:bg-white/5'
-                        }
-                      `}
+                      className={cn(
+                        'py-4 px-4 rounded-xl cursor-pointer mb-2',
+                        'transition-all duration-500 ease-in-out',
+                        isCurrent
+                          ? 'text-white text-3xl font-medium scale-110'
+                          : isPast
+                            ? 'text-zinc-700 text-2xl hover:text-zinc-500'
+                            : 'text-zinc-600 text-2xl hover:text-zinc-400 hover:bg-white/[0.03]'
+                      )}
                       style={
                         shouldBlur && opacity < 1 ? { opacity, filter: 'blur(0.5px)' } : undefined
                       }
                     >
                       <span>{line.text}</span>
-                    </div>
+                    </motion.div>
                   )
                 })}
               </div>
