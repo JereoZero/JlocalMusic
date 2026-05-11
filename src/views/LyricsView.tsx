@@ -114,8 +114,13 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
 
   const lineIndex = currentLineIndex()
 
+  const lastLyricSyncRef = useRef(0)
+
   useEffect(() => {
     if (lyricParserRef.current && lyricLines.length > 0) {
+      const now = performance.now()
+      if (now - lastLyricSyncRef.current < 200) return
+      lastLyricSyncRef.current = now
       const timeMs = currentTime * 1000
       lyricParserRef.current.play(timeMs)
     }

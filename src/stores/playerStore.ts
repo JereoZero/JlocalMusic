@@ -258,6 +258,12 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       return
     }
 
+    if (!backendLoaded) {
+      log('后台执行', 'playSong() - resume时首次加载音频')
+      await get().playSong(currentSong)
+      return
+    }
+
     log('恢复播放')
     const opId = ++playOperationId
     try {
@@ -417,6 +423,12 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       const { songs: likedSongs } = await api.getLikedSongs()
       songs = likedSongs
       source = 'liked'
+    } else if (queueSource === 'hidden') {
+      const allSongs = await api.getSongs()
+      const hiddenPaths = await api.getHiddenPaths()
+      const hiddenSet = new Set(hiddenPaths)
+      songs = allSongs.filter((s) => hiddenSet.has(s.path))
+      source = 'hidden'
     } else {
       songs = await api.getSongs()
       source = 'local'

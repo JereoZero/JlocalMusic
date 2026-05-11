@@ -21,10 +21,12 @@ export const AUDIO_FORMATS = {
 
   encrypted: ['ncm', 'qmc', 'qmc0', 'qmc3', 'qmcflac', 'qmcogg', 'mflac'] as const,
 
+  unsupported: ['wma', 'ape', 'wv', 'wvc', 'tta'] as const,
+
   all: [] as readonly string[],
 } as const
 
-const _allFormats = [...AUDIO_FORMATS.normal, ...AUDIO_FORMATS.encrypted]
+const _allFormats = [...AUDIO_FORMATS.normal, ...AUDIO_FORMATS.encrypted, ...AUDIO_FORMATS.unsupported]
 Object.defineProperty(AUDIO_FORMATS, 'all', { value: _allFormats })
 
 export function isAudioFormat(ext: string): boolean {

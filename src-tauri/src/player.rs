@@ -336,6 +336,13 @@ impl AudioPlayer {
                                     sink = Some(s);
                                 }
                                 stream_retry_counter = 0;
+
+                                has_source = false;
+                                let mut st = state.blocking_write();
+                                st.state = PlaybackState::Stopped;
+                                st.current_path = None;
+                                st.position = 0.0;
+                                st.duration = None;
                             }
                         }
                     }

@@ -142,7 +142,9 @@ export const usePlayQueueStore = create<PlayQueueStore>()(
 
           const removedPath = state.queue[index].path
           const newQueue = state.queue.filter((_, i) => i !== index)
-          const newOriginalQueue = state.originalQueue.filter((s) => s.path !== removedPath)
+          const origIndex = state.originalQueue.findIndex((s) => s.path === removedPath)
+          const newOriginalQueue = [...state.originalQueue]
+          if (origIndex >= 0) newOriginalQueue.splice(origIndex, 1)
           let newIndex = state.currentIndex
 
           if (index < state.currentIndex) {
