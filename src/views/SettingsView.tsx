@@ -559,6 +559,53 @@ export default function SettingsView({ onClose }: SettingsViewProps) {
                   版本历史
                 </h3>
                 <div className="space-y-4 text-sm max-h-80 overflow-y-auto">
+                  {/* v0.8.3 */}
+                  <div className="border-l-2 pl-4" style={{ borderLeftColor: primaryColor }}>
+                    <p className="text-white font-medium">v0.8.3</p>
+                    <p className="text-xs text-gray-500 mb-2">2026-05-11</p>
+                    <ul className="space-y-1 text-gray-400">
+                      <li>🔊 首次播放无声修复：前端 togglePlay 区分 backendLoaded</li>
+                      <li>🖱️ 窗口拖拽修复：切换为原生 macOS 标题栏，告别 Overlay 模式</li>
+                      <li>🖤 macOS 原生标题栏深色：NSAppearanceNameDarkAqua 强制深色</li>
+                      <li>🧹 清理：删除所有失效的自定义拖拽代码</li>
+                    </ul>
+                  </div>
+                  {/* v0.8.2 */}
+                  <div className="border-l-2 pl-4" style={{ borderLeftColor: hexToRgba(primaryColor, 0.7) }}>
+                    <p className="text-white font-medium">v0.8.2</p>
+                    <p className="text-xs text-gray-500 mb-2">2026-05-10</p>
+                    <ul className="space-y-1 text-gray-400">
+                      <li>🔊 SineWave 预热音频管线 + 永久 Sink 生命周期</li>
+                      <li>🖱️ 窗口拖拽三重保障：data-tauri-drag-region + CSS + inline</li>
+                    </ul>
+                  </div>
+                  {/* v0.8.1 */}
+                  <div className="border-l-2 pl-4" style={{ borderLeftColor: hexToRgba(primaryColor, 0.5) }}>
+                    <p className="text-white font-medium">v0.8.1</p>
+                    <p className="text-xs text-gray-500 mb-2">2026-05-10</p>
+                    <ul className="space-y-1 text-gray-400">
+                      <li>🖤 macOS 暗色标题栏：Overlay 透明模式</li>
+                      <li>🖱️ 顶部区域拖拽支持：data-tauri-drag-region</li>
+                      <li>🔗 后端防卡死：get_audio_file spawn_blocking + 50MB 限制</li>
+                      <li>🚀 并发封面加载：get_song_covers_batch 20 并发</li>
+                    </ul>
+                  </div>
+                  {/* v0.8.0 */}
+                  <div className="border-l-2 pl-4" style={{ borderLeftColor: hexToRgba(primaryColor, 0.3) }}>
+                    <p className="text-white font-medium">v0.8.0</p>
+                    <p className="text-xs text-gray-500 mb-2">2026-05-10</p>
+                    <ul className="space-y-1 text-gray-400">
+                      <li>🎨 全新 Logo + 霓虹绿主题色 (#39FF14)</li>
+                      <li>🛡️ OutputStream 自动恢复：音频设备故障免重启</li>
+                      <li>⚡ 扫描/元数据提取 spawn_blocking：大库不卡 UI</li>
+                      <li>🎯 播放竞态保护：序号防快速切歌状态混乱</li>
+                      <li>🎚️ 精确曲目结束检测：sink.empty() 替代时间估算</li>
+                      <li>🔀 Fisher-Yates 随机播放：预洗牌保证不重复</li>
+                      <li>🗄️ 数据库优化：cleanup_nonexistent_songs 分批 + 路径查询</li>
+                      <li>🔇 Flac 解码容错：连续错误限制 + 日志</li>
+                      <li>🧹 HMR 兼容：playerStore destroy() 方法</li>
+                    </ul>
+                  </div>
                   {/* v0.7.12 */}
                   <div className="border-l-2 pl-4" style={{ borderLeftColor: primaryColor }}>
                     <p className="text-white font-medium">v0.7.12</p>
