@@ -139,7 +139,6 @@ pub async fn get_metadata_batch(
 
     let paths = paths.clone();
     let results = tokio::task::spawn_blocking(move || {
-        let _extractor = MetadataExtractor::new();
         let mut results = Vec::new();
         
         for path in paths {

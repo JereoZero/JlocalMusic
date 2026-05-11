@@ -29,8 +29,14 @@ pub fn is_encrypted_extension(ext: &str) -> bool {
 }
 
 pub fn is_symphonia_format(path: &str) -> bool {
-    let path_lower = path.to_lowercase();
-    SYMPHONIA_EXTENSIONS.iter().any(|ext| path_lower.ends_with(ext))
+    std::path::Path::new(path)
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(|ext| {
+            let lower = ext.to_lowercase();
+            SYMPHONIA_EXTENSIONS.contains(&lower.as_str())
+        })
+        .unwrap_or(false)
 }
 
 // 播放器配置

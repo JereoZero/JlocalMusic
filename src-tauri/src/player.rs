@@ -14,9 +14,8 @@ use crate::constants::is_symphonia_format;
 
 pub fn probe_audio_file(path: &str) -> Result<(), String> {
     let file = File::open(path).map_err(|e| format!("Cannot open file: {}", e))?;
-    let path_lower = path.to_lowercase();
 
-    if is_symphonia_format(&path_lower) {
+    if is_symphonia_format(path) {
         use symphonia::core::io::MediaSourceStream;
         use symphonia::core::probe::Hint;
         use symphonia::core::formats::FormatOptions;
@@ -188,8 +187,7 @@ impl AudioPlayer {
                                 }
                             }
 
-                            let path_lower = path.to_lowercase();
-                            let use_symphonia = is_symphonia_format(&path_lower);
+                            let use_symphonia = is_symphonia_format(&path);
 
                             if use_symphonia {
                                 match SymphoniaDecoder::new(&path) {
@@ -286,7 +284,6 @@ impl AudioPlayer {
                         PlayerCmd::Stop => {
                             if let Some(ref s) = sink {
                                 s.stop();
-                                s.pause();
                             }
                             has_source = false;
                             start_time = None;
@@ -358,8 +355,8 @@ impl AudioPlayer {
                 if has_source && sink.as_ref().map(|s| s.empty()).unwrap_or(false) {
                     if let Some(ref s) = sink {
                         s.stop();
-                        s.pause();
                     }
+                    let finished_duration = duration;
                     has_source = false;
                     start_time = None;
                     base_position = 0.0;
@@ -371,9 +368,11 @@ impl AudioPlayer {
                     st.position = 0.0;
                     st.duration = None;
 
-                    let _ = app_handle.emit("track_finished", "");
+                    let _ = app_handle.emit("track_finished", serde_json::json!({
+                        "duration": finished_duration.unwrap_or(0.0)
+                    }));
 
-                    info!("Track finished");
+                    info!("Track finished (duration: {:?})", finished_duration);
                     continue;
                 }
 

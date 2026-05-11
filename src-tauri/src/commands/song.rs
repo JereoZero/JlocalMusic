@@ -143,11 +143,12 @@ pub async fn get_song_covers_batch(
     use crate::thumbnail::THUMBNAIL_SMALL_SIZE;
     
     let mut result = HashMap::new();
+    let db_ref = db.inner().clone();
     
     for chunk in paths.chunks(20) {
         let mut tasks = Vec::new();
         for path in chunk {
-            let db_clone = db.inner().clone();
+            let db_clone = db_ref.clone();
             let path = path.clone();
             tasks.push(async move {
                 let thumbnail = get_or_create_thumbnail(&db_clone, &path, THUMBNAIL_SMALL_SIZE).await.ok();

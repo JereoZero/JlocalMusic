@@ -70,6 +70,11 @@ impl Database {
             .run(&pool)
             .await?;
 
+        // 启用 WAL 模式提升并发读取性能
+        sqlx::query("PRAGMA journal_mode=WAL")
+            .execute(&pool)
+            .await?;
+
         info!("Database initialized successfully");
 
         Ok(Self { pool })
@@ -233,12 +238,13 @@ impl Database {
 
     /// 增加播放次数
     pub async fn increment_play_count(&self, path: &str) -> Result<(), DatabaseError> {
+        let mut tx = self.pool.begin().await?;
+
         sqlx::query("UPDATE songs SET play_count = play_count + 1 WHERE path = ?")
             .bind(path)
-            .execute(&self.pool)
+            .execute(&mut *tx)
             .await?;
 
-        // 更新播放次数统计表
         sqlx::query(
             r#"
             INSERT INTO play_counts (path, count, last_played) 
@@ -249,9 +255,10 @@ impl Database {
             "#
         )
         .bind(path)
-        .execute(&self.pool)
+        .execute(&mut *tx)
         .await?;
 
+        tx.commit().await?;
         Ok(())
     }
 
