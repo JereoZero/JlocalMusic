@@ -359,7 +359,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     if (!('mediaSession' in navigator) || !navigator.mediaSession) return
 
     navigator.mediaSession.setActionHandler('play', () => {
-      get().resume()
+      get().togglePlay()
     })
 
     navigator.mediaSession.setActionHandler('pause', () => {
