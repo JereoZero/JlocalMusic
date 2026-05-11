@@ -51,17 +51,6 @@ body {
   background: rgba(249, 115, 22, 0.3);
 }
 
-.titlebar {
-  -webkit-app-region: drag;
-  -webkit-user-select: none;
-  user-select: none;
-  pointer-events: auto;
-}
-
-.titlebar-no-drag {
-  -webkit-app-region: no-drag;
-}
-
 @keyframes slideIn {
   from {
     opacity: 0;

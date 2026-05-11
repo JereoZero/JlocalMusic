@@ -59,6 +59,7 @@ let eventUnsubscribers: Array<() => void> = []
 let currentPlayPath: string | null = null
 let accumulatedPlayedMs = 0
 let playOperationId = 0
+let backendLoaded = false
 
 function resetModuleState() {
   stopProgressTimer()
@@ -68,6 +69,7 @@ function resetModuleState() {
   currentPlayPath = null
   accumulatedPlayedMs = 0
   playOperationId = 0
+  backendLoaded = false
   lastUpdateTime = 0
   lastBackendSyncTime = 0
 }
@@ -140,6 +142,7 @@ async function playSongInternal(song: Song, logAction: string) {
   try {
     await api.playSong(song.path)
     if (opId !== playOperationId) return
+    backendLoaded = true
 
     log('播放成功', song.title)
     usePlayerStore.setState({
@@ -212,13 +215,18 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         set({ isPlaying: false })
         log('暂停成功')
       } else {
-        log('后台执行', 'resumeSong()')
-        await api.resumeSong()
-        if (opId !== playOperationId) return
-        lastUpdateTime = performance.now()
-        startProgressTimer()
-        set({ isPlaying: true })
-        log('恢复成功')
+        if (!backendLoaded) {
+          log('后台执行', 'playSong() - 首次加载音频')
+          await get().playSong(currentSong)
+        } else {
+          log('后台执行', 'resumeSong()')
+          await api.resumeSong()
+          if (opId !== playOperationId) return
+          lastUpdateTime = performance.now()
+          startProgressTimer()
+          set({ isPlaying: true })
+          log('恢复成功')
+        }
       }
     } catch (error) {
       if (opId !== playOperationId) return
@@ -272,6 +280,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     await finalizePlayHistory(false)
     try {
       await api.stopSong()
+      backendLoaded = false
       log('后台执行', 'stopSong()')
       stopProgressTimer()
       set({ isPlaying: false, currentTime: 0 })

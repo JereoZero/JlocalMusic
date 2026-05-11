@@ -1,4 +1,9 @@
-# Bug Records (2026-05-10)
+# JlocalMusic Bug 跟踪文档
+
+> 最后更新：2026-05-10
+> 状态：2 个活跃 Bug
+
+---
 
 ## Bug 1: macOS 窗口顶部无法拖拽
 
@@ -32,7 +37,7 @@ App.tsx 中 titlebar 已放在最顶部（第一子元素）：
 - **Tauri 2 Overlay + hiddenTitle 模式冲突**：Overlay 模式由 macOS 绘制红/黄/绿交通灯按钮（约 70×38px 区域），wry webview 可能拦截顶部鼠标事件用于交通灯定位/原生窗口管理，导致 `data-tauri-drag-region` 和 CSS 方案均失效。
 - **`data-tauri-drag-region` 与 `-webkit-app-region` 双保险反而冲突**：Tauri 2 内部用 attribute 做编程式拖拽，CSS 方案是 WebKit 原生方案，两者在 Overlay 模式下可能互相干扰。
 
-### 明天尝试方向
+### 尝试方向
 1. **只用 `data-tauri-drag-region`**，去掉 CSS `-webkit-app-region`，避免冲突
 2. **尝试 `titleBarStyle: "Visible"` + 深色** 代替 Overlay 模式（最可靠方案）
 3. **检查 tauri.conf.json 中 `dragDropEnabled` 配置**是否与此冲突
@@ -120,3 +125,7 @@ restoreLastSong: async () => {
 ## 解决优先级
 1. **Bug 2（无声音）** → 一行代码可修复，优先解决 ✅ 方案明确
 2. **Bug 1（拖拽）** → 需要验证 Overlay 模式兼容性，改为 titleBarStyle:"Visible" 或单用 data-tauri-drag-region
+
+---
+
+*历史修复记录见 [BUGS_HISTORY.md](./BUGS_HISTORY.md)*

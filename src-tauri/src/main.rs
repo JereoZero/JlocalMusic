@@ -18,6 +18,25 @@ mod thumbnail;
 use tauri::Manager;
 use tracing::{info, error, warn};
 
+#[cfg(target_os = "macos")]
+fn set_dark_window_appearance(window: &tauri::WebviewWindow) {
+    use objc2::msg_send;
+    use objc2::class;
+    use objc2_foundation::ns_string;
+
+    let ns_window = window.ns_window().unwrap() as *mut objc2::runtime::AnyObject;
+    unsafe {
+        let appearance: *mut objc2::runtime::AnyObject = msg_send![
+            class!(NSAppearance),
+            appearanceNamed: ns_string!("NSAppearanceNameDarkAqua")
+        ];
+        if !appearance.is_null() {
+            let _: () = msg_send![ns_window, setAppearance: appearance];
+            info!("Set macOS window to dark appearance");
+        }
+    }
+}
+
 fn main() {
     // 初始化日志
     tracing_subscriber::fmt()
@@ -57,6 +76,12 @@ fn main() {
             // 管理状态
             app.manage(db.clone());
             app.manage(player);
+
+            // macOS 原生标题栏深色外观
+            #[cfg(target_os = "macos")]
+            if let Some(window) = app.get_webview_window("main") {
+                set_dark_window_appearance(&window);
+            }
 
             // 自动扫描默认音乐文件夹
             tauri::async_runtime::spawn(async move {

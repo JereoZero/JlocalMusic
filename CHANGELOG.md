@@ -2,7 +2,22 @@
 
 All notable changes to JlocalMusic will be documented in this file.
 
-## v0.8.2 (2026-05-10)
+## v0.8.3 (2026-05-11)
+
+### 🐛 Bug Fixes — v0.8.2 Regressions Resolved
+
+- 🔊 **First-Play No Sound — Real Fix** — Root cause was in frontend `togglePlay()`: `restoreLastSong()` restored UI state but backend had no audio loaded. Added `backendLoaded` flag to distinguish "has loaded audio" vs "backend empty", ensuring first play calls `playSong()` instead of `resumeSong()` ([playerStore.ts](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src/stores/playerStore.ts))
+- 🖱️ **Window Dragging — Real Fix** — Abandoned Tauri 2 Overlay mode (wry kernel doesn't forward titlebar mouse events). Switched to native macOS `titleBarStyle: "Visible"`, system handles dragging natively with 100% reliability ([tauri.conf.json](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/tauri.conf.json))
+- 🖤 **macOS Dark Native Titlebar** — `NSAppearanceNameDarkAqua` forced via objc2 FFI, native titlebar now matches dark theme ([main.rs](file:///Volumes/JZMAC-1T/trae/mus1/Jlocal/jlocal/src-tauri/src/main.rs))
+- 🧹 **Cleanup** — Removed all failed custom drag code from `App.tsx`, `LyricsView.tsx`, `Sidebar.tsx`, `index.css`
+
+### Verification
+- ✅ Rust `cargo check` — zero errors, zero warnings
+- ✅ TypeScript build — compiles clean
+- ✅ Logs confirm: `Set macOS window to dark appearance` at startup
+- ✅ Logs confirm: `Playing:` (not `Resumed from 0.0s`) on first play
+
+---
 
 ### 🔥 Critical Bug Fixes — Audio Engine Rewrite + Window Dragging
 

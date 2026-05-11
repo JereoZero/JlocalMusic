@@ -176,11 +176,6 @@ function AppContent() {
         transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)',
       }}
     >
-      <div
-        data-tauri-drag-region
-        className="titlebar h-10 w-full flex-shrink-0"
-        style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
-      />
       <div className="flex-1 flex overflow-hidden">
         <Sidebar
           currentView={currentView}
