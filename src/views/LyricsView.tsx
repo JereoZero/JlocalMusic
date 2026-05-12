@@ -82,7 +82,8 @@ export default function LyricsView({ onClose }: LyricsViewProps) {
           setLyricLines([])
         }
       })
-      .catch(() => {
+      .catch((e) => {
+        console.error('Failed to load lyrics:', e)
         if (!cancelled) setLyricLines([])
       })
       .finally(() => {

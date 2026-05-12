@@ -252,6 +252,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   },
 
   resume: async () => {
+    const opId = ++playOperationId
     const { currentSong } = get()
     if (!currentSong) {
       await get().playRandomSong()
@@ -265,7 +266,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     }
 
     log('恢复播放')
-    const opId = ++playOperationId
+
     try {
       await api.resumeSong()
       if (opId !== playOperationId) return

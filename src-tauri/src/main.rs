@@ -24,7 +24,13 @@ fn set_dark_window_appearance(window: &tauri::WebviewWindow) {
     use objc2::class;
     use objc2_foundation::ns_string;
 
-    let ns_window = window.ns_window().unwrap() as *mut objc2::runtime::AnyObject;
+    let ns_window = match window.ns_window() {
+        Ok(w) => w as *mut objc2::runtime::AnyObject,
+        Err(e) => {
+            error!("Failed to get NSWindow for dark appearance: {}", e);
+            return;
+        }
+    };
     unsafe {
         let appearance: *mut objc2::runtime::AnyObject = msg_send![
             class!(NSAppearance),
@@ -42,8 +48,8 @@ fn main() {
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::from_default_env()
-                .add_directive("jlocal=info".parse().unwrap())
-                .add_directive("tauri=info".parse().unwrap()),
+                .add_directive("jlocal=info".parse().expect("invalid jlocal log directive"))
+                .add_directive("tauri=info".parse().expect("invalid tauri log directive")),
         )
         .init();
 
@@ -93,7 +99,9 @@ fn main() {
                             Ok(data_dir) => {
                                 let music_dir = data_dir.join("jmusic-file");
                                 let folder = music_dir.to_string_lossy().to_string();
-                                let _ = std::fs::create_dir_all(&music_dir);
+                                if let Err(e) = std::fs::create_dir_all(&music_dir) {
+                                    error!("Failed to create music directory '{}': {}", music_dir.display(), e);
+                                }
                                 let _ = db.set_setting("music_folder", &folder).await;
                                 folder
                             }

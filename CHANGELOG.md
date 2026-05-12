@@ -2,6 +2,26 @@
 
 All notable changes to JlocalMusic will be documented in this file.
 
+## v0.8.6 (2026-05-12)
+
+### 🔒 安全修复
+- 🛡️ **路径遍历防护** — `add_secondary_folder` 增加 `canonicalize()` 解析 + 路径存在性检查，防止符号链接指向任意路径
+- 🛡️ **Panic 消除** — 移除 `main.rs` 中 3 处 `.unwrap()`，改为降级处理 + `.expect()`
+
+### 🐛 Bug 修复
+- 🏃 **竞态保护** — `resume()` 函数补充 `playOperationId` 竞态检查
+- 📝 **错误日志** — 3 处空 `.catch()` 添加 `console.error` 日志输出
+
+### 🧹 代码优化
+- 🧩 **Clock 组件提取** — `Clock` 内联组件 → 模块级 `ClockIcon`，避免每次渲染重建
+
+### Verification
+- ✅ TypeScript — 0 errors
+- ✅ Rust `cargo check` — 通过
+- ✅ 7 方向代码审计完成
+
+---
+
 ## v0.8.5 (2026-05-12)
 
 ### 🧹 代码优化

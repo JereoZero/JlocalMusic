@@ -78,12 +78,22 @@ pub async fn add_secondary_folder(
     target_path: String,
 ) -> Result<ApiResponse<String>, String> {
     let primary_folder = crate::paths::ensure_music_folder_exists(&app)?;
-    
-    let target_name = std::path::Path::new(&target_path)
+
+    let target_path_buf = std::path::PathBuf::from(&target_path);
+
+    if !target_path_buf.exists() {
+        return Ok(ApiResponse::err("目标路径不存在"));
+    }
+
+    let absolute_target = target_path_buf
+        .canonicalize()
+        .map_err(|e| format!("无法解析目标路径: {}", e))?;
+
+    let target_name = absolute_target
         .file_name()
         .and_then(|n| n.to_str())
-        .unwrap_or("link");
-    
+        .ok_or_else(|| "无法获取目标文件夹名称".to_string())?;
+
     let mut link_name = target_name.to_string();
     let mut counter = 1;
     loop {
@@ -94,23 +104,23 @@ pub async fn add_secondary_folder(
         link_name = format!("{}_{}", target_name, counter);
         counter += 1;
     }
-    
+
     let link_path = primary_folder.join(&link_name);
-    
+
     #[cfg(unix)]
     {
-        std::os::unix::fs::symlink(&target_path, &link_path)
+        std::os::unix::fs::symlink(&absolute_target, &link_path)
             .map_err(|e| format!("创建符号链接失败: {}", e))?;
     }
-    
+
     #[cfg(windows)]
     {
         std::process::Command::new("cmd")
-            .args(&["/C", "mklink", "/J", &link_path.to_string_lossy(), &target_path])
+            .args(&["/C", "mklink", "/J", &link_path.to_string_lossy(), &absolute_target.to_string_lossy()])
             .output()
             .map_err(|e| format!("创建 junction 失败: {}", e))?;
     }
-    
+
     Ok(ApiResponse::ok(link_path.to_string_lossy().to_string()))
 }
 

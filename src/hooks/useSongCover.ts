@@ -72,7 +72,8 @@ export function useSongCover(path: string | undefined) {
         }
         return coverData
       })
-      .catch(() => {
+      .catch((e) => {
+        console.error('Failed to load song cover:', path, e)
         if (currentPathRef.current === path) {
           setCover(null)
         }
@@ -145,7 +146,8 @@ export function useSongCovers(paths: string[]) {
         setCovers(new Map(cachedCovers))
         setIsLoading(false)
       })
-      .catch(() => {
+      .catch((e) => {
+        console.error('Failed to load song covers batch:', e)
         if (cancelled) return
         setCovers(new Map(cachedCovers))
         setIsLoading(false)
