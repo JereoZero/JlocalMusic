@@ -132,7 +132,7 @@ export function useAlbumColor(
       img.onload = null
       img.onerror = null
     }
-  }, [coverBase64])
+  }, [coverBase64, songPath])
 
   return dominantColor
 }

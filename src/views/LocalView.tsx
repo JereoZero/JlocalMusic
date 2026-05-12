@@ -27,37 +27,24 @@ export default function LocalView() {
 
   const searchQuery = useDebouncedValue(searchInput, 300)
 
-  const visibleSongs = useMemo(() => {
-    return songs.filter((song) => !hiddenPaths.has(song.path))
-  }, [songs, hiddenPaths])
-
-  const filteredSongs = useMemo(() => {
-    return filterSongs(visibleSongs, searchQuery)
-  }, [visibleSongs, searchQuery])
+  const visibleSongs = useMemo(() => songs.filter((s) => !hiddenPaths.has(s.path)), [songs, hiddenPaths])
+  const filteredSongs = useMemo(() => filterSongs(visibleSongs, searchQuery), [visibleSongs, searchQuery])
 
   const {
     sortedItems: filteredAndSortedSongs,
-    titleSort,
-    albumSort,
-    handleTitleSort,
-    handleAlbumSort,
-    handleLikeSort,
+    titleSort, albumSort,
+    handleTitleSort, handleAlbumSort,
   } = useSongSort(filteredSongs, likedPaths, 'local')
 
   const handlePlaySong = useCallback(
-    (song: Song) => {
-      playSong(song, filteredAndSortedSongs, 'local')
-    },
+    (song: Song) => playSong(song, filteredAndSortedSongs, 'local'),
     [playSong, filteredAndSortedSongs]
   )
 
   return (
     <div
       className="h-full flex flex-col transition-colors duration-700 select-none"
-      style={{
-        backgroundColor: bgColor,
-        transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)',
-      }}
+      style={{ backgroundColor: bgColor, transitionTimingFunction: 'cubic-bezier(0.33, 0, 0.67, 1)' }}
     >
       <ViewHeader
         title="本地"
@@ -67,7 +54,6 @@ export default function LocalView() {
         onRefresh={refreshAll}
         isLoading={isLoading}
       />
-
       <SongList
         songs={filteredAndSortedSongs}
         currentSong={currentSong}
@@ -80,7 +66,6 @@ export default function LocalView() {
         showHeader
         onTitleSort={handleTitleSort}
         onAlbumSort={handleAlbumSort}
-        onLikeSort={handleLikeSort}
         titleSort={titleSort}
         albumSort={albumSort}
         emptyTitle="暂无歌曲"

@@ -2,6 +2,22 @@
 
 All notable changes to JlocalMusic will be documented in this file.
 
+## v0.8.5 (2026-05-12)
+
+### 🧹 代码优化
+- 🗑️ **死代码清理** — 删除无人引用的 `SongListHeader.tsx` (121行) 和 `styles/tokens.ts` (101行)
+- 📦 **组件拆分** — SongItem 提取为独立组件，SongList 从 432 行缩减到 220 行
+
+### 🔧 代码修复
+- 🛠️ **类型优化** — 用 `Set.has` 替代 `as string` 类型断言
+- 🧹 **清理** — 移除 LocalView 中未使用的 `handleLikeSort`
+
+### Verification
+- ✅ TypeScript build — 0 errors
+- ✅ ESLint `--max-warnings 0` — clean
+
+---
+
 ## v0.8.4 (2026-05-12)
 
 ### 🎨 UI 重构与列对齐修复
