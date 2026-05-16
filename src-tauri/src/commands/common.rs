@@ -34,6 +34,32 @@ pub struct ThumbnailInfo {
     pub size_bytes: u64,
 }
 
+pub async fn validate_path_in_music_folder(
+    db: &crate::database::Database,
+    path: &str,
+) -> Result<String, String> {
+    let music_folder = db.get_setting("music_folder").await
+        .map_err(|e| e.to_string())?
+        .ok_or("Music folder not configured".to_string())?;
+
+    if !crate::path_validator::is_path_in_music_folder(path, &music_folder) {
+        return Err("Access denied: path outside music folder".to_string());
+    }
+
+    Ok(music_folder)
+}
+
+pub const MAX_BATCH_SIZE: usize = 100;
+
+pub const ALLOWED_SETTING_KEYS: &[&str] = &[
+    "music_folder",
+    "secondary_folders",
+    "theme",
+    "language",
+    "volume",
+    "last_scan",
+];
+
 pub async fn get_or_create_thumbnail(
     db: &crate::database::Database,
     path: &str,

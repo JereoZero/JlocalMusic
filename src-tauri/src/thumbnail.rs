@@ -16,7 +16,9 @@ fn get_thumbnails_dir() -> PathBuf {
     let thumbnails_dir = data_dir.join("thumbnails");
     
     if !thumbnails_dir.exists() {
-        let _ = fs::create_dir_all(&thumbnails_dir);
+        if let Err(e) = fs::create_dir_all(&thumbnails_dir) {
+            tracing::error!("Failed to create thumbnails directory: {}", e);
+        }
     }
     
     thumbnails_dir

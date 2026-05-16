@@ -5,7 +5,7 @@ use base64::Engine;
 use crate::database::Database;
 use crate::database::Song;
 use crate::scanner::FolderScanner;
-use super::common::{ApiResponse, ThumbnailInfo, get_or_create_thumbnail};
+use super::common::{ApiResponse, ThumbnailInfo, get_or_create_thumbnail, validate_path_in_music_folder, MAX_BATCH_SIZE};
 
 #[tauri::command]
 pub async fn get_songs(db: State<'_, Database>) -> Result<ApiResponse<Vec<Song>>, String> {
@@ -21,7 +21,11 @@ pub async fn get_song_cover(
     path: String,
 ) -> Result<ApiResponse<Option<String>>, String> {
     use crate::thumbnail::THUMBNAIL_SMALL_SIZE;
-    
+
+    if let Err(e) = validate_path_in_music_folder(&db, &path).await {
+        return Ok(ApiResponse::err(e));
+    }
+
     match get_or_create_thumbnail(&db, &path, THUMBNAIL_SMALL_SIZE).await {
         Ok(thumbnail) => Ok(ApiResponse::ok(thumbnail)),
         Err(e) => Ok(ApiResponse::err(e)),
@@ -34,7 +38,11 @@ pub async fn get_song_cover_large(
     path: String,
 ) -> Result<ApiResponse<Option<String>>, String> {
     use crate::thumbnail::THUMBNAIL_LARGE_SIZE;
-    
+
+    if let Err(e) = validate_path_in_music_folder(&db, &path).await {
+        return Ok(ApiResponse::err(e));
+    }
+
     match get_or_create_thumbnail(&db, &path, THUMBNAIL_LARGE_SIZE).await {
         Ok(thumbnail) => Ok(ApiResponse::ok(thumbnail)),
         Err(e) => Ok(ApiResponse::err(e)),
@@ -46,6 +54,10 @@ pub async fn get_song_cover_full(
     db: State<'_, Database>,
     path: String,
 ) -> Result<ApiResponse<Option<String>>, String> {
+    if let Err(e) = validate_path_in_music_folder(&db, &path).await {
+        return Ok(ApiResponse::err(e));
+    }
+
     match db.get_song_cover(&path).await {
         Ok(Some(cover)) if !cover.is_empty() => {
             return Ok(ApiResponse::ok(Some(cover)));
@@ -55,7 +67,9 @@ pub async fn get_song_cover_full(
             match extractor.extract(&path).await {
                 Ok(metadata) => {
                     if let Some(cover) = metadata.cover {
-                        let _ = db.update_song_cover(&path, &cover).await;
+                        if let Err(e) = db.update_song_cover(&path, &cover).await {
+                            tracing::warn!("Failed to update song cover: {}", e);
+                        }
                         return Ok(ApiResponse::ok(Some(cover)));
                     }
                 }
@@ -63,11 +77,11 @@ pub async fn get_song_cover_full(
                     tracing::error!("Failed to extract cover: {}", e);
                 }
             }
-            
+
             if let Some(fallback_cover) = find_fallback_cover(&path).await {
                 return Ok(ApiResponse::ok(Some(fallback_cover)));
             }
-            
+
             Ok(ApiResponse::ok(None))
         }
         Err(e) => Ok(ApiResponse::err(e)),
@@ -77,10 +91,10 @@ pub async fn get_song_cover_full(
 async fn find_fallback_cover(song_path: &str) -> Option<String> {
     use std::path::Path;
     use tokio::fs;
-    
+
     let song = Path::new(song_path);
     let song_dir = song.parent()?;
-    
+
     let album_cover_names = [
         "cover", "Cover", "COVER",
         "album", "Album", "ALBUM",
@@ -88,9 +102,9 @@ async fn find_fallback_cover(song_path: &str) -> Option<String> {
         "front", "Front", "FRONT",
         "artwork", "Artwork", "ARTWORK",
     ];
-    
+
     let extensions = ["jpg", "jpeg", "png", "webp", "bmp"];
-    
+
     for name in &album_cover_names {
         for ext in &extensions {
             let cover_path = song_dir.join(format!("{}.{}", name, ext));
@@ -101,7 +115,7 @@ async fn find_fallback_cover(song_path: &str) -> Option<String> {
             }
         }
     }
-    
+
     if let Some(artist_dir) = song_dir.parent() {
         for name in &album_cover_names {
             for ext in &extensions {
@@ -113,13 +127,13 @@ async fn find_fallback_cover(song_path: &str) -> Option<String> {
                 }
             }
         }
-        
+
         let artist_cover_names = [
             "artist", "Artist", "ARTIST",
             "band", "Band", "BAND",
             "singer", "Singer", "SINGER",
         ];
-        
+
         for name in &artist_cover_names {
             for ext in &extensions {
                 let cover_path = artist_dir.join(format!("{}.{}", name, ext));
@@ -131,7 +145,7 @@ async fn find_fallback_cover(song_path: &str) -> Option<String> {
             }
         }
     }
-    
+
     None
 }
 
@@ -141,10 +155,16 @@ pub async fn get_song_covers_batch(
     paths: Vec<String>,
 ) -> Result<ApiResponse<HashMap<String, Option<String>>>, String> {
     use crate::thumbnail::THUMBNAIL_SMALL_SIZE;
-    
+
+    if paths.len() > MAX_BATCH_SIZE {
+        return Ok(ApiResponse::err(format!(
+            "Too many paths (max {})", MAX_BATCH_SIZE
+        )));
+    }
+
     let mut result = HashMap::new();
     let db_ref = db.inner().clone();
-    
+
     for chunk in paths.chunks(20) {
         let mut tasks = Vec::new();
         for path in chunk {
@@ -160,7 +180,7 @@ pub async fn get_song_covers_batch(
             result.insert(path, thumbnail);
         }
     }
-    
+
     Ok(ApiResponse::ok(result))
 }
 
@@ -196,6 +216,10 @@ pub async fn toggle_like(
     path: String,
     liked: bool,
 ) -> Result<ApiResponse<()>, String> {
+    if let Err(e) = validate_path_in_music_folder(&db, &path).await {
+        return Ok(ApiResponse::err(e));
+    }
+
     match db.toggle_like(&path, liked).await {
         Ok(_) => Ok(ApiResponse::ok(())),
         Err(e) => Ok(ApiResponse::err(e)),
@@ -286,6 +310,10 @@ pub async fn delete_song(
     db: State<'_, Database>,
     path: String,
 ) -> Result<ApiResponse<()>, String> {
+    if let Err(e) = validate_path_in_music_folder(&db, &path).await {
+        return Ok(ApiResponse::err(e));
+    }
+
     match db.delete_song(&path).await {
         Ok(_) => Ok(ApiResponse::ok(())),
         Err(e) => Ok(ApiResponse::err(e)),

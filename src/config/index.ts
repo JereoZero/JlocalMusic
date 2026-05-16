@@ -1,5 +1,5 @@
 export const APP_CONFIG = {
-  version: '0.8.5',
+  version: '0.8.7',
   name: 'JlocalMusic',
   repository: 'https://github.com/jz0ojiang/jlocalmusic',
   releasesUrl: 'https://github.com/jz0ojiang/jlocalmusic/releases',

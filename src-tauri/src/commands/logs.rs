@@ -3,7 +3,7 @@ use tauri::State;
 use crate::database::Database;
 use crate::database::AppLog;
 use crate::database::PlayHistory;
-use super::common::ApiResponse;
+use super::common::{ApiResponse, validate_path_in_music_folder};
 
 #[tauri::command]
 pub async fn add_log(
@@ -95,6 +95,10 @@ pub async fn add_play_history(
     duration: i64,
     completed: bool,
 ) -> Result<ApiResponse<()>, String> {
+    if let Err(e) = validate_path_in_music_folder(&db, &path).await {
+        return Ok(ApiResponse::err(e));
+    }
+
     match db.add_play_history(&path, duration, completed).await {
         Ok(_) => Ok(ApiResponse::ok(())),
         Err(e) => Ok(ApiResponse::err(e)),

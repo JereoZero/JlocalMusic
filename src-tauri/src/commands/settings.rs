@@ -2,7 +2,7 @@ use tauri::State;
 
 use crate::database::Database;
 use crate::path_validator;
-use super::common::ApiResponse;
+use super::common::{ApiResponse, ALLOWED_SETTING_KEYS};
 
 #[tauri::command]
 pub async fn get_setting(
@@ -21,6 +21,12 @@ pub async fn set_setting(
     key: String,
     value: String,
 ) -> Result<ApiResponse<()>, String> {
+    if !ALLOWED_SETTING_KEYS.contains(&key.as_str()) {
+        return Ok(ApiResponse::err(format!(
+            "Setting key '{}' is not allowed", key
+        )));
+    }
+
     match db.set_setting(&key, &value).await {
         Ok(_) => Ok(ApiResponse::ok(())),
         Err(e) => Ok(ApiResponse::err(e)),

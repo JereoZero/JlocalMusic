@@ -31,6 +31,9 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
+# Project documentation (local only, not pushed)
+docs/
+
 # Test music files
 jmusic-file/
 

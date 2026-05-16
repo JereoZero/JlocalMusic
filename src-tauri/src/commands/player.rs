@@ -38,7 +38,9 @@ pub async fn play_song(
 
     match player.play(&path).await {
         Ok(_) => {
-            let _ = db.increment_play_count(&path).await;
+            if let Err(e) = db.increment_play_count(&path).await {
+                tracing::warn!("Failed to increment play count: {}", e);
+            }
             Ok(ApiResponse::ok(()))
         }
         Err(e) => Ok(ApiResponse::err(e.to_string())),

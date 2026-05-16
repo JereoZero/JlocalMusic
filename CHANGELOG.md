@@ -2,6 +2,26 @@
 
 All notable changes to JlocalMusic will be documented in this file.
 
+## v0.8.7 (2026-05-12)
+
+### 🔒 安全修复
+- 🛡️ **后端安全审计** — 逐文件审读 18 个 Rust 源文件，修复 6 项安全漏洞
+- 🛡️ **路径验证统一** — 提取 `validate_path_in_music_folder()` 辅助函数，`delete_song`、`library.rs`、`add_play_history` 等命令全部增加路径边界检查
+- 🛡️ **设置白名单** — `set_setting` 增加 `ALLOWED_SETTING_KEYS` 白名单，防止前端篡改关键配置
+- 🛡️ **Batch 上限** — `get_song_covers_batch`、`hide_songs_batch` 增加 `MAX_BATCH_SIZE = 100` 防 DoS
+- 🛡️ **错误吞掉修复** — 3 处 `let _ =` 改为 `if let Err(e) { tracing::warn/error! }`
+
+### 📚 文档
+- 📖 **PROJECT.md** — 创建项目架构文档 (696 行)，涵盖架构图/数据流/事件系统/测试/IPC 命令/设计决策等 13 个章节
+- 📖 **docs/ 加入 .gitignore** — 本地文档不推送到 GitHub
+
+### Verification
+- ✅ TypeScript — 0 errors
+- ✅ ESLint — 0 warnings
+- ✅ Rust `cargo check` — 0 errors, 0 warnings
+
+---
+
 ## v0.8.6 (2026-05-12)
 
 ### 🔒 安全修复
